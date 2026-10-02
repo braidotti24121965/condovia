@@ -16,6 +16,11 @@ begin
 end
 $$;
 
+-- Supabase grants SQL privileges separately from row-level security. Authenticated
+-- clients need SELECT on exposed tables so these policies can decide which rows
+-- are visible; tables without a SELECT policy remain closed by RLS.
+grant select on all tables in schema public to authenticated;
+
 create policy user_accounts_read_self on public.user_accounts
   for select to authenticated using (auth_user_id = (select auth.uid()));
 create policy people_read_self on public.people
