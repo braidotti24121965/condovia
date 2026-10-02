@@ -1,0 +1,2 @@
+-- Development-only sample tenants are created by supabase/tests/rls_isolation.sql.
+-- This file intentionally contains no fixed users or credentials.
