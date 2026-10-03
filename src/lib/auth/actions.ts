@@ -16,8 +16,13 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
   if (!email.success || !password.success) return { error: "Informe um e-mail e uma senha válidos." };
   const supabase = await createClient();
   if (!supabase) return { error: "A conexão com o serviço de autenticação não está configurada." };
-  const { error } = await supabase.auth.signInWithPassword({ email: email.data, password: password.data });
-  if (error) return { error: "Não foi possível entrar com esses dados. Confira as informações e tente novamente." };
+  const { data, error } = await supabase.auth.signInWithPassword({ email: email.data, password: password.data });
+  if (error || !data.user) return { error: "Não foi possível entrar com esses dados. Confira as informações e tente novamente." };
+  const { data: accountReady, error: accountError } = await supabase.rpc("record_user_login");
+  if (accountError || accountReady !== true) {
+    await supabase.auth.signOut();
+    return { error: "Não foi possível entrar com esses dados. Confira as informações e tente novamente." };
+  }
   redirect("/app");
 }
 
