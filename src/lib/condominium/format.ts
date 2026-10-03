@@ -1,0 +1,26 @@
+export function normalizePostalCode(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+export function validateBrazilianCnpj(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 14 || /^(\d)\1{13}$/.test(digits)) return false;
+  const calculate = (base: string, weights: number[]) => {
+    const sum = [...base].reduce((total, digit, index) => total + Number(digit) * weights[index], 0);
+    const remainder = sum % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+  const first = calculate(digits.slice(0, 12), [5,4,3,2,9,8,7,6,5,4,3,2]);
+  const second = calculate(digits.slice(0, 12) + first, [6,5,4,3,2,9,8,7,6,5,4,3,2]);
+  return digits.endsWith(`${first}${second}`);
+}
+
+export function friendlyDatabaseError(message?: string) {
+  const value = message?.toLowerCase() ?? "";
+  if (value.includes("duplicate key") || value.includes("unique constraint")) return "Já existe uma unidade ou estrutura com este nome ou código neste contexto.";
+  if (value.includes("cycle") || value.includes("parent") || value.includes("hierarchy")) return "Esta alteração criaria uma hierarquia inválida.";
+  if (value.includes("inactive") || value.includes("active children")) return "Não é possível ativar ou inativar enquanto houver vínculos ativos incompatíveis.";
+  if (value.includes("not authorized") || value.includes("permission denied")) return "Você não possui permissão para realizar esta operação.";
+  if (value.includes("cnpj") || value.includes("timezone") || value.includes("check constraint")) return "Confira os dados informados e tente novamente.";
+  return "Não foi possível salvar. Confira os dados e tente novamente.";
+}

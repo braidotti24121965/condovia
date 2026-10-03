@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bell, Building2, ChevronDown, CircleUserRound, Command, House, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, UserRound } from "lucide-react";
+import { Bell, Building2, ChevronDown, CircleUserRound, Command, House, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, UserRound, Network, DoorOpen } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
 import { Brand } from "@/components/layout/brand";
 import type { AuthorizedContext } from "@/lib/auth/context";
 
-export function AppShell({ children, context, personName }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null }) {
+export function AppShell({ children, context, personName, condominiumNavigation = { overview: false, structures: false, units: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
+  const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
   const nav = [{ label: "Painel", href: "/app/dashboard", Icon: LayoutDashboard, active: true }, { label: "Meu perfil", href: "/app/profile", Icon: UserRound, active: false }];
   return <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
     <input className="drawer-toggle" type="checkbox" id="drawer-toggle" aria-hidden="true" />
@@ -17,7 +20,7 @@ export function AppShell({ children, context, personName }: { children: React.Re
       <div className="sidebar-brand"><Brand light /><button className="icon-button desktop-collapse" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"} title={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}>{collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</button><label className="icon-button mobile-menu-close" htmlFor="drawer-toggle" aria-label="Fechar menu"><ChevronDown size={20} /></label></div>
       <Link className="sidebar-context" href="/select-context" aria-label={`Trocar contexto. Atual: ${context.name}, ${context.role}`}><span className="context-avatar"><Building2 size={18} /></span><span><strong>{context.name}</strong><small>{context.role}</small></span><ChevronDown size={16} className="context-chevron" /></Link>
       <div className="nav-label">MENU PRINCIPAL</div>
-      <nav>{nav.map(({ label, href, Icon, active }) => <Link key={href} href={href} title={label} aria-label={label} className={`nav-item ${active ? "nav-active" : ""}`}><Icon size={19} /><span>{label}</span></Link>)}</nav>
+      <nav>{nav.map(({ label, href, Icon }) => <Link key={href} href={href} title={label} aria-label={label} className={navClass(href)} aria-current={pathname === href ? "page" : undefined}><Icon size={19} /><span>{label}</span></Link>)}{context.type === "condominium" && (condominiumNavigation.overview || condominiumNavigation.structures || condominiumNavigation.units) && <div className="nav-group"><div className="nav-label">CONDOMÍNIO</div>{condominiumNavigation.overview && <Link className={`nav-item ${pathname === "/app/condominium" ? "nav-active" : ""}`} href="/app/condominium" aria-current={pathname === "/app/condominium" ? "page" : undefined}><Building2 size={19} /><span>Visão Geral</span></Link>}{condominiumNavigation.structures && <Link className={navClass("/app/condominium/structures")} href="/app/condominium/structures" aria-current={pathname?.startsWith("/app/condominium/structures") ? "page" : undefined}><Network size={19} /><span>Estruturas</span></Link>}{condominiumNavigation.units && <Link className={navClass("/app/condominium/units")} href="/app/condominium/units" aria-current={pathname?.startsWith("/app/condominium/units") ? "page" : undefined}><DoorOpen size={19} /><span>Unidades</span></Link>}</div>}</nav>
       <div className="sidebar-bottom"><div className="sidebar-help"><div className="help-mark"><Command size={17} /></div><div><strong>Precisa de ajuda?</strong><small>Fale com nosso suporte</small></div><ChevronDown size={15} /></div><div className="sidebar-version">CondoVia <span>v0.1</span></div></div>
     </aside>
     <div className="main-column">
