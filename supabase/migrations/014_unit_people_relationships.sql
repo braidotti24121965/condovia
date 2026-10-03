@@ -214,7 +214,7 @@ create policy units_read_own_relationships on public.units for select to authent
   or exists(select 1 from public.unit_ownerships o join public.condominiums c on c.id=o.condominium_id where o.unit_id=units.id and public.can_read_own_unit_relationship(o.person_id,o.condominium_id) and o.starts_at<=timezone(c.timezone,now())::date and (o.ends_at is null or o.ends_at>timezone(c.timezone,now())::date))
 );
 
-drop function public.change_primary_resident(uuid,uuid,uuid,date,text);
+drop function if exists public.change_primary_resident(uuid,uuid,uuid,date,text);
 create or replace function public.change_primary_resident(p_unit_id uuid,p_condominium_id uuid,p_person_id uuid,p_starts_at date,p_occupancy_type text default 'tenant',p_ends_at date default null)
 returns uuid language plpgsql security definer set search_path = '' as $$
 declare old_row public.unit_occupancies%rowtype; new_id uuid; today_local date;
