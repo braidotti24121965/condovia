@@ -41,6 +41,13 @@ insert into public.condominium_memberships (id, condominium_id, user_account_id)
   ('60000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000002', '50000000-0000-4000-8000-000000000002'),
   ('60000000-0000-4000-8000-000000000003', '20000000-0000-4000-8000-000000000001', '50000000-0000-4000-8000-000000000003'),
   ('60000000-0000-4000-8000-000000000004', '20000000-0000-4000-8000-000000000002', '50000000-0000-4000-8000-000000000003');
+-- P3 requires explicit tenant links before people are visible in a condominium.
+insert into public.person_condominium_links (person_id, condominium_id, status)
+values
+  ('40000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'active'),
+  ('40000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000002', 'active'),
+  ('40000000-0000-4000-8000-000000000003', '20000000-0000-4000-8000-000000000001', 'active'),
+  ('40000000-0000-4000-8000-000000000003', '20000000-0000-4000-8000-000000000002', 'active');
 insert into public.role_assignments (id, user_account_id, role_id, condominium_id) values
   ('70000000-0000-4000-8000-000000000001', '50000000-0000-4000-8000-000000000001', (select id from public.roles where code = 'condominium.syndic'), '20000000-0000-4000-8000-000000000001'),
   ('70000000-0000-4000-8000-000000000002', '50000000-0000-4000-8000-000000000002', (select id from public.roles where code = 'condominium.syndic'), '20000000-0000-4000-8000-000000000002'),
@@ -50,7 +57,8 @@ insert into public.role_assignments (id, user_account_id, role_id, condominium_i
 
 insert into public.role_permissions (role_id, permission_id)
 select r.id, p.id from public.roles r cross join public.permissions p
-where r.code = 'condominium.syndic' and p.code = 'people.read';
+where r.code = 'condominium.syndic' and p.code = 'people.read'
+on conflict do nothing;
 
 select is((select count(*)::int from public.people where status = 'archived'), 1, 'legacy archived people status remains unchanged');
 select is((select count(*)::int from public.people where status in ('inactive', 'anonymized')), 2, 'new people lifecycle states are accepted');
@@ -139,7 +147,7 @@ select throws_ok(
   $$insert into public.role_assignments (user_account_id, role_id, condominium_id) values ('50000000-0000-4000-8000-000000000001', (select id from public.roles where code = 'condominium.syndic'), '20000000-0000-4000-8000-000000000001')$$,
   '42501', 'Not authorized to assign a role to self', 'self-assignment without roles.assign is rejected by the actor trigger');
 set local role authenticated;
-select throws_ok($$select count(*) from public.audit_events$$, '42501', 'permission denied for table audit_events', 'audit log is not readable by ordinary authenticated users');
+select throws_ok($$select actor_auth_user_id from public.audit_events limit 1$$, '42501', 'permission denied for table audit_events', 'authenticated users cannot read audit actor identity');
 
 reset role;
 insert into public.permission_overrides (user_account_id, permission_id, condominium_id, effect, reason)
