@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, Building2, ChevronDown, CircleUserRound, Command, House, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, UserRound, Network, DoorOpen, Users, KeyRound } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
 import { Brand } from "@/components/layout/brand";
@@ -11,10 +11,18 @@ import type { AuthorizedContext } from "@/lib/auth/context";
 export function AppShell({ children, context, personName, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const drawerToggleRef = useRef<HTMLInputElement>(null);
+  const mainContentRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (drawerToggleRef.current?.checked) {
+      drawerToggleRef.current.checked = false;
+      mainContentRef.current?.focus({ preventScroll: true });
+    }
+  }, [pathname]);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
   const nav = [{ label: "Painel", href: "/app/dashboard", Icon: LayoutDashboard, active: true }, { label: "Meu perfil", href: "/app/profile", Icon: UserRound, active: false }];
   return <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
-    <input className="drawer-toggle" type="checkbox" id="drawer-toggle" aria-hidden="true" />
+    <input ref={drawerToggleRef} className="drawer-toggle" type="checkbox" id="drawer-toggle" aria-hidden="true" />
     <label className="drawer-backdrop" htmlFor="drawer-toggle" aria-label="Fechar menu" />
     <aside className="sidebar" aria-label="Navegação principal">
       <div className="sidebar-brand"><Brand light /><button className="icon-button desktop-collapse" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"} title={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}>{collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</button><label className="icon-button mobile-menu-close" htmlFor="drawer-toggle" aria-label="Fechar menu"><ChevronDown size={20} /></label></div>
@@ -30,7 +38,7 @@ export function AppShell({ children, context, personName, condominiumNavigation 
         <div className="search-box"><Search size={17} /><input aria-label="Buscar" placeholder="Buscar no CondoVia" /><kbd>⌘ K</kbd></div>
         <div className="topbar-actions"><button className="icon-button notification-button" aria-label="Notificações"><Bell size={19} /><span /></button><div className="topbar-divider" /><details className="user-menu"><summary><span className="user-avatar"><CircleUserRound size={21} /></span><span className="user-name"><strong>{personName || "Minha conta"}</strong><small>{context.role}</small></span><ChevronDown size={15} /></summary><div className="user-dropdown"><form action={signOut}><button type="submit"><LogOut size={16} /> Sair da conta</button></form></div></details></div>
       </header>
-      <main className="main-content">{children}</main>
+      <main ref={mainContentRef} tabIndex={-1} className="main-content">{children}</main>
     </div>
   </div>;
 }

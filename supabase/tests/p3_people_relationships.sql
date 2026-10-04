@@ -1,5 +1,5 @@
 create extension if not exists pgtap with schema extensions;
-select plan(118);
+select plan(174);
 begin;
 insert into public.clients(id,legal_name) values ('b1000000-0000-4000-8000-000000000001','P3 test client');
 insert into public.condominiums(id,client_id,name,timezone) values
@@ -205,39 +205,30 @@ select set_config('request.jwt.claim.sub','b3000000-0000-4000-8000-000000000001'
 select is(public.current_user_account_id(),null::uuid,'suspended account blocks self-access');
 reset role;
 
-select ok(not has_table_privilege('authenticated','public.person_condominium_links','DELETE'),'authenticated cannot DELETE person-condominium history');
-select ok(not has_table_privilege('authenticated','public.unit_ownerships','DELETE'),'authenticated cannot DELETE ownership history');
-select ok(not has_table_privilege('authenticated','public.unit_occupancies','DELETE'),'authenticated cannot DELETE occupancy history');
-select ok(not has_table_privilege('authenticated','public.unit_financial_responsibilities','DELETE'),'authenticated cannot DELETE financial-responsibility history');
-select ok(not has_table_privilege('authenticated','public.person_condominium_links','TRUNCATE'),'authenticated cannot TRUNCATE person-condominium history');
-select ok(not has_table_privilege('authenticated','public.unit_ownerships','TRUNCATE'),'authenticated cannot TRUNCATE ownership history');
-select ok(not has_table_privilege('authenticated','public.unit_occupancies','TRUNCATE'),'authenticated cannot TRUNCATE occupancy history');
-select ok(not has_table_privilege('authenticated','public.unit_financial_responsibilities','TRUNCATE'),'authenticated cannot TRUNCATE financial-responsibility history');
-select ok(not has_table_privilege('anon','public.person_condominium_links','DELETE'),'anon cannot DELETE person-condominium history');
-select ok(not has_table_privilege('anon','public.unit_ownerships','DELETE'),'anon cannot DELETE ownership history');
-select ok(not has_table_privilege('anon','public.unit_occupancies','DELETE'),'anon cannot DELETE occupancy history');
-select ok(not has_table_privilege('anon','public.unit_financial_responsibilities','DELETE'),'anon cannot DELETE financial-responsibility history');
-select ok(not has_table_privilege('anon','public.person_condominium_links','TRUNCATE'),'anon cannot TRUNCATE person-condominium history');
-select ok(not has_table_privilege('anon','public.unit_ownerships','TRUNCATE'),'anon cannot TRUNCATE ownership history');
-select ok(not has_table_privilege('anon','public.unit_occupancies','TRUNCATE'),'anon cannot TRUNCATE occupancy history');
-select ok(not has_table_privilege('anon','public.unit_financial_responsibilities','TRUNCATE'),'anon cannot TRUNCATE financial-responsibility history');
+select ok(
+  not has_table_privilege('authenticated', format('public.%I', table_name), privilege_type),
+  format('authenticated cannot %s %s', privilege_type, table_name)
+) from unnest(array['person_condominium_links','unit_ownerships','unit_occupancies','unit_financial_responsibilities']) table_name
+cross join unnest(array['DELETE','TRUNCATE','TRIGGER','MAINTAIN']) privilege_type;
 
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.person_condominium_links'::regclass and a.grantee=0 and a.privilege_type='DELETE'),'PUBLIC cannot DELETE person-condominium history');
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.unit_ownerships'::regclass and a.grantee=0 and a.privilege_type='DELETE'),'PUBLIC cannot DELETE ownership history');
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.unit_occupancies'::regclass and a.grantee=0 and a.privilege_type='DELETE'),'PUBLIC cannot DELETE occupancy history');
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.unit_financial_responsibilities'::regclass and a.grantee=0 and a.privilege_type='DELETE'),'PUBLIC cannot DELETE financial-responsibility history');
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.person_condominium_links'::regclass and a.grantee=0 and a.privilege_type='TRUNCATE'),'PUBLIC cannot TRUNCATE person-condominium history');
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.unit_ownerships'::regclass and a.grantee=0 and a.privilege_type='TRUNCATE'),'PUBLIC cannot TRUNCATE ownership history');
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.unit_occupancies'::regclass and a.grantee=0 and a.privilege_type='TRUNCATE'),'PUBLIC cannot TRUNCATE occupancy history');
-select ok(not exists (select 1 from pg_class c cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
- where c.oid='public.unit_financial_responsibilities'::regclass and a.grantee=0 and a.privilege_type='TRUNCATE'),'PUBLIC cannot TRUNCATE financial-responsibility history');
+select ok(
+  not has_table_privilege('anon', format('public.%I', table_name), privilege_type),
+  format('anon cannot %s %s', privilege_type, table_name)
+) from unnest(array['person_condominium_links','unit_ownerships','unit_occupancies','unit_financial_responsibilities']) table_name
+cross join unnest(array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN']) privilege_type;
+
+select ok(
+  not exists (
+    select 1
+    from pg_class c
+    cross join lateral aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+    where c.oid = format('public.%I', table_name)::regclass
+      and a.grantee = 0
+      and a.privilege_type = privilege_type
+  ),
+  format('PUBLIC cannot %s %s', privilege_type, table_name)
+) from unnest(array['person_condominium_links','unit_ownerships','unit_occupancies','unit_financial_responsibilities']) table_name
+cross join unnest(array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN']) privilege_type;
 
 select ok((select relrowsecurity from pg_class where oid='public.person_condominium_links'::regclass),'RLS remains enabled on person-condominium history');
 select ok((select relrowsecurity from pg_class where oid='public.unit_ownerships'::regclass),'RLS remains enabled on ownership history');

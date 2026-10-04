@@ -31,10 +31,10 @@ export function PersonPicker({
   const newPersonHref = `/app/condominium/people/new?returnTo=${encodeURIComponent(returnTo)}&relationship=${kind}`;
 
   return <div className="cv-person-picker">
-    <label>Buscar pessoa neste condomínio
+    <label className="cv-field-lg">Buscar pessoa neste condomínio
       <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Digite o nome" autoComplete="off" aria-label="Buscar pessoa vinculada ao condomínio" />
     </label>
-    <label>Pessoa
+    <label className="cv-field-lg">Pessoa
       <select name="person_id" required value={selected} onChange={(event) => setSelected(event.target.value)}>
         <option value="" disabled>{filtered.length ? "Selecione uma pessoa" : "Nenhuma pessoa encontrada"}</option>
         {filtered.map((person) => <option key={person.id} value={person.id}>{person.full_name}</option>)}
