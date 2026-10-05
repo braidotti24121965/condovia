@@ -11,6 +11,10 @@ import type {
   GatehouseDashboardSummary,
 } from "./types";
 
+export function filterActiveAccessPoints(points: AccessPoint[], condominiumId: string): AccessPoint[] {
+  return points.filter((point) => point.condominium_id === condominiumId && point.status === "active");
+}
+
 export async function getGatehousePresence(condominiumId: string): Promise<GatehousePresence[]> {
   const { supabase } = await requireUser();
   if (!supabase) return [];
@@ -162,6 +166,23 @@ export async function getAccessPoints(condominiumId: string): Promise<AccessPoin
 
   if (error) {
     console.error("Error fetching access points:", error);
+    return [];
+  }
+  return filterActiveAccessPoints((data || []) as AccessPoint[], condominiumId);
+}
+
+export async function getAllAccessPoints(condominiumId: string): Promise<AccessPoint[]> {
+  const { supabase } = await requireUser();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("access_points")
+    .select("*")
+    .eq("condominium_id", condominiumId)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching all access points:", error);
     return [];
   }
   return (data || []) as AccessPoint[];

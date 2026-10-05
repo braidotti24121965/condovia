@@ -46,6 +46,57 @@ export async function createVisitorAction(prevState: unknown, formData: FormData
   return { success: true };
 }
 
+export async function createAccessPointAction(prevState: unknown, formData: FormData) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." };
+
+  const name = String(formData.get("name") || "").trim();
+  const type = String(formData.get("type") || "").trim();
+  if (name.length < 2) return { error: "Nome deve conter no mínimo 2 caracteres." };
+  if (!["pedestrian", "vehicle", "service", "mixed"].includes(type)) return { error: "Tipo de acesso inválido." };
+
+  const { error } = await supabase.from("access_points").insert({
+    condominium_id: context.id,
+    name,
+    type,
+    status: "active",
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/app/gatehouse");
+  revalidatePath("/app/gatehouse/access-points");
+  return { success: true };
+}
+
+export async function updateAccessPointAction(prevState: unknown, formData: FormData) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." };
+
+  const id = String(formData.get("id") || "").trim();
+  const name = String(formData.get("name") || "").trim();
+  const type = String(formData.get("type") || "").trim();
+  const status = String(formData.get("status") || "").trim();
+  if (!id) return { error: "Ponto de acesso inválido." };
+  if (name.length < 2) return { error: "Nome deve conter no mínimo 2 caracteres." };
+  if (!["pedestrian", "vehicle", "service", "mixed"].includes(type)) return { error: "Tipo de acesso inválido." };
+  if (!["active", "inactive"].includes(status)) return { error: "Status inválido." };
+
+  const { error } = await supabase
+    .from("access_points")
+    .update({ name, type, status, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("condominium_id", context.id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/app/gatehouse");
+  revalidatePath("/app/gatehouse/access-points");
+  return { success: true };
+}
+
 export async function createProviderAction(prevState: unknown, formData: FormData) {
   const { supabase, user } = await requireUser();
   if (!supabase || !user) return { error: "Não autenticado." };

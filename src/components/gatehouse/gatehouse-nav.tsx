@@ -10,6 +10,7 @@ import {
   LogIn,
   Package as PackageIcon,
   History,
+  DoorOpen,
 } from "lucide-react";
 
 export function GatehouseNav() {
@@ -23,6 +24,7 @@ export function GatehouseNav() {
     { href: "/app/gatehouse/visitors", label: "Visitantes", icon: UserCheck },
     { href: "/app/gatehouse/providers", label: "Prestadores", icon: Briefcase },
     { href: "/app/gatehouse/history", label: "Histórico", icon: History },
+    { href: "/app/gatehouse/access-points", label: "Pontos de acesso", icon: DoorOpen },
   ];
 
   return (
