@@ -147,6 +147,17 @@ export function getAuthorizationOperationalStatus(
   return { code: "active", label: "Ativa", tone: "active" };
 }
 
+export function isAuthorizationValidAt(
+  validFrom: Date | string,
+  validUntil: Date | string,
+  now: Date | string
+): boolean {
+  const from = typeof validFrom === "string" ? new Date(validFrom) : validFrom;
+  const until = typeof validUntil === "string" ? new Date(validUntil) : validUntil;
+  const current = typeof now === "string" ? new Date(now) : now;
+  return from <= current && current <= until;
+}
+
 /**
  * Retorna os limites UTC de início e fim do dia corrente em um determinado fuso horário.
  */

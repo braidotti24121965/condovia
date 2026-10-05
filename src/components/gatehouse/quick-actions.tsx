@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LogIn, LogOut, FileQuestion, PackagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
+import { formatAuthorizationWindowInTimezone } from "@/lib/gatehouse/timezone";
 import {
   registerEntryAction,
   registerExitAction,
@@ -19,6 +20,7 @@ interface Props {
   units: { id: string; code: string; display_name: string | null }[];
   visitors: Visitor[];
   providers: ServiceProvider[];
+  timeZone: string;
 }
 
 export function QuickActions({
@@ -28,6 +30,7 @@ export function QuickActions({
   units,
   visitors,
   providers,
+  timeZone,
 }: Props) {
   const [activeModal, setActiveModal] = useState<"entry" | "exit" | "request" | "package" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -209,9 +212,10 @@ export function QuickActions({
                       const name = a.visitor?.full_name || a.service_provider?.full_name || "Sem nome";
                       const company = a.service_provider?.company_name ? ` (${a.service_provider.company_name})` : "";
                       const unit = a.unit ? ` · Unidade ${a.unit.code}` : "";
+                      const window = ` · ${formatAuthorizationWindowInTimezone(a.valid_from, a.valid_until, timeZone).replace(" até ", "–")}`;
                       return (
                         <option key={a.id} value={a.id}>
-                          {name}{company}{unit}
+                          {name}{company}{unit}{window}
                         </option>
                       );
                     })}

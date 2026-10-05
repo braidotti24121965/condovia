@@ -110,6 +110,7 @@ export default async function GatehouseDashboardPage() {
         units={units}
         visitors={visitors}
         providers={providers}
+        timeZone={timeZone}
       />
 
       {/* 2x2 Grid with Operational Panels */}

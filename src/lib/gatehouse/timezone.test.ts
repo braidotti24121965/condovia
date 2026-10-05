@@ -4,6 +4,7 @@ import {
   formatDateTimeInTimezone,
   getAuthorizationOperationalStatus,
   getDayBoundsInTimezone,
+  isAuthorizationValidAt,
   parseDateTimeInTimezone,
   toLocalDateTimeInput,
 } from "./timezone";
@@ -78,6 +79,16 @@ describe("Gatehouse timezone handling", () => {
     expect(statusAfter.code).toBe("expired");
     expect(statusAfter.label).toBe("Expirada");
     expect(statusAfter.tone).toBe("inactive");
+  });
+
+  it("filters entry authorizations at fixed instants using inclusive UTC comparisons", () => {
+    const from = "2026-10-05T19:00:00.000Z";
+    const until = "2026-10-05T21:00:00.000Z";
+
+    expect(isAuthorizationValidAt(from, until, "2026-10-05T18:59:00.000Z")).toBe(false);
+    expect(isAuthorizationValidAt(from, until, "2026-10-05T19:02:00.000Z")).toBe(true);
+    expect(isAuthorizationValidAt(from, until, "2026-10-05T21:01:00.000Z")).toBe(false);
+    expect(isAuthorizationValidAt("2026-10-05T16:00:00.000Z", "2026-10-05T17:00:00.000Z", "2026-10-05T19:02:00.000Z")).toBe(false);
   });
 
   it("works accurately with other non-Brasília timezones without fixed offsets", () => {
