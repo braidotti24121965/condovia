@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { VisitorForm } from "@/components/gatehouse/visitor-form";
 import { getVisitors } from "@/lib/gatehouse/data";
+import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 
 export const metadata = { title: "Visitantes — Portaria" };
 
@@ -76,8 +77,8 @@ export default async function VisitorsPage({
                 {visitors.map((v) => (
                   <tr key={v.id}>
                     <td><strong>{v.full_name}</strong></td>
-                    <td>{v.document_number ? `${v.document_type?.toUpperCase() || "DOC"}: ${v.document_number}` : "—"}</td>
-                    <td>{v.phone || "—"}</td>
+                    <td>{v.document_number ? `${v.document_type?.toUpperCase() || "DOC"}: ${v.document_type?.toLowerCase() === "cpf" ? formatBrazilianCpf(v.document_number) : v.document_number}` : "—"}</td>
+                    <td>{v.phone ? formatBrazilianPhone(v.phone) : "—"}</td>
                     <td>{v.notes || "—"}</td>
                     <td>
                       <span className={`cv-status cv-status-${v.status}`}>

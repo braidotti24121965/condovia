@@ -22,6 +22,12 @@ describe("condominium formatting and validation", () => {
     expect(formatBrazilianPhone("11912345678")).toBe("(11) 91234-5678");
     expect(formatBrazilianPhone("1134567890")).toBe("(11) 3456-7890");
   });
+  it("formats the CPF and phone values used by gatehouse listings", () => {
+    expect(formatBrazilianCpf("07345536840")).toBe("073.455.368-40");
+    expect(formatBrazilianCpf("073.455.368-40")).toBe("073.455.368-40");
+    expect(formatBrazilianPhone("11973846679")).toBe("(11) 97384-6679");
+    expect(formatBrazilianPhone("(11) 97384-6679")).toBe("(11) 97384-6679");
+  });
   it("uses domain labels and horizontal/vertical floor presentation", () => {
       expect(unitTypeLabels.house).toBe("Casa");
       expect(unitTypeLabels.house).not.toBe("house");

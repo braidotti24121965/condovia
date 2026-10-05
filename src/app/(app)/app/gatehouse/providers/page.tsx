@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { ProviderForm } from "@/components/gatehouse/provider-form";
 import { getServiceProviders } from "@/lib/gatehouse/data";
+import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 
 export const metadata = { title: "Prestadores — Portaria" };
 
@@ -79,8 +80,8 @@ export default async function ProvidersPage({
                     <td><strong>{p.full_name}</strong></td>
                     <td>{p.company_name || "—"}</td>
                     <td>{p.service_type || "Geral"}</td>
-                    <td>{p.document_number ? `${p.document_type?.toUpperCase() || "DOC"}: ${p.document_number}` : "—"}</td>
-                    <td>{p.phone || "—"}</td>
+                    <td>{p.document_number ? `${p.document_type?.toUpperCase() || "DOC"}: ${p.document_type?.toLowerCase() === "cpf" ? formatBrazilianCpf(p.document_number) : p.document_number}` : "—"}</td>
+                    <td>{p.phone ? formatBrazilianPhone(p.phone) : "—"}</td>
                     <td>
                       <span className={`cv-status cv-status-${p.status}`}>
                         {p.status === "active" ? "Ativo" : "Inativo"}
