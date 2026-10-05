@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowUpRight, Building2, CalendarDays, CheckCircle2, ChevronRight, CircleHelp, Clock3, ShieldCheck, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/feedback";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
+import { formatDateInTimezone } from "@/lib/gatehouse/timezone";
 
 export const metadata: Metadata = { title: "Painel" };
 
@@ -10,9 +11,10 @@ export default async function DashboardPage() {
   const { supabase } = await requireUser();
   const context = await requireCurrentContext();
   if (context.type === "platform") redirect("/app/platform");
-  const displayDate = new Intl.DateTimeFormat("pt-BR", {
-    weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo",
-  }).format(new Date()).toLocaleUpperCase("pt-BR");
+  const timeZone = context.type === "condominium"
+    ? ((await supabase!.from("condominiums").select("timezone").eq("id", context.id).maybeSingle()).data?.timezone || "UTC")
+    : "UTC";
+  const displayDate = formatDateInTimezone(new Date(), timeZone).toLocaleUpperCase("pt-BR");
   const { data: allowed } = context.type === "condominium"
     ? await supabase!.rpc("has_permission", { permission_code: "dashboard.read", target_condominium_id: context.id })
     : await supabase!.rpc("has_administrator_permission", { permission_code: "administrator.read", target_administrator_id: context.id });

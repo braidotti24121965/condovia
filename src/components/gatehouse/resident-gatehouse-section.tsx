@@ -4,7 +4,7 @@ import { useState } from "react";
 import { KeyRound, FileQuestion, Package as PackageIcon } from "lucide-react";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
-import { formatDateTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
+import { formatDateTimeInTimezone, formatTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import type { AccessAuthorization, AccessRequest, Package, Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 
 interface Props {
@@ -106,7 +106,7 @@ export function ResidentGatehouseSection({
                         </td>
                         <td><span className="cv-status">{type}</span></td>
                         <td>Unidade {r.unit?.code}</td>
-                        <td>{new Date(r.requested_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                        <td>{formatTimeInTimezone(r.requested_at, timeZone)}</td>
                         <td>{r.notes || "—"}</td>
                         <td>
                           <RequestDecisionButtons requestId={r.id} />

@@ -6,6 +6,7 @@ import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickActions } from "@/components/gatehouse/quick-actions";
 import { formatAuthorizationWindowInTimezone } from "@/lib/gatehouse/timezone";
 import { formatTimeInTimezone } from "@/lib/gatehouse/timezone";
+import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 import {
   getGatehouseDashboardSummary,
   getAccessPoints,
@@ -230,7 +231,7 @@ export default async function GatehouseDashboardPage() {
                         <strong>{r.visitor?.full_name || r.service_provider?.full_name}</strong>
                       </td>
                       <td>Unidade {r.unit?.code}</td>
-                      <td>{new Date(r.requested_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                      <td>{formatTimeInTimezone(r.requested_at, timeZone)}</td>
                       <td><span className="cv-status cv-status-under_construction">Pendente</span></td>
                     </tr>
                   ))}
@@ -267,7 +268,7 @@ export default async function GatehouseDashboardPage() {
                       <td><strong>{pkg.description}</strong></td>
                       <td>Unidade {pkg.unit?.code}</td>
                       <td>{pkg.carrier || "—"}</td>
-                      <td>{new Date(pkg.received_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                      <td>{formatTimeInTimezone(pkg.received_at, timeZone)}</td>
                     </tr>
                   ))}
                 </tbody>

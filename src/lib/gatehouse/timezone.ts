@@ -77,6 +77,19 @@ export function formatDateTimeInTimezone(
   }).format(d);
 }
 
+export function formatDateInTimezone(
+  date: Date | string,
+  timeZone: string
+): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone,
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(typeof date === "string" ? new Date(date) : date);
+}
+
 /**
  * Formata a janela de uma autorização no fuso horário do condomínio.
  * Ex: "16:00 até 18:00"
