@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser, requireCurrentContext } from "@/lib/auth/context";
 import { parseDateTimeInTimezone } from "@/lib/gatehouse/timezone";
+import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
 
 export async function createVisitorAction(prevState: unknown, formData: FormData) {
   const { supabase, user } = await requireUser();
@@ -12,7 +13,7 @@ export async function createVisitorAction(prevState: unknown, formData: FormData
 
   const full_name = String(formData.get("full_name") || "").trim();
   const document_type = String(formData.get("document_type") || "").trim() || null;
-  const document_number = String(formData.get("document_number") || "").trim() || null;
+  const document_number = normalizeVisitorDocumentNumber(document_type, String(formData.get("document_number") || ""));
   const phone = String(formData.get("phone") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
 
@@ -38,6 +39,9 @@ export async function createVisitorAction(prevState: unknown, formData: FormData
   });
 
   if (error) {
+    if (error.code === "23505" && error.message.includes("visitors_document_duplicate")) {
+      return { error: `Já existe um visitante cadastrado com este ${document_type === "cpf" ? "CPF" : "documento"}.` };
+    }
     return { error: error.message };
   }
 
