@@ -26,6 +26,12 @@ describe("Gatehouse timezone handling", () => {
     expect(formatTimeInTimezone("2026-10-05T19:20:00Z", "America/Sao_Paulo")).toBe("16:20");
   });
 
+  it("formats the gatehouse dashboard presence time without changing the instant", () => {
+    const enteredAt = "2026-10-05T20:07:00Z";
+    expect(formatTimeInTimezone(enteredAt, "America/Sao_Paulo")).toBe("17:07");
+    expect(new Date(enteredAt).getTime()).toBe(Date.parse(enteredAt));
+  });
+
   it("formats historical events with date, seconds, and condominium timezone", () => {
     expect(formatEventDateTimeInTimezone("2026-10-05T19:20:12Z", "America/Sao_Paulo")).toBe("05/10/2026 16:20:12");
     expect(formatEventDateTimeInTimezone("2026-10-05T19:27:18Z", "America/Sao_Paulo")).toBe("05/10/2026 16:27:18");

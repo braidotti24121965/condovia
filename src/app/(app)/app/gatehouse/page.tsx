@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickActions } from "@/components/gatehouse/quick-actions";
 import { formatAuthorizationWindowInTimezone } from "@/lib/gatehouse/timezone";
+import { formatTimeInTimezone } from "@/lib/gatehouse/timezone";
 import {
   getGatehouseDashboardSummary,
   getAccessPoints,
@@ -139,7 +140,7 @@ export default async function GatehouseDashboardPage() {
                 </thead>
                 <tbody>
                   {summary.presenceList.slice(0, 5).map((p) => (
-                    <tr key={p.target_id}>
+                  <tr key={p.target_id}>
                       <td>
                         <strong>{p.full_name}</strong>
                         {p.company_name && <small className="cv-muted">{p.company_name}</small>}
@@ -151,7 +152,7 @@ export default async function GatehouseDashboardPage() {
                       </td>
                       <td>Unidade {p.unit_code}</td>
                       <td>{p.access_point_name}</td>
-                      <td>{new Date(p.entered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                      <td>{formatTimeInTimezone(p.entered_at, timeZone)}</td>
                     </tr>
                   ))}
                 </tbody>
