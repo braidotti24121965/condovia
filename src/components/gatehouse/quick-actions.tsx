@@ -210,12 +210,11 @@ export function QuickActions({
                     <option value="" disabled>Selecione quem está autorizado...</option>
                     {authorizations.map((a) => {
                       const name = a.visitor?.full_name || a.service_provider?.full_name || "Sem nome";
-                      const company = a.service_provider?.company_name ? ` (${a.service_provider.company_name})` : "";
                       const unit = a.unit ? ` · Unidade ${a.unit.code}` : "";
                       const window = ` · ${formatAuthorizationWindowInTimezone(a.valid_from, a.valid_until, timeZone).replace(" até ", "–")}`;
                       return (
                         <option key={a.id} value={a.id}>
-                          {name}{company}{unit}{window}
+                          {name}{a.service_provider?.company_name ? ` · ${a.service_provider.company_name}` : ""}{unit}{window}
                         </option>
                       );
                     })}
@@ -349,7 +348,7 @@ export function QuickActions({
                     }}>
                       <option value="" disabled>Selecione o prestador...</option>
                       {providers.map((sp) => (
-                        <option key={sp.id} value={sp.id}>{sp.full_name} {sp.company_name ? `(${sp.company_name})` : ""}</option>
+                        <option key={sp.id} value={sp.id}>{sp.full_name}{sp.company_name ? ` · ${sp.company_name}` : ""}</option>
                       ))}
                     </select>
                   </label>

@@ -5,7 +5,10 @@ import { KeyRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { createAuthorizationAction } from "@/lib/gatehouse/actions";
+import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 import { toLocalDateTimeInput } from "@/lib/gatehouse/timezone";
+import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import type { Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 
 interface Props {
@@ -23,6 +26,7 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
   const [loading, setLoading] = useState(false);
   const [targetType, setTargetType] = useState<"visitor" | "provider">("visitor");
   const [visitorMode, setVisitorMode] = useState<"new" | "recent">("new");
+  const [overlap, setOverlap] = useState<{ valid_from: string; valid_until: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,7 +35,9 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
     const fd = new FormData(e.currentTarget);
     const res = await createAuthorizationAction(null, fd);
     setLoading(false);
-    if (res?.error) {
+    if (res?.overlap) {
+      setOverlap(res.overlap);
+    } else if (res?.error) {
       setError(res.error);
     } else {
       setSuccess("Autorização concedida com sucesso!");
@@ -82,6 +88,7 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
             {success && <div style={{ marginBottom: "16px" }}><Alert tone="success">{success}</Alert></div>}
 
             <form onSubmit={handleSubmit} className="cv-form">
+              <input type="hidden" name="allow_overlap" defaultValue="" />
               <label className="cv-field-wide">
                 Unidade de destino *
                 <select name="unit_id" required defaultValue="">
@@ -117,8 +124,8 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
                     <div className="cv-form-grid">
                       <label className="cv-field-wide">Nome *<input name="visitor_name" required /></label>
                       <label>Tipo de documento<select name="document_type" defaultValue=""><option value="">Não informado</option><option value="cpf">CPF</option><option value="rg">RG</option><option value="cnh">CNH</option><option value="passport">Passaporte</option><option value="other">Outro</option></select></label>
-                      <label>Documento<input name="document_number" /></label>
-                      <label>Telefone<input name="phone" /></label>
+                      <label>Documento<input name="document_number" inputMode="numeric" onChange={(e) => { e.currentTarget.value = formatBrazilianCpf(e.currentTarget.value); }} /></label>
+                      <label>Telefone<input name="phone" inputMode="tel" onChange={(e) => { e.currentTarget.value = formatBrazilianPhone(e.currentTarget.value); }} /></label>
                     </div>
                   ) : visitors.length ? (
                     <label className="cv-field-wide">Visitante recente *<select name="target_id" required defaultValue=""><option value="" disabled>Selecione...</option>{visitors.map((v) => <option key={v.id} value={v.id}>{v.full_name}</option>)}</select></label>
@@ -145,7 +152,7 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
                     <option value="" disabled>Selecione o prestador cadastrado...</option>
                     {providers.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.full_name} {p.company_name ? `(${p.company_name})` : ""}
+                        {p.full_name}{p.company_name ? ` · ${p.company_name}` : ""}
                       </option>
                     ))}
                   </select>
@@ -175,6 +182,7 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
                 </Button>
               </div>
             </form>
+            <ConfirmationDialog open={Boolean(overlap)} title="Autorização sobreposta" description={overlap ? `Já existe uma autorização para esta pessoa nesta unidade durante parte deste período: ${formatDateTimeInTimezone(overlap.valid_from, timeZone)} até ${formatDateTimeInTimezone(overlap.valid_until, timeZone)}.` : ""} confirmLabel="Continuar mesmo assim" onCancel={() => setOverlap(null)} onConfirm={() => { setOverlap(null); const form = document.querySelector(".cv-form") as HTMLFormElement | null; if (form) { (form.elements.namedItem("allow_overlap") as HTMLInputElement).value = "true"; form.requestSubmit(); } }} />
           </div>
         </div>
       )}

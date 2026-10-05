@@ -6,7 +6,6 @@ import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickActions } from "@/components/gatehouse/quick-actions";
 import { formatAuthorizationWindowInTimezone } from "@/lib/gatehouse/timezone";
 import { formatTimeInTimezone } from "@/lib/gatehouse/timezone";
-import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 import {
   getGatehouseDashboardSummary,
   getAccessPoints,

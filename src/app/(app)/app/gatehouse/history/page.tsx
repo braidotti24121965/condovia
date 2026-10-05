@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { getAccessEvents } from "@/lib/gatehouse/data";
 import { formatEventDateTimeInTimezone } from "@/lib/gatehouse/timezone";
+import { ProviderDisplay } from "@/components/gatehouse/provider-display";
 
 export const metadata = { title: "Histórico de Acesso — Portaria" };
 
@@ -64,7 +65,6 @@ export default async function GatehouseHistoryPage() {
               <tbody>
                 {events.map((e) => {
                   const name = e.visitor?.full_name || e.service_provider?.full_name || "—";
-                  const company = e.service_provider?.company_name ? ` (${e.service_provider.company_name})` : "";
                   const isEntry = e.event_type === "entry";
                   return (
                     <tr key={e.id}>
@@ -77,8 +77,7 @@ export default async function GatehouseHistoryPage() {
                         </span>
                       </td>
                       <td>
-                        <strong>{name}</strong>
-                        {company && <small className="cv-muted">{company}</small>}
+                        {e.service_provider ? <ProviderDisplay name={name} company={e.service_provider.company_name} /> : <strong>{name}</strong>}
                       </td>
                       <td>Unidade {e.unit?.code}</td>
                       <td>{e.access_point?.name || "Portaria"}</td>

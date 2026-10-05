@@ -16,6 +16,32 @@ export function formatBrazilianCnpj(value: string) {
     .replace(/(\d{4})(\d)/, "$1-$2");
 }
 
+export function formatBrazilianCpf(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  return digits
+    .replace(/^(\d{3})(\d)/, "$1.$2")
+    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
+}
+
+export const occupancyTypeLabels: Record<string, string> = {
+  owner: "Proprietário",
+  tenant: "Inquilino",
+  family_member: "Familiar",
+  dependent: "Dependente",
+  other: "Outro",
+};
+
+export const unitTypeLabels: Record<string, string> = {
+  apartment: "Apartamento",
+  house: "Casa",
+  lot: "Lote",
+  commercial: "Comercial",
+  office: "Escritório",
+  store: "Loja",
+  other: "Outra",
+};
+
 export function validateBrazilianCnpj(value: string) {
   const digits = value.replace(/\D/g, "");
   if (digits.length !== 14 || /^(\d)\1{13}$/.test(digits)) return false;

@@ -30,16 +30,14 @@ export function PersonPicker({
   }, [people, search, selected]);
   const newPersonHref = `/app/condominium/people/new?returnTo=${encodeURIComponent(returnTo)}&relationship=${kind}`;
 
+  const selectedPerson = people.find((person) => person.id === selected);
   return <div className="cv-person-picker">
-    <label className="cv-field-lg">Buscar pessoa neste condomínio
-      <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Digite o nome" autoComplete="off" aria-label="Buscar pessoa vinculada ao condomínio" />
-    </label>
     <label className="cv-field-lg">Pessoa
-      <select name="person_id" required value={selected} onChange={(event) => setSelected(event.target.value)}>
-        <option value="" disabled>{filtered.length ? "Selecione uma pessoa" : "Nenhuma pessoa encontrada"}</option>
-        {filtered.map((person) => <option key={person.id} value={person.id}>{person.full_name}</option>)}
-      </select>
+      <input type="search" value={selectedPerson && !search ? selectedPerson.full_name : search} onChange={(event) => { const match = people.find((person) => person.full_name === event.target.value); setSelected(match?.id || ""); setSearch(match ? "" : event.target.value); }} placeholder="Digite o nome para buscar" autoComplete="off" list="person-options" role="combobox" aria-autocomplete="list" aria-controls="person-options" aria-expanded="false" aria-label="Buscar pessoa vinculada ao condomínio" required />
+      <datalist id="person-options">{filtered.map((person) => <option key={person.id} value={person.full_name} />)}</datalist>
+      <input type="hidden" name="person_id" value={selected} />
     </label>
+    {selectedPerson && <p className="cv-form-hint" role="status">Selecionado: {selectedPerson.full_name}</p>}
     <Link className="button button-outline" href={newPersonHref}>Cadastrar nova pessoa</Link>
   </div>;
 }

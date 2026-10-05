@@ -5,6 +5,7 @@ import { Briefcase, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { createProviderAction } from "@/lib/gatehouse/actions";
+import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 
 export function ProviderForm() {
   const [open, setOpen] = useState(false);
@@ -95,13 +96,13 @@ export function ProviderForm() {
                 </label>
                 <label>
                   Número do documento
-                  <input name="document_number" placeholder="Ex: 123.456.789-00" />
+                  <input name="document_number" inputMode="numeric" placeholder="Ex: 123.456.789-00" onChange={(e) => { e.currentTarget.value = formatBrazilianCpf(e.currentTarget.value); }} />
                 </label>
               </div>
 
               <label className="cv-field-wide">
                 Telefone / Contato
-                <input name="phone" placeholder="Ex: (11) 91234-5678" />
+                <input name="phone" inputMode="tel" placeholder="Ex: (11) 91234-5678" onChange={(e) => { e.currentTarget.value = formatBrazilianPhone(e.currentTarget.value); }} />
               </label>
 
               <label className="cv-field-wide">

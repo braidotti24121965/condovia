@@ -5,6 +5,7 @@ import { UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { createVisitorAction } from "@/lib/gatehouse/actions";
+import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 
 export function VisitorForm() {
   const [open, setOpen] = useState(false);
@@ -85,13 +86,13 @@ export function VisitorForm() {
                 </label>
                 <label>
                   Número do documento
-                  <input name="document_number" placeholder="Ex: 123.456.789-00" />
+                <input name="document_number" inputMode="numeric" placeholder="Ex: 123.456.789-00" onChange={(e) => { e.currentTarget.value = formatBrazilianCpf(e.currentTarget.value); }} />
                 </label>
               </div>
 
               <label className="cv-field-wide">
                 Telefone / WhatsApp
-                <input name="phone" placeholder="Ex: (11) 98765-4321" />
+                <input name="phone" inputMode="tel" placeholder="Ex: (11) 98765-4321" onChange={(e) => { e.currentTarget.value = formatBrazilianPhone(e.currentTarget.value); }} />
               </label>
 
               <label className="cv-field-wide">

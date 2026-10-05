@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatBrazilianCnpj, formatBrazilianPostalCode, friendlyDatabaseError, normalizePostalCode, validateBrazilianCnpj } from "@/lib/condominium/format";
+import { formatBrazilianCnpj, formatBrazilianCpf, formatBrazilianPhone, formatBrazilianPostalCode, friendlyDatabaseError, normalizePostalCode, occupancyTypeLabels, unitTypeLabels, validateBrazilianCnpj } from "@/lib/condominium/format";
+import { shouldShowFloor } from "@/lib/condominium/unit-presentation";
 
 describe("condominium formatting and validation", () => {
   it("normalizes a Brazilian postal code without inventing missing digits", () => {
@@ -14,6 +15,18 @@ describe("condominium formatting and validation", () => {
   it("formats CNPJ and CEP while accepting unmasked input", () => {
     expect(formatBrazilianCnpj("11222333000181")).toBe("11.222.333/0001-81");
     expect(formatBrazilianPostalCode("01310100")).toBe("01310-100");
+  });
+  it("formats CPF and phone input while typing or pasting", () => {
+    expect(formatBrazilianCpf("52998224725")).toBe("529.982.247-25");
+    expect(formatBrazilianCpf("529.982.247-25")).toBe("529.982.247-25");
+    expect(formatBrazilianPhone("11912345678")).toBe("(11) 91234-5678");
+    expect(formatBrazilianPhone("1134567890")).toBe("(11) 3456-7890");
+  });
+  it("uses domain labels and horizontal/vertical floor presentation", () => {
+    expect(unitTypeLabels.house).toBe("Casa");
+    expect(occupancyTypeLabels.owner).toBe("Proprietário");
+    expect(shouldShowFloor("horizontal")).toBe(false);
+    expect(shouldShowFloor("vertical")).toBe(true);
   });
   it("maps database conflicts to actionable friendly copy", () => {
     expect(friendlyDatabaseError("duplicate key value violates unique constraint")).toContain("Já existe");

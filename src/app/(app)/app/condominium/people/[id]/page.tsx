@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/feedback";
 import { PersonContactForms, PersonCpfForm, PersonEditForm, ResidentInviteForm } from "@/components/condominium/person-form";
 import { endPersonRelationship } from "@/lib/condominium/actions";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
+import { occupancyTypeLabels } from "@/lib/condominium/format";
 
 export const metadata = { title: "Dossiê da pessoa" };
 type Relation = { id:string; unit_id:string; starts_at:string; ends_at:string|null; ownership_percentage?:number|null; occupancy_type?:string; is_primary?:boolean; units:{code:string;display_name:string|null}|null };
@@ -55,9 +56,8 @@ export default async function PersonDossier({ params, searchParams }: { params: 
   </div>;
 }
 function RelationshipRows({kind,rows,personId,canManage}:{kind:"ownership"|"occupancy"|"financial";rows:Relation[];personId:string;canManage:boolean}) {
-  const labels:Record<string,string>={owner:"Proprietário",tenant:"Inquilino",family_member:"Familiar",dependent:"Dependente",other:"Outro"};
   if(!rows.length)return <p className="cv-muted">Nenhum vínculo registrado.</p>;
-  return <div className="cv-person-relations">{rows.map((r)=><article key={r.id}><strong>{relationUnitValue(r)}</strong><span>{kind==="ownership"?r.ownership_percentage===null?"Participação não informada":`${r.ownership_percentage}%`:kind==="occupancy"?`${labels[r.occupancy_type||""]||"Morador"}${r.is_primary?" · Principal":""}`:"Responsável financeiro"}</span><small>{r.starts_at} → {r.ends_at||"sem término definido"}</small>{canManage&&!r.ends_at&&<form action={endPersonRelationship} className="cv-end-form"><input type="hidden" name="kind" value={kind}/><input type="hidden" name="id" value={r.id}/><input type="hidden" name="person_id" value={personId}/><label>Encerrar com término em<input type="date" name="ends_at" required min={nextDate(r.starts_at)}/></label><button className="button button-outline button-small" type="submit">Encerrar</button><small>A data final é exclusiva.</small></form>}</article>)}</div>;
+  return <div className="cv-person-relations">{rows.map((r)=><article key={r.id}><strong>{relationUnitValue(r)}</strong><span>{kind==="ownership"?r.ownership_percentage===null?"Participação não informada":`${r.ownership_percentage}%`:kind==="occupancy"?`${occupancyTypeLabels[r.occupancy_type||""]||"Morador"}${r.is_primary?" · Principal":""}`:"Responsável financeiro"}</span><small>{r.starts_at} → {r.ends_at||"sem término definido"}</small>{canManage&&!r.ends_at&&<form action={endPersonRelationship} className="cv-end-form"><input type="hidden" name="kind" value={kind}/><input type="hidden" name="id" value={r.id}/><input type="hidden" name="person_id" value={personId}/><label>Encerrar com término em<input type="date" name="ends_at" required min={nextDate(r.starts_at)}/></label><button className="button button-outline button-small" type="submit">Encerrar</button><small>A data final é exclusiva.</small></form>}</article>)}</div>;
 }
 function relationUnitValue(r:Relation){return r.units?.display_name||r.units?.code||"Unidade";}
 function nextDate(day:string){const d=new Date(`${day}T00:00:00Z`);d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10);}

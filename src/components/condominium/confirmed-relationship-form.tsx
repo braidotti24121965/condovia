@@ -1,12 +1,26 @@
 "use client";
 
-import type { FormHTMLAttributes } from "react";
+import { useState } from "react";
+import type { FormEvent, FormHTMLAttributes } from "react";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 export function ConfirmedRelationshipForm({ confirmPrimary, ...props }: FormHTMLAttributes<HTMLFormElement> & { confirmPrimary: boolean }) {
-  return <form {...props} onSubmit={(event) => {
-    if (confirmPrimary && new FormData(event.currentTarget).get("is_primary") === "true"
-      && !window.confirm("Confirmar o morador principal nesta data? Um período principal anterior será encerrado no início informado, preservando o histórico.")) {
-      event.preventDefault();
+  const [open, setOpen] = useState(false);
+  const [pendingForm, setPendingForm] = useState<HTMLFormElement | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    if (confirmed) {
+      setConfirmed(false);
+      return;
     }
-  }} />;
+    if (confirmPrimary && new FormData(event.currentTarget).get("is_primary") === "true") {
+      event.preventDefault();
+      setPendingForm(event.currentTarget);
+      setOpen(true);
+    }
+  };
+  return <>
+    <form {...props} onSubmit={submit} />
+    <ConfirmationDialog open={open} title="Confirmar morador principal" description="Um período principal anterior será encerrado no início informado, preservando o histórico." confirmLabel="Confirmar morador principal" onCancel={() => { setOpen(false); setPendingForm(null); }} onConfirm={() => { setOpen(false); setConfirmed(true); pendingForm?.requestSubmit(); setPendingForm(null); }} />
+  </>;
 }

@@ -188,6 +188,23 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
   const validFromIso = fromDate.toISOString();
   const validUntilIso = untilDate.toISOString();
 
+  const overlapTarget = visitor_mode === "recent" || !visitor_mode ? target_id : "";
+  if (overlapTarget && !formData.get("allow_overlap")) {
+    const targetColumn = target_type === "visitor" ? "visitor_id" : "service_provider_id";
+    const { data: conflicts } = await supabase
+      .from("access_authorizations")
+      .select("valid_from, valid_until")
+      .eq("condominium_id", context.id)
+      .eq("unit_id", unit_id)
+      .eq(targetColumn, overlapTarget)
+      .in("status", ["approved", "pending"])
+      .lt("valid_from", validUntilIso)
+      .gt("valid_until", validFromIso)
+      .order("valid_from", { ascending: true })
+      .limit(1);
+    if (conflicts?.[0]) return { overlap: conflicts[0] };
+  }
+
   if (visitor_mode) {
     const full_name = String(formData.get("visitor_name") || "").trim();
     if (visitor_mode === "recent" && !target_id) return { error: "Selecione um visitante recente." };
