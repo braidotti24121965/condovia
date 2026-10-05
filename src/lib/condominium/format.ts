@@ -2,6 +2,20 @@ export function normalizePostalCode(value: string) {
   return value.replace(/\D/g, "");
 }
 
+export function formatBrazilianPostalCode(value: string) {
+  const digits = normalizePostalCode(value).slice(0, 8);
+  return digits.replace(/^(\d{5})(\d)/, "$1-$2");
+}
+
+export function formatBrazilianCnpj(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  return digits
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+
 export function validateBrazilianCnpj(value: string) {
   const digits = value.replace(/\D/g, "");
   if (digits.length !== 14 || /^(\d)\1{13}$/.test(digits)) return false;
