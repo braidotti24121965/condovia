@@ -4,6 +4,7 @@ import { useState } from "react";
 import { KeyRound, FileQuestion, Package as PackageIcon } from "lucide-react";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
+import { formatDateTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import type { AccessAuthorization, AccessRequest, Package, Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
   authorizations: AccessAuthorization[];
   requests: AccessRequest[];
   packages: Package[];
+  timeZone?: string;
 }
 
 export function ResidentGatehouseSection({
@@ -22,6 +24,7 @@ export function ResidentGatehouseSection({
   authorizations,
   requests,
   packages,
+  timeZone = "America/Sao_Paulo",
 }: Props) {
   const [tab, setTab] = useState<"authorizations" | "requests" | "packages">("requests");
 
@@ -36,7 +39,7 @@ export function ResidentGatehouseSection({
           <h2>Portaria e Acessos das Minhas Unidades</h2>
           <p>Gerencie autorizações, decida solicitações na portaria e acompanhe encomendas.</p>
         </div>
-        <AuthorizationForm units={units} visitors={visitors} providers={providers} residentMode />
+        <AuthorizationForm units={units} visitors={visitors} providers={providers} residentMode timeZone={timeZone} />
       </div>
 
       {/* Tabs */}
@@ -142,7 +145,7 @@ export function ResidentGatehouseSection({
                   {authorizations.map((a) => {
                     const name = a.visitor?.full_name || a.service_provider?.full_name;
                     const type = a.visitor_id ? "Visitante" : "Prestador";
-                    const isExpired = new Date(a.valid_until) < new Date();
+                    const opStatus = getAuthorizationOperationalStatus(a.valid_from, a.valid_until);
                     return (
                       <tr key={a.id}>
                         <td>
@@ -153,11 +156,11 @@ export function ResidentGatehouseSection({
                         </td>
                         <td><span className="cv-status">{type}</span></td>
                         <td>Unidade {a.unit?.code}</td>
-                        <td>{new Date(a.valid_from).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
-                        <td>{new Date(a.valid_until).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
+                        <td>{formatDateTimeInTimezone(a.valid_from, timeZone)}</td>
+                        <td>{formatDateTimeInTimezone(a.valid_until, timeZone)}</td>
                         <td>
-                          <span className={`cv-status ${isExpired ? "cv-status-inactive" : "cv-status-active"}`}>
-                            {isExpired ? "Expirada" : "Ativa"}
+                          <span className={`cv-status cv-status-${opStatus.tone}`}>
+                            {opStatus.label}
                           </span>
                         </td>
                       </tr>

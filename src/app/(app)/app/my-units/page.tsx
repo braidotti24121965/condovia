@@ -192,6 +192,7 @@ export default async function MyUnitsPage() {
             authorizations={residentAuthorizations}
             requests={residentRequests}
             packages={residentPackages}
+            timeZone={condo?.timezone || "America/Sao_Paulo"}
           />
         </>
       )}

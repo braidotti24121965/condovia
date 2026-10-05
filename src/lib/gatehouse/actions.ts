@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser, requireCurrentContext } from "@/lib/auth/context";
+import { parseDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
 export async function createVisitorAction(prevState: unknown, formData: FormData) {
   const { supabase, user } = await requireUser();
@@ -108,9 +109,29 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
   if (!unit_id) return { error: "Selecione a unidade." };
   if (!visitor_mode && !target_id) return { error: "Selecione a pessoa (visitante ou prestador)." };
   if (!valid_from || !valid_until) return { error: "Defina o período de validade." };
-  if (new Date(valid_from) >= new Date(valid_until)) {
+
+  const { data: condo } = await supabase
+    .from("condominiums")
+    .select("timezone")
+    .eq("id", context.id)
+    .maybeSingle();
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
+
+  let fromDate: Date;
+  let untilDate: Date;
+  try {
+    fromDate = parseDateTimeInTimezone(valid_from, timeZone);
+    untilDate = parseDateTimeInTimezone(valid_until, timeZone);
+  } catch {
+    return { error: "Data ou horário em formato inválido." };
+  }
+
+  if (fromDate >= untilDate) {
     return { error: "A data final deve ser posterior à data inicial." };
   }
+
+  const validFromIso = fromDate.toISOString();
+  const validUntilIso = untilDate.toISOString();
 
   if (visitor_mode) {
     const full_name = String(formData.get("visitor_name") || "").trim();
@@ -118,8 +139,8 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
     if (visitor_mode === "new" && full_name.length < 2) return { error: "Informe o nome do visitante." };
     const { error } = await supabase.rpc("create_resident_visitor_authorization", {
       p_unit_id: unit_id,
-      p_valid_from: new Date(valid_from).toISOString(),
-      p_valid_until: new Date(valid_until).toISOString(),
+      p_valid_from: validFromIso,
+      p_valid_until: validUntilIso,
       p_visitor_id: visitor_mode === "recent" ? target_id : null,
       p_full_name: visitor_mode === "new" ? full_name : null,
       p_document_type: visitor_mode === "new" ? String(formData.get("document_type") || "").trim() || null : null,
@@ -149,8 +170,8 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
     unit_id,
     authorized_by_person_id: account.person_id,
     authorized_by_user_account_id: account.id,
-    valid_from: new Date(valid_from).toISOString(),
-    valid_until: new Date(valid_until).toISOString(),
+    valid_from: validFromIso,
+    valid_until: validUntilIso,
     status: "approved",
     notes,
   };

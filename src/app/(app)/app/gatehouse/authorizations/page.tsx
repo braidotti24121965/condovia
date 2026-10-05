@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
+import { formatDateTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import {
   getAccessAuthorizations,
   getAccessRequests,
@@ -20,14 +21,16 @@ export default async function AuthorizationsPage() {
   if (!supabase || !user) return null;
   const context = await requireCurrentContext();
 
-  const [authorizations, requests, units, visitors, providers] = await Promise.all([
+  const [authorizations, requests, units, visitors, providers, { data: condo }] = await Promise.all([
     getAccessAuthorizations(context.id),
     getAccessRequests(context.id),
     getCondoUnits(context.id),
     getVisitors(context.id),
     getServiceProviders(context.id),
+    supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle(),
   ]);
 
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
   return (
@@ -46,7 +49,7 @@ export default async function AuthorizationsPage() {
           <h1>Autorizações e Solicitações</h1>
           <p>Consulte autorizações prévias dos moradores e decida solicitações pendentes.</p>
         </div>
-        <AuthorizationForm units={units} visitors={visitors} providers={providers} />
+        <AuthorizationForm units={units} visitors={visitors} providers={providers} timeZone={timeZone} />
       </section>
 
       <GatehouseNav />
@@ -89,7 +92,7 @@ export default async function AuthorizationsPage() {
                       </td>
                       <td><span className="cv-status">{type}</span></td>
                       <td>Unidade {r.unit?.code}</td>
-                      <td>{new Date(r.requested_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                      <td>{formatDateTimeInTimezone(r.requested_at, timeZone)}</td>
                       <td>{r.notes || "—"}</td>
                       <td>
                         <RequestDecisionButtons requestId={r.id} />
@@ -132,7 +135,8 @@ export default async function AuthorizationsPage() {
                 {authorizations.map((a) => {
                   const name = a.visitor?.full_name || a.service_provider?.full_name;
                   const type = a.visitor_id ? "Visitante" : "Prestador";
-                  const isExpired = new Date(a.valid_until) < new Date();
+                  const opStatus = getAuthorizationOperationalStatus(a.valid_from, a.valid_until);
+                  const isDbApproved = a.status === "approved";
                   return (
                     <tr key={a.id}>
                       <td>
@@ -143,11 +147,11 @@ export default async function AuthorizationsPage() {
                       </td>
                       <td><span className="cv-status">{type}</span></td>
                       <td>Unidade {a.unit?.code}</td>
-                      <td>{new Date(a.valid_from).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
-                      <td>{new Date(a.valid_until).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
+                      <td>{formatDateTimeInTimezone(a.valid_from, timeZone)}</td>
+                      <td>{formatDateTimeInTimezone(a.valid_until, timeZone)}</td>
                       <td>
-                        <span className={`cv-status ${isExpired ? "cv-status-inactive" : "cv-status-active"}`}>
-                          {isExpired ? "Expirada" : a.status === "approved" ? "Ativa" : a.status}
+                        <span className={`cv-status cv-status-${!isDbApproved ? "inactive" : opStatus.tone}`}>
+                          {!isDbApproved ? a.status : opStatus.label}
                         </span>
                       </td>
                     </tr>

@@ -5,6 +5,7 @@ import { KeyRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { createAuthorizationAction } from "@/lib/gatehouse/actions";
+import { toLocalDateTimeInput } from "@/lib/gatehouse/timezone";
 import type { Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 
 interface Props {
@@ -12,14 +13,10 @@ interface Props {
   visitors: Visitor[];
   providers: ServiceProvider[];
   residentMode?: boolean;
+  timeZone?: string;
 }
 
-function toLocalDateTimeInput(date: Date) {
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 16);
-}
-
-export function AuthorizationForm({ units, visitors, providers, residentMode = false }: Props) {
+export function AuthorizationForm({ units, visitors, providers, residentMode = false, timeZone = "America/Sao_Paulo" }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -45,8 +42,8 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
     }
   };
 
-  const defaultFrom = toLocalDateTimeInput(new Date());
-  const defaultUntil = toLocalDateTimeInput(new Date(Date.now() + 8 * 60 * 60 * 1000));
+  const defaultFrom = toLocalDateTimeInput(new Date(), timeZone);
+  const defaultUntil = toLocalDateTimeInput(new Date(Date.now() + 8 * 60 * 60 * 1000), timeZone);
 
   return (
     <>

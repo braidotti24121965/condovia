@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth/context";
+import { getDayBoundsInTimezone } from "./timezone";
 import type {
   Visitor,
   ServiceProvider,
@@ -42,9 +43,13 @@ export async function getGatehouseDashboardSummary(condominiumId: string): Promi
     };
   }
 
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  const { data: condo } = await supabase
+    .from("condominiums")
+    .select("timezone")
+    .eq("id", condominiumId)
+    .maybeSingle();
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
+  const { startOfDayUtc, endOfDayUtc } = getDayBoundsInTimezone(timeZone);
 
   const [presenceRes, authsTodayRes, requestsRes, packagesRes] = await Promise.all([
     supabase.rpc("get_gatehouse_presence", { p_condominium_id: condominiumId }),
@@ -53,8 +58,8 @@ export async function getGatehouseDashboardSummary(condominiumId: string): Promi
       .select("*, unit:units(id, code, display_name), visitor:visitors(id, full_name), service_provider:service_providers(id, full_name, company_name)")
       .eq("condominium_id", condominiumId)
       .eq("status", "approved")
-      .lte("valid_from", endOfDay)
-      .gte("valid_until", startOfDay)
+      .lte("valid_from", endOfDayUtc)
+      .gte("valid_until", startOfDayUtc)
       .order("valid_from", { ascending: true }),
     supabase
       .from("access_requests")
