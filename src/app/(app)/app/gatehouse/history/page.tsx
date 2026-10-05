@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { getAccessEvents } from "@/lib/gatehouse/data";
+import { formatEventDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
 export const metadata = { title: "Histórico de Acesso — Portaria" };
 
@@ -13,6 +14,8 @@ export default async function GatehouseHistoryPage() {
   const context = await requireCurrentContext();
 
   const events = await getAccessEvents(context.id, 100);
+  const { data: condo } = await supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle();
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
     <div className="cv-page">
@@ -66,10 +69,7 @@ export default async function GatehouseHistoryPage() {
                   return (
                     <tr key={e.id}>
                       <td>
-                        <strong>{new Date(e.occurred_at).toLocaleDateString("pt-BR")}</strong>
-                        <small className="cv-muted" style={{ display: "block" }}>
-                          {new Date(e.occurred_at).toLocaleTimeString("pt-BR")}
-                        </small>
+                        <strong>{formatEventDateTimeInTimezone(e.occurred_at, timeZone)}</strong>
                       </td>
                       <td>
                         <span className={`cv-status ${isEntry ? "cv-badge-entry" : "cv-badge-exit"}`}>

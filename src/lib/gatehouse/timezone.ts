@@ -106,6 +106,17 @@ export function formatTimeInTimezone(
   }).format(typeof date === "string" ? new Date(date) : date);
 }
 
+export function formatEventDateTimeInTimezone(
+  date: Date | string,
+  timeZone: string = "America/Sao_Paulo"
+): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone,
+    dateStyle: "short",
+    timeStyle: "medium",
+  }).format(typeof date === "string" ? new Date(date) : date).replace(", ", " ");
+}
+
 /**
  * Converte um objeto Date para o formato padrão do input datetime-local ('YYYY-MM-DDTHH:mm')
  * no fuso horário especificado.

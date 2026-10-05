@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatAuthorizationWindowInTimezone,
   formatDateTimeInTimezone,
+  formatEventDateTimeInTimezone,
   formatTimeInTimezone,
   getAuthorizationOperationalStatus,
   getDayBoundsInTimezone,
@@ -23,6 +24,11 @@ describe("Gatehouse timezone handling", () => {
 
   it("formats entry time in the condominium timezone", () => {
     expect(formatTimeInTimezone("2026-10-05T19:20:00Z", "America/Sao_Paulo")).toBe("16:20");
+  });
+
+  it("formats historical events with date, seconds, and condominium timezone", () => {
+    expect(formatEventDateTimeInTimezone("2026-10-05T19:20:12Z", "America/Sao_Paulo")).toBe("05/10/2026 16:20:12");
+    expect(formatEventDateTimeInTimezone("2026-10-05T19:27:18Z", "America/Sao_Paulo")).toBe("05/10/2026 16:27:18");
   });
 
   it("converts America/Sao_Paulo local inputs to exact UTC moments and formats them back", () => {
