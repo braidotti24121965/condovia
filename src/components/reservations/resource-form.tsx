@@ -44,11 +44,11 @@ export function ResourceForm({ resource, hours = [] }: { resource?: Record<strin
       {error && <p className="cv-alert cv-alert-error">{error}</p>}
       <form action={async (form) => { setLoading(true); setError(""); try { await saveReservableResource(form); setOpen(false); window.location.reload(); } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível salvar."); } finally { setLoading(false); } }} className="cv-form">
         <section className="cv-form-section"><h3>Dados do recurso</h3><div className="cv-form-grid cv-resource-data-grid">
-          <label>Nome *<input name="name" defaultValue={String(resource?.name || "")} required /></label>
-          <label>Localização<input name="location" defaultValue={String(resource?.location || "")} /></label>
-          <label>Capacidade<input name="capacity" type="number" min="1" defaultValue={resource?.capacity == null ? "" : String(resource.capacity)} /></label>
-          <label>Status<select name="status" defaultValue={String(resource?.status || "active")}><option value="active">Ativo</option><option value="inactive">Inativo</option></select></label>
-          <label className="cv-form-wide">Descrição<textarea name="description" defaultValue={String(resource?.description || "")} /></label>
+          <label className="cv-resource-name">Nome *<input name="name" defaultValue={String(resource?.name || "")} required /></label>
+          <label className="cv-resource-location">Localização<input name="location" defaultValue={String(resource?.location || "")} /></label>
+          <label className="cv-resource-capacity">Capacidade<input name="capacity" type="number" min="1" defaultValue={resource?.capacity == null ? "" : String(resource.capacity)} /></label>
+          <label className="cv-resource-status">Status<select name="status" defaultValue={String(resource?.status || "active")}><option value="active">Ativo</option><option value="inactive">Inativo</option></select></label>
+          <label className="cv-resource-description">Descrição<textarea name="description" defaultValue={String(resource?.description || "")} /></label>
         </div></section>
 
         <section className="cv-form-section"><h3>Regras de reserva</h3><p className="cv-form-hint">Informe valores em minutos, horas ou dias. O sistema salva tudo em minutos.</p><div className="cv-resource-rules-grid">

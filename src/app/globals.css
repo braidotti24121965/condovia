@@ -206,9 +206,12 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 }
 
 .cv-resource-panel { width: min(100%, 980px); }
-.cv-resource-data-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(120px, 1fr); }
-.cv-resource-data-grid > label:nth-child(4) { grid-column: 1; max-width: 220px; }
-.cv-resource-data-grid > label:nth-child(5) { grid-column: 2 / 4; }
+.cv-resource-data-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(140px, 1fr); grid-template-areas: "name location capacity" "status description description"; }
+.cv-resource-data-grid .cv-resource-name { grid-area: name; }
+.cv-resource-data-grid .cv-resource-location { grid-area: location; }
+.cv-resource-data-grid .cv-resource-capacity { grid-area: capacity; }
+.cv-resource-data-grid .cv-resource-status { grid-area: status; max-width: 220px; }
+.cv-resource-data-grid .cv-resource-description { grid-area: description; }
 .cv-resource-rules-grid { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 16px; }
 .cv-resource-rule { min-width: 0; display: grid; gap: 6px; color: var(--cv-text); font-size: 14px; font-weight: 500; }
 .cv-resource-unit-field { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(104px, 0.9fr); gap: 8px; }
@@ -224,13 +227,13 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-resource-schedule-row .cv-checkbox-label { white-space: nowrap; }
 @media (max-width: 900px) {
   .cv-resource-data-grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
-  .cv-resource-data-grid > label:nth-child(4) { grid-column: 1; }
-  .cv-resource-data-grid > label:nth-child(5) { grid-column: 2; }
+  .cv-resource-data-grid { grid-template-areas: "name location" "capacity status" "description description"; }
   .cv-resource-rules-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
 }
 @media (max-width: 600px) {
   .cv-resource-data-grid, .cv-resource-rules-grid { grid-template-columns: 1fr; }
-  .cv-resource-data-grid > label:nth-child(4), .cv-resource-data-grid > label:nth-child(5) { grid-column: auto; max-width: none; }
+  .cv-resource-data-grid { grid-template-areas: "name" "location" "capacity" "status" "description"; }
+  .cv-resource-data-grid .cv-resource-status { max-width: none; }
   .cv-resource-panel { width: 100%; }
   .cv-resource-unit-field { grid-template-columns: minmax(0, 1fr) minmax(108px, .9fr); }
 }
