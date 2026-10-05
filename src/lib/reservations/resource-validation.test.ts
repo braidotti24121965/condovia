@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateResourceHours, validateResourceValues } from "./resource-validation";
+import { formatCurrencyBRL, parseCurrencyBRL, toMinutes, validateResourceHours, validateResourceValues } from "./resource-validation";
 
 describe("reservable resource rules", () => {
   it("validates numeric resource rules", () => {
@@ -9,5 +9,16 @@ describe("reservable resource rules", () => {
     expect(validateResourceHours([{ weekday: 1, start_time: "08:00", end_time: "12:00", active: true }])).toEqual([]);
     expect(validateResourceHours([{ weekday: 1, start_time: "12:00", end_time: "08:00", active: true }]).length).toBeGreaterThan(0);
     expect(validateResourceHours([{ weekday: 1, start_time: "08:00", end_time: "12:00", active: true }, { weekday: 1, start_time: "10:00", end_time: "14:00", active: true }]).length).toBeGreaterThan(0);
+  });
+
+  it("converts friendly duration units to persisted minutes", () => {
+    expect(toMinutes("2", "hours")).toBe(120);
+    expect(toMinutes("1", "days")).toBe(1440);
+    expect(toMinutes("30", "minutes")).toBe(30);
+  });
+
+  it("formats and parses Brazilian currency without changing its value", () => {
+    expect(formatCurrencyBRL(25.5)).toBe("R$ 25,50");
+    expect(parseCurrencyBRL("R$ 25,50")).toBe("25.50");
   });
 });

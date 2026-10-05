@@ -1,5 +1,24 @@
 export type ResourceHourInput = { weekday: number; start_time: string; end_time: string; active: boolean };
 
+export type MinuteUnit = "minutes" | "hours" | "days";
+
+export function toMinutes(value: string, unit: MinuteUnit) {
+  const amount = Number(value);
+  const multiplier = unit === "days" ? 1440 : unit === "hours" ? 60 : 1;
+  return Number.isFinite(amount) ? Math.round(amount * multiplier) : NaN;
+}
+
+export function formatCurrencyBRL(value: unknown) {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount).replace(/\u00a0/g, " ") : "—";
+}
+
+export function parseCurrencyBRL(value: string) {
+  const normalized = value.trim().replace(/R\$\s?/i, "");
+  if (!normalized) return "";
+  return normalized.includes(",") ? normalized.replace(/\./g, "").replace(",", ".") : normalized.replace(/,/g, "");
+}
+
 export function validateResourceValues(values: { name: string; capacity: string; minimum_advance_minutes: string; maximum_advance_minutes: string; minimum_duration_minutes: string; maximum_duration_minutes: string; buffer_minutes: string; cancellation_deadline_minutes: string; usage_fee: string }) {
   const errors: Record<string, string> = {};
   if (values.name.trim().length < 2) errors.name = "Informe um nome válido.";
