@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatAuthorizationWindowInTimezone,
   formatDateTimeInTimezone,
+  formatTimeInTimezone,
   getAuthorizationOperationalStatus,
   getDayBoundsInTimezone,
   isAuthorizationValidAt,
@@ -18,6 +19,10 @@ describe("Gatehouse timezone handling", () => {
         "America/Sao_Paulo"
       )
     ).toBe("16:00 até 18:00");
+  });
+
+  it("formats entry time in the condominium timezone", () => {
+    expect(formatTimeInTimezone("2026-10-05T19:20:00Z", "America/Sao_Paulo")).toBe("16:20");
   });
 
   it("converts America/Sao_Paulo local inputs to exact UTC moments and formats them back", () => {

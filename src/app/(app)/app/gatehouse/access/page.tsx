@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickExitButton } from "@/components/gatehouse/quick-exit-button";
+import { formatTimeInTimezone } from "@/lib/gatehouse/timezone";
 import {
   getGatehousePresence,
   getAccessPoints,
@@ -16,12 +17,14 @@ export default async function AccessPresencePage() {
   if (!supabase || !user) return null;
   const context = await requireCurrentContext();
 
-  const [presenceList, accessPoints] = await Promise.all([
+  const [presenceList, accessPoints, { data: condo }] = await Promise.all([
     getGatehousePresence(context.id),
     getAccessPoints(context.id),
+    supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle(),
   ]);
 
   const defaultAccessPointId = accessPoints[0]?.id || "";
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
     <div className="cv-page">
@@ -87,7 +90,7 @@ export default async function AccessPresencePage() {
                     <td>{p.document_number ? `${p.document_type?.toUpperCase() || "DOC"}: ${p.document_number}` : "—"}</td>
                     <td>Unidade {p.unit_code}</td>
                     <td>{p.access_point_name}</td>
-                    <td>{new Date(p.entered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                    <td>{formatTimeInTimezone(p.entered_at, timeZone)}</td>
                     <td>
                       <QuickExitButton
                         targetKind={p.target_kind}

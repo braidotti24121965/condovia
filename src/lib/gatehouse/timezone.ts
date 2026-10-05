@@ -95,6 +95,17 @@ export function formatAuthorizationWindowInTimezone(
   return `${formatter.format(new Date(validFrom))} até ${formatter.format(new Date(validUntil))}`;
 }
 
+export function formatTimeInTimezone(
+  date: Date | string,
+  timeZone: string = "America/Sao_Paulo"
+): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(typeof date === "string" ? new Date(date) : date);
+}
+
 /**
  * Converte um objeto Date para o formato padrão do input datetime-local ('YYYY-MM-DDTHH:mm')
  * no fuso horário especificado.
