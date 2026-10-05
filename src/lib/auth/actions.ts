@@ -67,5 +67,11 @@ export async function selectContext(formData: FormData) {
   if (!context) redirect("/select-context?error=invalid-context");
   const cookieStore = await cookies();
   cookieStore.set("condovia_context", context.id, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 60 * 12 });
-  redirect(context.type === "condominium" ? "/app/dashboard" : "/no-permission");
+  if (context.type !== "condominium") redirect("/no-permission");
+  const supabase = await createClient();
+  const { data: canReadDashboard } = await supabase!.rpc("has_permission", {
+    permission_code: "dashboard.read",
+    target_condominium_id: context.id,
+  });
+  redirect(canReadDashboard === true ? "/app/dashboard" : "/app/my-units");
 }
