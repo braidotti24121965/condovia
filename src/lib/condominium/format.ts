@@ -38,3 +38,15 @@ export function friendlyDatabaseError(message?: string) {
   if (value.includes("cnpj") || value.includes("timezone") || value.includes("check constraint")) return "Confira os dados informados e tente novamente.";
   return "Não foi possível salvar. Confira os dados e tente novamente.";
 }
+
+export function formatBrazilianPhone(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return digits.replace(/^(\d{2})(\d+)/, "($1) $2");
+  if (digits.length <= 10) {
+    return digits.replace(/^(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+  }
+
+  return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+}

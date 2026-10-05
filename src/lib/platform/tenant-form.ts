@@ -49,5 +49,5 @@ export function mapTenantServerError(message?: string): Pick<TenantActionState, 
   if (value.includes("postal") || value.includes("cep")) return { fieldErrors: { postal_code: "Informe um CEP válido." } };
   if (value.includes("email")) return { fieldErrors: { admin_email: "Informe um e-mail válido." } };
   if (value.includes("timezone")) return { fieldErrors: { timezone: "Informe um fuso horário válido." } };
-  return { fieldErrors: {}, message: "Não foi possível concluir o onboarding. Revise os dados e tente novamente." };
+  return { fieldErrors: {}, message: "O serviço de cadastro está temporariamente indisponível. Nenhum tenant foi criado. Tente novamente em instantes." };
 }

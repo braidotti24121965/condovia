@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Alert } from "@/components/ui/feedback";
-import { formatBrazilianCnpj, formatBrazilianPostalCode, normalizePostalCode } from "@/lib/condominium/format";
+import { formatBrazilianCnpj, formatBrazilianPhone, formatBrazilianPostalCode, normalizePostalCode } from "@/lib/condominium/format";
 import { createTenant } from "@/lib/platform/actions";
 import { initialTenantState, tenantFieldNames, validateTenantValues, type TenantFieldErrors, type TenantFieldName, type TenantFormValues } from "@/lib/platform/tenant-form";
 import { lookupBrazilianPostalCode } from "@/lib/platform/postal-code";
@@ -86,7 +86,7 @@ export function TenantForm() {
         <label className="cv-width-document">CNPJ<input {...fieldProps("document_number")} inputMode="numeric" placeholder="00.000.000/0000-00" onChange={(event) => update("document_number", formatBrazilianCnpj(event.target.value))}/>{error("document_number")}</label>
         <label className="cv-width-medium">Tipo<select name="condominium_type" value={values.condominium_type} onChange={(event) => update("condominium_type", event.target.value)} aria-invalid={Boolean(errors.condominium_type)} aria-describedby={errors.condominium_type ? "condominium_type-error" : undefined}><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option><option value="mixed">Misto</option><option value="other">Outro</option></select>{error("condominium_type")}</label>
         <label className="cv-width-flexible">E-mail institucional<input {...fieldProps("condominium_email")} type="email" autoComplete="email"/>{error("condominium_email")}</label>
-        <label className="cv-width-phone">Telefone<input {...fieldProps("condominium_phone")} type="tel" autoComplete="tel"/>{error("condominium_phone")}</label>
+        <label className="cv-width-phone">Telefone<input {...fieldProps("condominium_phone")} type="tel" autoComplete="tel" inputMode="tel" placeholder="(00) 00000-0000" onChange={(event) => update("condominium_phone", formatBrazilianPhone(event.target.value))}/>{error("condominium_phone")}</label>
       </div>
       <label className="cv-field-lg">Fuso horário IANA<input {...fieldProps("timezone")}/>{error("timezone")}</label>
     </div></div>
@@ -107,7 +107,7 @@ export function TenantForm() {
     <div className="cv-form-section"><h3>Administrador inicial</h3><div className="cv-semantic-row">
       <label className="cv-width-flexible">Nome completo<input {...fieldProps("admin_name")} autoComplete="name"/>{error("admin_name")}</label>
       <label className="cv-width-flexible">E-mail<input {...fieldProps("admin_email")} type="email" autoComplete="email"/>{error("admin_email")}</label>
-      <label className="cv-width-phone">Telefone (opcional)<input {...fieldProps("admin_phone")} type="tel" autoComplete="tel"/>{error("admin_phone")}</label>
+      <label className="cv-width-phone">Telefone (opcional)<input {...fieldProps("admin_phone")} type="tel" autoComplete="tel" inputMode="tel" placeholder="(00) 00000-0000" onChange={(event) => update("admin_phone", formatBrazilianPhone(event.target.value))}/>{error("admin_phone")}</label>
     </div><p className="cv-form-hint">O convidado ativará as próprias credenciais e receberá exclusivamente a role condominium.syndic.</p></div>
     <button className="button button-primary" type="submit" disabled={pending}>{pending ? "Criando tenant…" : "Criar tenant e enviar convite"}</button>
   </form>;

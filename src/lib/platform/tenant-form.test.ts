@@ -16,6 +16,16 @@ describe("new tenant form validation", () => {
   });
   it("maps known backend errors without exposing their contents", () => {
     expect(mapTenantServerError("document_number violates cnpj check").fieldErrors.document_number).toBe("Informe um CNPJ válido.");
+    expect(mapTenantServerError("function pg_catalog.coalesce does not exist").message).toBe("O serviço de cadastro está temporariamente indisponível. Nenhum tenant foi criado. Tente novamente em instantes.");
     expect(mapTenantServerError("sensitive sql detail").message).not.toContain("sql");
+  });
+
+  it("formats brazilian phone numbers properly for 10 and 11 digits and truncates above 11 digits", async () => {
+    const { formatBrazilianPhone } = await import("@/lib/condominium/format");
+    expect(formatBrazilianPhone("11999990000")).toBe("(11) 99999-0000");
+    expect(formatBrazilianPhone("1140000000")).toBe("(11) 4000-0000");
+    expect(formatBrazilianPhone("1199999000012345")).toBe("(11) 99999-0000");
+    expect(formatBrazilianPhone("(11) 99999-0000")).toBe("(11) 99999-0000");
+    expect(formatBrazilianPhone("")).toBe("");
   });
 });
