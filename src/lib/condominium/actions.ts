@@ -184,6 +184,8 @@ export async function addPersonRelationship(form: FormData) {
   const { supabase, context } = await requireCondominiumPermission(permission);
   const unitId = value(form, "unit_id"); const personId = value(form, "person_id");
   const startsAt = value(form, "starts_at"); const endsAt = nullable(value(form, "ends_at"));
+  const defaultBasePath = `/app/condominium/${kind === "ownership" ? "owners" : "residents"}`;
+  const returnPath = safePersonRelationshipReturnPath(value(form, "return_to"), kind) || defaultBasePath;
   let error: { message: string } | null = null;
   if (kind === "ownership") {
     ({ error } = await supabase.from("unit_ownerships").insert({ condominium_id: context.id, unit_id: unitId, person_id: personId, ownership_percentage: numberOrNull(value(form, "ownership_percentage")), starts_at: startsAt, ends_at: endsAt, notes: nullable(value(form, "notes")) }));
@@ -194,12 +196,13 @@ export async function addPersonRelationship(form: FormData) {
   } else {
     ({ error } = await supabase.rpc("set_unit_financial_responsibility", { p_unit_id: unitId, p_condominium_id: context.id, p_person_id: personId, p_starts_at: startsAt, p_notes: nullable(value(form, "notes")) }));
   }
-  if (error) redirect(`/app/condominium/${kind === "ownership" ? "owners" : "residents"}?error=${encodeURIComponent(friendlyDatabaseError(error.message))}`);
+  const separator = returnPath.includes("?") ? "&" : "?";
+  if (error) redirect(`${returnPath}${separator}error=${encodeURIComponent(friendlyDatabaseError(error.message))}`);
   revalidatePath("/app/condominium/owners"); revalidatePath("/app/condominium/residents"); revalidatePath("/app/condominium/units");
   revalidatePath(`/app/condominium/people/${personId}`);
   revalidatePath(`/app/condominium/units/${unitId}`);
   revalidatePath("/app/my-units");
-  redirect(`/app/condominium/${kind === "ownership" ? "owners" : "residents"}?saved=1`);
+  redirect(`${returnPath}${separator}saved=1`);
 }
 
 export async function endPersonRelationship(form: FormData) {

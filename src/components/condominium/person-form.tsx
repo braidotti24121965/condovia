@@ -1,6 +1,7 @@
 import { addPersonRelationship, inviteResident, savePerson, savePersonContact, setPersonCpf, updatePerson } from "@/lib/condominium/actions";
 import { ConfirmedRelationshipForm } from "@/components/condominium/confirmed-relationship-form";
 import { PersonPicker } from "@/components/condominium/person-picker";
+import { RelationshipSubmitButton } from "@/components/condominium/relationship-submit-button";
 import type { PersonRelationshipKind } from "@/lib/condominium/person-return";
 
 export function PersonForm({ returnPath = "", returnKind = "" }: { returnPath?: string; returnKind?: string }) {
@@ -23,6 +24,7 @@ export function PersonForm({ returnPath = "", returnKind = "" }: { returnPath?: 
 export function PersonRelationshipForm({ people, units, kind, returnTo, selectedPersonId, defaultUnitId }: { people: { id: string; full_name: string }[]; units: { id: string; code: string; display_name: string | null; operational_status: string }[]; kind: PersonRelationshipKind; returnTo: string; selectedPersonId?: string; defaultUnitId?: string }) {
   return <ConfirmedRelationshipForm action={addPersonRelationship} className="cv-form cv-inline-form" confirmPrimary={kind === "occupancy"}>
     <input type="hidden" name="kind" value={kind}/>
+    <input type="hidden" name="return_to" value={returnTo}/>
     {selectedPersonId&&<p className="cv-form-hint" role="status">Pessoa cadastrada e selecionada. Complete os dados do vínculo.</p>}
     <div className="cv-form-grid">
       <PersonPicker people={people} kind={kind} returnTo={returnTo} selectedPersonId={selectedPersonId}/>
@@ -36,7 +38,7 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     </div>
     {kind === "occupancy" && <p className="cv-form-hint">A data final é exclusiva: com término em 01/11, o vínculo vale até 31/10. Um único morador principal pode estar vigente em cada data.</p>}
     {kind === "ownership" && <p className="cv-form-hint">A soma das participações conhecidas não pode ultrapassar 100% nos períodos sobrepostos. Deixe em branco quando a participação não estiver informada.</p>}
-    <button className="button button-primary" type="submit">Adicionar vínculo</button>
+    <RelationshipSubmitButton />
   </ConfirmedRelationshipForm>;
 }
 

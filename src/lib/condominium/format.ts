@@ -31,6 +31,13 @@ export function validateBrazilianCnpj(value: string) {
 
 export function friendlyDatabaseError(message?: string) {
   const value = message?.toLowerCase() ?? "";
+  if (value.includes("sobrepor") || value.includes("mesma pessoa")) return "Já existe um período registrado para esta pessoa nesta unidade.";
+  if (value.includes("excede 100")) return "A soma das participações ultrapassa 100% no período informado.";
+  if (value.includes("não vinculada") || value.includes("não vinculado")) return "A pessoa deve estar vinculada e ativa neste condomínio.";
+  if (value.includes("morador principal")) return "Já existe um morador principal neste período.";
+  if (value.includes("responsável financeiro")) return "Já existe um responsável financeiro neste período.";
+  if (value.includes("unidade inativa não aceita novos vínculos")) return "Unidade inativa não aceita novos vínculos.";
+  if (value.includes("unidade em construção não aceita moradores")) return "Unidade em construção não aceita moradores.";
   if (value.includes("duplicate key") || value.includes("unique constraint")) return "Já existe uma unidade ou estrutura com este nome ou código neste contexto.";
   if (value.includes("cycle") || value.includes("parent") || value.includes("hierarchy")) return "Esta alteração criaria uma hierarquia inválida.";
   if (value.includes("inactive") || value.includes("active children")) return "Não é possível ativar ou inativar enquanto houver vínculos ativos incompatíveis.";
