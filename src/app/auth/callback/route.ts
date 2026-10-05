@@ -6,14 +6,16 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const inviteToken = url.searchParams.get("invite_token");
+  const adminInviteToken = url.searchParams.get("admin_invite_token");
   const requestedPath = url.searchParams.get("next") ?? "/app";
   const nextPath = requestedPath.startsWith("/") && !requestedPath.startsWith("//") ? requestedPath : "/app";
   const supabase = await createClient();
   // Admin email invitations return an implicit session in the URL fragment.
   // Fragments never reach the server; the browser must establish that session.
-  if (!code && inviteToken && /^[0-9a-f]{64}$/.test(inviteToken)) {
+  if (!code && ((inviteToken && /^[0-9a-f]{64}$/.test(inviteToken)) || (adminInviteToken && /^[0-9a-f]{64}$/.test(adminInviteToken)))) {
     const target = new URL("/auth/activate", url.origin);
-    target.searchParams.set("invite_token", inviteToken);
+    if (adminInviteToken) target.searchParams.set("admin_invite_token", adminInviteToken);
+    else target.searchParams.set("invite_token", inviteToken!);
     const response = NextResponse.redirect(target);
     response.headers.set("Cache-Control", "no-store");
     response.headers.set("Referrer-Policy", "no-referrer");
@@ -49,6 +51,21 @@ export async function GET(request: NextRequest) {
     response.headers.set("Cache-Control", "no-store");
     response.headers.set("Referrer-Policy", "no-referrer");
     return response;
+  }
+  if (adminInviteToken) {
+    const { data: condominiumId, error: inviteError } = await supabase.rpc("accept_initial_condominium_admin_invitation", { p_token: adminInviteToken });
+    if (inviteError || typeof condominiumId !== "string") {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(new URL("/login?error=invitation", url.origin));
+    }
+    const { data: accountReady } = await supabase.rpc("record_user_login");
+    if (accountReady !== true) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(new URL("/login?error=invitation", url.origin));
+    }
+    const cookieStore = await cookies();
+    cookieStore.set("condovia_context", condominiumId, { httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*12 });
+    return NextResponse.redirect(new URL("/app/dashboard", url.origin));
   }
   return NextResponse.redirect(new URL(nextPath, url.origin));
 }

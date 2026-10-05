@@ -11,11 +11,12 @@ export async function getAuthorizedContexts(): Promise<AuthorizedContext[]> {
   const { data: account } = await supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).eq("status", "active").maybeSingle();
   if (!account) return [];
 
-  const [{ data: condominiumRows }, { data: adminRows }] = await Promise.all([
+  const [{ data: condominiumRows }, { data: adminRows }, { data: platformAdmin }] = await Promise.all([
     supabase.rpc("get_authorized_condominiums"),
     supabase.rpc("get_authorized_administrators"),
+    supabase.rpc("has_platform_permission", { permission_code: "platform.manage" }),
   ]);
-  return buildAuthorizedContexts(condominiumRows ?? [], adminRows ?? []);
+  return buildAuthorizedContexts(condominiumRows ?? [], adminRows ?? [], platformAdmin === true);
 }
 
 export async function requireCurrentContext() {

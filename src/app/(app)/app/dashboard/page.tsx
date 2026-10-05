@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "Painel" };
 export default async function DashboardPage() {
   const { supabase } = await requireUser();
   const context = await requireCurrentContext();
+  if (context.type === "platform") redirect("/app/platform");
   const displayDate = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo",
   }).format(new Date()).toLocaleUpperCase("pt-BR");

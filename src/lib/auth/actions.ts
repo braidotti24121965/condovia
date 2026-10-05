@@ -23,6 +23,8 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
     await supabase.auth.signOut();
     return { error: "Não foi possível entrar com esses dados. Confira as informações e tente novamente." };
   }
+  const { data: platformAdmin } = await supabase.rpc("has_platform_permission", { permission_code: "platform.manage" });
+  if (platformAdmin === true) redirect("/app/platform");
   redirect("/app");
 }
 
@@ -67,7 +69,8 @@ export async function selectContext(formData: FormData) {
   if (!context) redirect("/select-context?error=invalid-context");
   const cookieStore = await cookies();
   cookieStore.set("condovia_context", context.id, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 60 * 12 });
-  if (context.type !== "condominium") redirect("/no-permission");
+  if (context.type === "platform") redirect("/app/platform");
+  if (context.type !== "condominium") redirect("/app/dashboard");
   const supabase = await createClient();
   const { data: canReadDashboard } = await supabase!.rpc("has_permission", {
     permission_code: "dashboard.read",

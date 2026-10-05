@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
-import { completeResidentInvitation } from "@/lib/auth/invitation-actions";
+import { completeInitialAdminInvitation, completeResidentInvitation } from "@/lib/auth/invitation-actions";
 
 export default function ActivateInvitationPage() {
   const started = useRef(false);
@@ -10,7 +10,8 @@ export default function ActivateInvitationPage() {
     if (started.current) return;
     started.current = true;
     const url = new URL(window.location.href);
-    const token = url.searchParams.get("invite_token") ?? "";
+    const adminToken = url.searchParams.get("admin_invite_token");
+    const token = adminToken ?? url.searchParams.get("invite_token") ?? "";
     const fragment = new URLSearchParams(url.hash.slice(1));
     const accessToken = fragment.get("access_token");
     const refreshToken = fragment.get("refresh_token");
@@ -25,8 +26,8 @@ export default function ActivateInvitationPage() {
     void (async () => {
       const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
       if (error) { fail(); return; }
-      const result = await completeResidentInvitation(token);
-      window.location.replace(result.success ? "/app/my-units" : "/login?error=invitation");
+      const result = adminToken ? await completeInitialAdminInvitation(token) : await completeResidentInvitation(token);
+      window.location.replace(result.success ? (adminToken ? "/app/dashboard" : "/app/my-units") : "/login?error=invitation");
     })().catch(fail);
   }, []);
   return <main className="auth-page"><p role="status">Confirmando seu convite CondoVia…</p></main>;

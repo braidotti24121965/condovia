@@ -1,5 +1,5 @@
 export type AuthorizedContext = {
-  type: "condominium" | "administrator";
+  type: "condominium" | "administrator" | "platform";
   id: string;
   name: string;
   role: string;
@@ -8,7 +8,7 @@ export type AuthorizedContext = {
 type CondominiumRow = { condominium_id: string; condominium_name: string; role_name: string };
 type AdministratorRow = { administrator_id: string; administrator_name: string; role_name: string };
 
-export function buildAuthorizedContexts(condominiumRows: CondominiumRow[], adminRows: AdministratorRow[]): AuthorizedContext[] {
+export function buildAuthorizedContexts(condominiumRows: CondominiumRow[], adminRows: AdministratorRow[], platformAdmin = false): AuthorizedContext[] {
   const contexts = new Map<string, AuthorizedContext>();
   for (const row of condominiumRows) {
     contexts.set(`condominium:${row.condominium_id}`, {
@@ -20,6 +20,9 @@ export function buildAuthorizedContexts(condominiumRows: CondominiumRow[], admin
       type: "administrator", id: row.administrator_id, name: row.administrator_name, role: row.role_name,
     });
   }
+  if (platformAdmin) contexts.set("platform:platform", {
+    type: "platform", id: "platform", name: "CondoVia", role: "Administrador da plataforma",
+  });
   return [...contexts.values()];
 }
 
