@@ -204,3 +204,27 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 @media (max-width: 600px) {
   .cv-quick-actions-bar { grid-template-columns: 1fr; }
 }
+
+.cv-resource-panel { width: min(100%, 980px); }
+.cv-resource-data-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+.cv-resource-rules-grid { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 16px; }
+.cv-resource-rule { min-width: 0; display: grid; gap: 6px; color: var(--cv-text); font-size: 14px; font-weight: 500; }
+.cv-resource-unit-field { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(104px, 0.9fr); gap: 8px; }
+.cv-resource-unit-field input, .cv-resource-unit-field select { min-width: 0; }
+.cv-resource-fee { width: min(100%, 300px); display: grid; gap: 6px; color: var(--cv-text); font-size: 14px; font-weight: 500; }
+.cv-resource-checkboxes { display: flex; flex-wrap: wrap; gap: 16px 24px; }
+.cv-resource-schedule { overflow-x: auto; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); }
+.cv-resource-schedule-row { min-width: 620px; display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(150px, 1.3fr) minmax(130px, 1fr) minmax(130px, 1fr); align-items: center; gap: 12px; padding: 8px 12px; border-top: 1px solid var(--cv-border); }
+.cv-resource-schedule-row:first-child { border-top: 0; }
+.cv-resource-schedule-head { padding-block: 10px; color: var(--cv-text-muted); background: var(--cv-surface); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.cv-resource-schedule-row input[type="time"] { min-width: 0; width: 100%; }
+.cv-resource-schedule-row input:disabled { cursor: not-allowed; opacity: .55; background: var(--cv-surface); }
+.cv-resource-schedule-row .cv-checkbox-label { white-space: nowrap; }
+@media (max-width: 900px) {
+  .cv-resource-rules-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+}
+@media (max-width: 600px) {
+  .cv-resource-data-grid, .cv-resource-rules-grid { grid-template-columns: 1fr; }
+  .cv-resource-panel { width: 100%; }
+  .cv-resource-unit-field { grid-template-columns: minmax(0, 1fr) minmax(108px, .9fr); }
+}
