@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
+import { ProviderDisplay } from "@/components/gatehouse/provider-display";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
 import { formatDateTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import {
@@ -84,12 +85,7 @@ export default async function AuthorizationsPage() {
                   const type = r.visitor_id ? "Visitante" : "Prestador";
                   return (
                     <tr key={r.id}>
-                      <td>
-                        <strong>{name}</strong>
-                        {r.service_provider?.company_name && (
-                          <small className="cv-muted">{r.service_provider.company_name}</small>
-                        )}
-                      </td>
+                      <td>{r.service_provider ? <ProviderDisplay name={name || "Sem nome"} company={r.service_provider.company_name} /> : <strong>{name}</strong>}</td>
                       <td><span className="cv-status">{type}</span></td>
                       <td>Unidade {r.unit?.code}</td>
                       <td>{formatDateTimeInTimezone(r.requested_at, timeZone)}</td>
@@ -139,12 +135,7 @@ export default async function AuthorizationsPage() {
                   const isDbApproved = a.status === "approved";
                   return (
                     <tr key={a.id}>
-                      <td>
-                        <strong>{name}</strong>
-                        {a.service_provider?.company_name && (
-                          <small className="cv-muted">{a.service_provider.company_name}</small>
-                        )}
-                      </td>
+                      <td>{a.service_provider ? <ProviderDisplay name={name || "Sem nome"} company={a.service_provider.company_name} /> : <strong>{name}</strong>}</td>
                       <td><span className="cv-status">{type}</span></td>
                       <td>Unidade {a.unit?.code}</td>
                       <td>{formatDateTimeInTimezone(a.valid_from, timeZone)}</td>

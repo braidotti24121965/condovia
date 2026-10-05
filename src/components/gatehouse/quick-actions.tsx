@@ -12,6 +12,7 @@ import {
   receivePackageAction,
 } from "@/lib/gatehouse/actions";
 import type { AccessAuthorization, AccessPoint, GatehousePresence, Visitor, ServiceProvider } from "@/lib/gatehouse/types";
+import { accessPointTypeLabels } from "@/lib/gatehouse/labels";
 
 interface Props {
   authorizations: AccessAuthorization[];
@@ -225,7 +226,7 @@ export function QuickActions({
                   Ponto de acesso
                   <select name="access_point_id" required defaultValue={accessPoints[0]?.id || ""}>
                     {accessPoints.map((ap) => (
-                      <option key={ap.id} value={ap.id}>{ap.name} ({ap.type})</option>
+                      <option key={ap.id} value={ap.id}>{ap.name} ({accessPointTypeLabels[ap.type]})</option>
                     ))}
                   </select>
                 </label>
@@ -276,7 +277,7 @@ export function QuickActions({
                   Ponto de saída
                   <select name="access_point_id" required defaultValue={accessPoints[0]?.id || ""}>
                     {accessPoints.map((ap) => (
-                      <option key={ap.id} value={ap.id}>{ap.name} ({ap.type})</option>
+                      <option key={ap.id} value={ap.id}>{ap.name} ({accessPointTypeLabels[ap.type]})</option>
                     ))}
                   </select>
                 </label>
