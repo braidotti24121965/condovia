@@ -6,6 +6,7 @@ import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { ReceivePackageButton } from "@/components/gatehouse/receive-package-button";
 import { CollectPackageModal } from "@/components/gatehouse/collect-package-modal";
 import { getPackages, getCondoUnits } from "@/lib/gatehouse/data";
+import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
 export const metadata = { title: "Encomendas — Portaria" };
 
@@ -18,6 +19,8 @@ export default async function GatehousePackagesPage() {
     getPackages(context.id),
     getCondoUnits(context.id),
   ]);
+  const { data: condo } = await supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle();
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   const waitingPackages = packages.filter((p) => p.status === "received");
   const collectedPackages = packages.filter((p) => p.status === "collected");
@@ -74,7 +77,7 @@ export default async function GatehousePackagesPage() {
                     <td><strong>{pkg.description}</strong></td>
                     <td>Unidade {pkg.unit?.code}</td>
                     <td>{pkg.carrier || "—"}</td>
-                    <td>{new Date(pkg.received_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
+                    <td>{formatDateTimeInTimezone(pkg.received_at, timeZone)}</td>
                     <td>{pkg.notes || "—"}</td>
                     <td>
                       <CollectPackageModal
@@ -123,7 +126,7 @@ export default async function GatehousePackagesPage() {
                     <td>{pkg.collection?.collector_name || "Morador / Titular"}</td>
                     <td>
                       {pkg.collection?.collected_at
-                        ? new Date(pkg.collection.collected_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+                        ? formatDateTimeInTimezone(pkg.collection.collected_at, timeZone)
                         : "—"}
                     </td>
                   </tr>

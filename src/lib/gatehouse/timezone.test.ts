@@ -31,6 +31,15 @@ describe("Gatehouse timezone handling", () => {
     expect(formatEventDateTimeInTimezone("2026-10-05T19:27:18Z", "America/Sao_Paulo")).toBe("05/10/2026 16:27:18");
   });
 
+  it("formats received and collected package timestamps without changing the instant", () => {
+    const receivedAt = "2026-10-05T19:34:00Z";
+    const collectedAt = "2026-10-05T19:41:00Z";
+    expect(formatDateTimeInTimezone(receivedAt, "America/Sao_Paulo")).toBe("05/10/2026, 16:34");
+    expect(formatDateTimeInTimezone(collectedAt, "America/Sao_Paulo")).toBe("05/10/2026, 16:41");
+    expect(new Date(receivedAt).getTime()).toBe(Date.parse(receivedAt));
+    expect(new Date(collectedAt).getTime()).toBe(Date.parse(collectedAt));
+  });
+
   it("converts America/Sao_Paulo local inputs to exact UTC moments and formats them back", () => {
     const tz = "America/Sao_Paulo";
     const fromStr = "2026-10-05T14:53";

@@ -201,7 +201,7 @@ export function ResidentGatehouseSection({
                       <td><strong>{pkg.description}</strong></td>
                       <td>Unidade {pkg.unit?.code}</td>
                       <td>{pkg.carrier || "—"}</td>
-                      <td>{new Date(pkg.received_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
+                      <td>{formatDateTimeInTimezone(pkg.received_at, timeZone)}</td>
                       <td>{pkg.notes || "—"}</td>
                     </tr>
                   ))}
@@ -233,7 +233,7 @@ export function ResidentGatehouseSection({
                         <td>{pkg.collection?.collector_name || "Titular / Morador"}</td>
                         <td>
                           {pkg.collection?.collected_at
-                            ? new Date(pkg.collection.collected_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+                        ? formatDateTimeInTimezone(pkg.collection.collected_at, timeZone)
                             : "—"}
                         </td>
                       </tr>
