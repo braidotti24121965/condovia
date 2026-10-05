@@ -78,6 +78,24 @@ export function formatDateTimeInTimezone(
 }
 
 /**
+ * Formata a janela de uma autorização no fuso horário do condomínio.
+ * Ex: "16:00 até 18:00"
+ */
+export function formatAuthorizationWindowInTimezone(
+  validFrom: Date | string,
+  validUntil: Date | string,
+  timeZone: string = "America/Sao_Paulo"
+): string {
+  const formatter = new Intl.DateTimeFormat("pt-BR", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${formatter.format(new Date(validFrom))} até ${formatter.format(new Date(validUntil))}`;
+}
+
+/**
  * Converte um objeto Date para o formato padrão do input datetime-local ('YYYY-MM-DDTHH:mm')
  * no fuso horário especificado.
  */

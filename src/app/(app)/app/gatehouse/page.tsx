@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickActions } from "@/components/gatehouse/quick-actions";
+import { formatAuthorizationWindowInTimezone } from "@/lib/gatehouse/timezone";
 import {
   getGatehouseDashboardSummary,
   getAccessPoints,
@@ -49,13 +50,15 @@ export default async function GatehouseDashboardPage() {
     );
   }
 
-  const [summary, accessPoints, units, visitors, providers] = await Promise.all([
+  const [summary, accessPoints, units, visitors, providers, { data: condo }] = await Promise.all([
     getGatehouseDashboardSummary(context.id),
     getAccessPoints(context.id),
     getCondoUnits(context.id),
     getVisitors(context.id),
     getServiceProviders(context.id),
+    supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle(),
   ]);
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
     <div className="cv-page">
@@ -187,8 +190,7 @@ export default async function GatehouseDashboardPage() {
                       </td>
                       <td>Unidade {a.unit?.code}</td>
                       <td>
-                        {new Date(a.valid_from).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} até{" "}
-                        {new Date(a.valid_until).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        {formatAuthorizationWindowInTimezone(a.valid_from, a.valid_until, timeZone)}
                       </td>
                     </tr>
                   ))}
