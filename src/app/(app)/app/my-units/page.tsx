@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, House } from "lucide-react";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
+import { unitTypeLabels } from "@/lib/condominium/format";
 import { todayInTimezone } from "@/lib/condominium/people-data";
 import { ResidentGatehouseSection } from "@/components/gatehouse/resident-gatehouse-section";
 import {
@@ -154,7 +155,7 @@ export default async function MyUnitsPage() {
                   <div>
                     <h2>{u.display_name || u.code}</h2>
                     <p>
-                      {u.code} · {u.unit_type}
+                      {u.code} · {unitTypeLabels[u.unit_type] || u.unit_type}
                     </p>
                     <div className="cv-chip-row">
                       {occupancy && (

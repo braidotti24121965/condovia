@@ -23,7 +23,8 @@ describe("condominium formatting and validation", () => {
     expect(formatBrazilianPhone("1134567890")).toBe("(11) 3456-7890");
   });
   it("uses domain labels and horizontal/vertical floor presentation", () => {
-    expect(unitTypeLabels.house).toBe("Casa");
+      expect(unitTypeLabels.house).toBe("Casa");
+      expect(unitTypeLabels.house).not.toBe("house");
     expect(occupancyTypeLabels.owner).toBe("Proprietário");
     expect(shouldShowFloor("horizontal")).toBe(false);
     expect(shouldShowFloor("vertical")).toBe(true);
