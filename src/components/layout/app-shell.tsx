@@ -10,7 +10,7 @@ import type { AuthorizedContext } from "@/lib/auth/context";
 import { NotificationCenter } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 import { createClient } from "@/lib/supabase/browser";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { RealtimePostgresChangesPayload, SupabaseClient } from "@supabase/supabase-js";
 
 export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false) {
   if (context.type === "platform") return { resident: false, primary: [{ label: "Plataforma", href: "/app/platform" }], showCondominiumSection: false };
@@ -29,6 +29,27 @@ export function handleReservationRealtimeEvent(event: "INSERT" | "UPDATE", paylo
   const condominiumMatch = payload.new?.condominium_id === condominiumId;
   console.info(`[reservations-realtime] event ${event}`, `condominium match=${condominiumMatch}`, "refresh=true");
   refresh();
+}
+
+export function setupReservationRealtimeDiagnostics(supabase: SupabaseClient, condominiumId: string) {
+  const setup = (label: "filtered" | "unfiltered", filter?: string) => {
+    const config = { event: "INSERT" as const, schema: "public", table: "reservations", ...(filter ? { filter } : {}) };
+    const channel = supabase.channel(`reservations-diag-${label}:${condominiumId}`)
+      .on("postgres_changes", config, () => console.info(`[reservations-diag-${label}] INSERT received=true`))
+      .subscribe((status: string) => {
+        if (status === "SUBSCRIBED") console.info(`[reservations-diag-${label}] status SUBSCRIBED`);
+        if (status === "CHANNEL_ERROR") console.error(`[reservations-diag-${label}] status CHANNEL_ERROR`);
+        if (status === "TIMED_OUT") console.warn(`[reservations-diag-${label}] status TIMED_OUT`);
+        if (status === "CLOSED") console.info(`[reservations-diag-${label}] status CLOSED`);
+      });
+    return channel;
+  };
+  const filtered = setup("filtered", `condominium_id=eq.${condominiumId}`);
+  const unfiltered = setup("unfiltered");
+  return () => {
+    void supabase.removeChannel(filtered);
+    void supabase.removeChannel(unfiltered);
+  };
 }
 
 export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", userAccountId, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, dashboard: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; userAccountId?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; dashboard?: boolean } }) {
@@ -53,8 +74,9 @@ export function AppShell({ children, context, personName, notifications = [], no
       .subscribe((status: string) => {
         logReservationRealtimeStatus(status);
       });
-    return () => { void supabase.removeChannel(channel); };
-  }, [context.id, context.type, router]);
+    const removeDiagnostics = context.role === "Síndico" ? setupReservationRealtimeDiagnostics(supabase, context.id) : () => undefined;
+    return () => { void supabase.removeChannel(channel); removeDiagnostics(); };
+  }, [context.id, context.role, context.type, router]);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
   const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations);
   const nav = navigation.primary.map((item) => ({ ...item, Icon: item.label === "Meu perfil" ? UserRound : LayoutDashboard }));
