@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { ReservationManagementActions } from "./reservation-management-actions";
-import { reservationStatusLabels, type ReservationStatus } from "@/lib/reservations/reservation-presenters";
+import { reservationStatusLabels, type ReservationMode, type ReservationStatus } from "@/lib/reservations/reservation-presenters";
 
-export type ReservationListRow = { id: string; resourceName: string; unitCode: string; requesterName: string; date: string; schedule: string; status: ReservationStatus };
+export type ReservationListRow = { id: string; resourceName: string; reservationMode: ReservationMode; unitCode: string; requesterName: string; date: string; schedule: string; status: ReservationStatus };
 
 export function filterReservations(rows: ReservationListRow[], status: string, resource: string, date: string) {
   return rows.filter((row) => (!status || row.status === status) && (!resource || row.resourceName === resource) && (!date || row.date === date));

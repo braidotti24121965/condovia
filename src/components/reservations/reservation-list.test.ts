@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { filterReservations } from "./reservation-list";
 
 const rows = [
-  { id: "1", resourceName: "Salão", unitCode: "G30", requesterName: "Morador", date: "2026-10-08", schedule: "14:00–18:00", status: "pending" as const },
-  { id: "2", resourceName: "Academia", unitCode: "G30", requesterName: "Morador", date: "2026-10-09", schedule: "10:00–11:00", status: "approved" as const },
+  { id: "1", resourceName: "Salão", reservationMode: "time_slot" as const, unitCode: "G30", requesterName: "Morador", date: "2026-10-08", schedule: "14:00–18:00", status: "pending" as const },
+  { id: "2", resourceName: "Academia", reservationMode: "time_slot" as const, unitCode: "G30", requesterName: "Morador", date: "2026-10-09", schedule: "10:00–11:00", status: "approved" as const },
 ];
 
 describe("reservation list filters", () => {
