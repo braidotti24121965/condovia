@@ -1,32 +1,41 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, Building2, CalendarDays, CheckCircle2, ChevronRight, CircleHelp, Clock3, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, AlertTriangle, CalendarDays, Home, Package, ShieldAlert, UserRound, Users } from "lucide-react";
+import { DashboardPeriodFilter } from "@/components/dashboard/dashboard-period-filter";
 import { EmptyState } from "@/components/ui/feedback";
-import { requireCurrentContext, requireUser } from "@/lib/auth/context";
-import { formatDateInTimezone } from "@/lib/gatehouse/timezone";
-
+import { requireCurrentContext } from "@/lib/auth/context";
+import { getCondominiumDashboard, type DashboardPeriod } from "@/lib/dashboard/data";
+import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 export const metadata: Metadata = { title: "Painel" };
-
-export default async function DashboardPage() {
-  const { supabase } = await requireUser();
+const periods = new Set<DashboardPeriod>(["today", "7d", "30d"]);
+const metricLinks: Record<string, string> = { units: "/app/condominium/units", residents: "/app/condominium/residents", visitors: "/app/gatehouse", packages: "/app/gatehouse/packages", reservations: "/app/reservations", open: "/app/occurrences", triage: "/app/occurrences", urgent: "/app/occurrences" };
+function Metric({ id, label, value, icon: Icon, permission, note }: { id: string; label: string; value: number | null; icon: typeof Home; permission: boolean; note?: string }) {
+  if (!permission) return null;
+  return <Link className="dashboard-metric" href={metricLinks[id]}><span className="dashboard-metric-icon"><Icon size={19} /></span><span className="dashboard-metric-label">{label}</span><strong>{value ?? "—"}</strong>{note && <small>{note}</small>}</Link>;
+}
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
   const context = await requireCurrentContext();
   if (context.type === "platform") redirect("/app/platform");
-  const timeZone = context.type === "condominium"
-    ? ((await supabase!.from("condominiums").select("timezone").eq("id", context.id).maybeSingle()).data?.timezone || "UTC")
-    : "UTC";
-  const displayDate = formatDateInTimezone(new Date(), timeZone).toLocaleUpperCase("pt-BR");
-  const { data: allowed } = context.type === "condominium"
-    ? await supabase!.rpc("has_permission", { permission_code: "dashboard.read", target_condominium_id: context.id })
-    : await supabase!.rpc("has_administrator_permission", { permission_code: "administrator.read", target_administrator_id: context.id });
-  if (!allowed) redirect("/no-permission");
-
-  return <div className="dashboard-page">
-    <div className="breadcrumbs"><span>Início</span><ChevronRight size={14} /><strong>Painel</strong></div>
-    <section className="page-heading"><div><p className="page-overline">{displayDate}</p><h1>Bem-vindo ao CondoVia</h1><p>Este é o espaço de gestão de <strong>{context.name}</strong>.</p></div><div className="heading-status"><span className="status-dot" /> Sistema operacional</div></section>
-    <section className="welcome-banner"><div className="banner-copy"><span className="banner-kicker"><Sparkles size={15} /> SEU AMBIENTE CONECTADO</span><h2>Gestão mais simples,<br />todos os dias.</h2><p>Seu espaço de gestão está pronto para acompanhar o que acontece {context.type === "condominium" ? "no condomínio" : "na administradora"}.</p></div><div className="banner-art" aria-hidden="true"><div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" /><div className="art-building"><div /><div /><div /></div><div className="art-pin"><Building2 size={19} /></div><div className="art-spark spark-one">✦</div><div className="art-spark spark-two">✧</div></div><div className="banner-foot"><span><ShieldCheck size={16} /> Seu acesso é protegido</span><span>GESTÃO SEGURA E CONECTADA</span></div></section>
-    <div className="section-title-row"><div><h2>Visão geral</h2><p>Resumo do ambiente de gestão</p></div><button className="date-filter" disabled><CalendarDays size={16} /> Hoje <ChevronRight size={14} /></button></div>
-    <section className="overview-grid" aria-label="Visão geral do sistema"><article className="overview-card"><span className="overview-icon teal-icon"><Building2 size={18} /></span><span className="overview-label">Contexto ativo</span><strong className="overview-value overview-context">{context.name}</strong><span className="overview-foot">{context.role}</span></article><article className="overview-card"><span className="overview-icon blue-icon"><ShieldCheck size={18} /></span><span className="overview-label">Acesso</span><strong className="overview-value">Verificado</strong><span className="overview-foot"><span className="small-status-dot" /> Permissões atualizadas</span></article><article className="overview-card"><span className="overview-icon violet-icon"><Clock3 size={18} /></span><span className="overview-label">Sua sessão</span><strong className="overview-value">Ativa</strong><span className="overview-foot">Autenticação segura</span></article></section>
-    <section className="dashboard-lower"><div className="activity-panel"><div className="panel-heading"><div><h2>Atividade recente</h2><p>Acompanhe as novidades por aqui</p></div><button aria-label="Ajuda sobre atividade recente" className="subtle-icon" disabled><CircleHelp size={17} /></button></div><EmptyState title="Tudo tranquilo por aqui" description={`As atividades ${context.type === "condominium" ? "do seu condomínio" : "da sua administradora"} aparecerão neste espaço quando estiverem disponíveis.`} /></div><aside className="quick-panel"><span className="quick-mark"><CheckCircle2 size={19} /></span><div><h3>Conta protegida</h3><p>Seu acesso é validado com segurança pelo CondoVia.</p></div><div className="quick-divider" /><span className="quick-meta">ACESSO CONFIRMADO <CheckCircle2 size={13} /></span></aside></section>
-    <footer className="dashboard-footer"><span>CondoVia <span>by Kynovia</span></span><span>Um jeito mais simples de cuidar do seu condomínio <ArrowUpRight size={13} /></span></footer>
+  if (context.type !== "condominium") redirect("/app/platform");
+  const requested = (await searchParams).period;
+  const period = periods.has(requested as DashboardPeriod) ? requested as DashboardPeriod : "today";
+  const dashboard = await getCondominiumDashboard(context.id, period);
+  if (!Object.values(dashboard.permissions).some(Boolean)) redirect("/no-permission");
+  return <div className="cv-page dashboard-operational">
+    <div className="page-heading"><div><p className="page-overline">PAINEL OPERACIONAL</p><h1>{context.name}</h1><p>Visão atual do condomínio e das atividades recentes.</p></div><DashboardPeriodFilter period={period} /></div>
+    <section className="dashboard-metric-grid" aria-label="Métricas operacionais">
+      <Metric id="units" label="Unidades ativas" value={dashboard.units} icon={Home} permission={Boolean(dashboard.permissions["units.read"])} />
+      <Metric id="residents" label="Moradores ativos" value={dashboard.residents} icon={Users} permission={Boolean(dashboard.permissions["residents.read"])} />
+      <Metric id="visitors" label="Visitantes dentro agora" value={dashboard.visitorsInside} icon={UserRound} permission={Boolean(dashboard.permissions["gatehouse.read"])} note="Estado atual" />
+      <Metric id="packages" label="Encomendas aguardando retirada" value={dashboard.packagesWaiting} icon={Package} permission={Boolean(dashboard.permissions["gatehouse.read"])} note="Estado atual" />
+      <Metric id="reservations" label={period === "today" ? "Reservas hoje" : "Reservas nos últimos " + (period === "7d" ? "7" : "30") + " dias"} value={dashboard.reservations} icon={CalendarDays} permission={Boolean(dashboard.permissions["reservations.read"])} />
+      <Metric id="open" label="Ocorrências abertas" value={dashboard.occurrencesOpen} icon={Activity} permission={Boolean(dashboard.permissions["occurrences.read"])} note="Estado atual" />
+      <Metric id="triage" label="Aguardando triagem" value={dashboard.occurrencesTriage} icon={ShieldAlert} permission={Boolean(dashboard.permissions["occurrences.read"])} note="Estado atual" />
+      <Metric id="urgent" label="Ocorrências urgentes" value={dashboard.occurrencesUrgent} icon={AlertTriangle} permission={Boolean(dashboard.permissions["occurrences.read"])} note="Estado atual" />
+    </section>
+    {dashboard.error && <EmptyState title="Não foi possível carregar todas as métricas" description="Tente novamente em instantes. As métricas indisponíveis não foram substituídas por zero." />}
+    <section className="cv-panel dashboard-activity-panel"><div className="cv-panel-heading"><div><h2>Atividade recente</h2><p>Eventos dos módulos aos quais você tem acesso.</p></div></div>{dashboard.activity.length ? <ul className="dashboard-activity-list">{dashboard.activity.map((item) => <li key={item.id}><Link href={item.href}><span>{item.label}</span><small>{formatDateTimeInTimezone(item.at, dashboard.timeZone)}</small></Link></li>)}</ul> : <EmptyState title="Nenhuma atividade recente" description="As atividades disponíveis aparecerão aqui quando houver movimentação." />}</section>
+    <footer className="dashboard-footer"><span>CondoVia <span>by Kynovia</span></span><span>Dados no fuso de {dashboard.timeZone}</span></footer>
   </div>;
 }

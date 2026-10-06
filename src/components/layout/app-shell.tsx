@@ -10,13 +10,13 @@ import type { AuthorizedContext } from "@/lib/auth/context";
 import { NotificationCenter } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 
-export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false, occurrencesAllowed = false) {
+export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false, occurrencesAllowed = false, importsAllowed = false) {
   if (context.type === "platform") return { resident: false, primary: [{ label: "Plataforma", href: "/app/platform" }], showCondominiumSection: false };
   if (context.type === "condominium" && !dashboardAllowed) return { resident: true, primary: [{ label: "Meu perfil", href: "/app/profile" }, { label: "Minhas Unidades", href: "/app/my-units" }, ...(reservationsAllowed ? [{ label: "Reservas", href: "/app/reservations" }] : []), ...(occurrencesAllowed ? [{ label: "Ocorrências", href: "/app/occurrences" }] : [])], showCondominiumSection: false };
-  return { resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }, ...(occurrencesAllowed ? [{ label: "Ocorrências", href: "/app/occurrences" }] : [])], showCondominiumSection: context.type === "condominium" };
+  return { resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }, ...(occurrencesAllowed ? [{ label: "Ocorrências", href: "/app/occurrences" }] : []), ...(importsAllowed ? [{ label: "Importação", href: "/app/condominium/imports" }] : [])], showCondominiumSection: context.type === "condominium" };
 }
 
-export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", userAccountId, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, occurrences: false, dashboard: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; userAccountId?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; occurrences?: boolean; dashboard?: boolean } }) {
+export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", userAccountId, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, occurrences: false, dashboard: false, imports: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; userAccountId?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; occurrences?: boolean; dashboard?: boolean; imports?: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const drawerToggleRef = useRef<HTMLInputElement>(null);
@@ -28,7 +28,7 @@ export function AppShell({ children, context, personName, notifications = [], no
     }
   }, [pathname]);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
-  const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations, condominiumNavigation.occurrences);
+  const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations, condominiumNavigation.occurrences, condominiumNavigation.imports);
   const nav = navigation.primary.map((item) => ({ ...item, Icon: item.label === "Meu perfil" ? UserRound : LayoutDashboard }));
   return <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
     <input ref={drawerToggleRef} className="drawer-toggle" type="checkbox" id="drawer-toggle" aria-hidden="true" />
