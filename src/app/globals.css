@@ -322,7 +322,6 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-availability-legend i { width: 7px; height: 7px; display: inline-block; border-radius: 50%; background: var(--cv-brand-teal); }
 .cv-availability-legend i.is-occupied { background: #D97706; }.cv-availability-legend i.is-own { background: #7C3AED; }.cv-availability-legend i.is-unavailable { background: #94A3B8; }
 .cv-reservation-fields select { appearance: none; -webkit-appearance: none; padding-right: 36px; background-color: var(--cv-surface); background-image: linear-gradient(45deg, transparent 50%, var(--cv-text-muted) 50%), linear-gradient(135deg, var(--cv-text-muted) 50%, transparent 50%); background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
-.cv-reservation-agenda { overflow-anchor: none; }
 .cv-availability-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 4px; }
 .cv-availability-date { grid-column: 1 / -1; margin-bottom: 2px; color: var(--cv-text-strong); font-size: 14px; line-height: 20px; text-transform: capitalize; }
 .cv-availability-slot { min-height: 50px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center; }
