@@ -2,6 +2,7 @@ import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
 export type ReservationStatus = "pending" | "approved" | "rejected" | "cancelled";
 export type ReservationMode = "day" | "time_slot";
+export type ReservationSituation = ReservationStatus | "completed";
 
 export const reservationStatusLabels: Record<ReservationStatus, string> = {
   pending: "Pendente",
@@ -9,6 +10,12 @@ export const reservationStatusLabels: Record<ReservationStatus, string> = {
   rejected: "Rejeitada",
   cancelled: "Cancelada",
 };
+
+export const reservationSituationLabels: Record<ReservationSituation, string> = { ...reservationStatusLabels, completed: "Realizada" };
+
+export function reservationSituation(status: ReservationStatus, endsAt: string | undefined, now = new Date()) {
+  return status === "approved" && endsAt && new Date(endsAt).getTime() < now.getTime() ? "completed" : status;
+}
 
 export function formatReservationSchedule(mode: ReservationMode, startsAt: string, endsAt: string, timeZone: string) {
   return mode === "day" ? "Dia inteiro" : `${formatDateTimeInTimezone(startsAt, timeZone).split(", ")[1]}–${formatDateTimeInTimezone(endsAt, timeZone).split(", ")[1]}`;
