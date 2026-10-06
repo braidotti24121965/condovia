@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Building2, CalendarDays, ChevronDown, CircleUserRound, Command, House, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, UserRound, Network, DoorOpen, Users, KeyRound, Shield } from "lucide-react";
+import { Building2, CalendarDays, ChevronDown, CircleUserRound, Command, House, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, UserRound, Network, DoorOpen, Users, KeyRound, Shield } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
 import { Brand } from "@/components/layout/brand";
 import type { AuthorizedContext } from "@/lib/auth/context";
+import { NotificationCenter } from "./notification-center";
+import type { NotificationItem } from "@/lib/notifications/notification-types";
 
-export function AppShell({ children, context, personName, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean } }) {
+export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const drawerToggleRef = useRef<HTMLInputElement>(null);
@@ -38,7 +40,7 @@ export function AppShell({ children, context, personName, condominiumNavigation 
         <label htmlFor="drawer-toggle" className="icon-button mobile-menu-open" aria-label="Abrir menu"><Menu size={20} /></label>
         <div className="mobile-brand"><Brand /></div>
         <div className="search-box"><Search size={17} /><input aria-label="Buscar" placeholder="Buscar no CondoVia" /><kbd>⌘ K</kbd></div>
-        <div className="topbar-actions"><button className="icon-button notification-button" aria-label="Notificações"><Bell size={19} /><span /></button><div className="topbar-divider" /><details className="user-menu"><summary><span className="user-avatar"><CircleUserRound size={21} /></span><span className="user-name"><strong>{personName || "Minha conta"}</strong><small>{context.role}</small></span><ChevronDown size={15} /></summary><div className="user-dropdown"><form action={signOut}><button type="submit"><LogOut size={16} /> Sair da conta</button></form></div></details></div>
+        <div className="topbar-actions"><NotificationCenter initialNotifications={notifications} timeZone={notificationTimeZone} /><div className="topbar-divider" /><details className="user-menu"><summary><span className="user-avatar"><CircleUserRound size={21} /></span><span className="user-name"><strong>{personName || "Minha conta"}</strong><small>{context.role}</small></span><ChevronDown size={15} /></summary><div className="user-dropdown"><form action={signOut}><button type="submit"><LogOut size={16} /> Sair da conta</button></form></div></details></div>
       </header>
       <main ref={mainContentRef} tabIndex={-1} className="main-content">{children}</main>
     </div>
