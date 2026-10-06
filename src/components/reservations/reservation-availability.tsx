@@ -18,6 +18,12 @@ type Resource = {
 type OccupiedReservation = { resource_id: string; starts_at: string; ends_at: string; own: boolean };
 type ResourceBlock = { start_at: string; end_at: string; status: string };
 
+export function isSlotWithinAdvanceWindow(start: Date, end: Date, minimumAdvanceMinutes: number, maximumAdvanceMinutes: number | null, now = new Date()) {
+  const minimumAt = now.getTime() + minimumAdvanceMinutes * 60000;
+  const maximumAt = maximumAdvanceMinutes == null ? Number.POSITIVE_INFINITY : now.getTime() + maximumAdvanceMinutes * 60000;
+  return start.getTime() >= minimumAt && end.getTime() <= maximumAt;
+}
+
 export function filterReservationsForResource(reservations: OccupiedReservation[], resourceId: string) {
   return reservations.filter((reservation) => reservation.resource_id === resourceId);
 }
@@ -49,8 +55,7 @@ export function ReservationAvailability({ resource, timeZone, reservations, bloc
       const startDate = parseDateTimeInTimezone(startLocal, timeZone);
       const endDate = parseDateTimeInTimezone(endLocal, timeZone);
       const occupied = dayReservations.find((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource!.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource!.buffer_minutes * 60000 > startDate.getTime()) || (blocks.some((block) => new Date(block.start_at) < endDate && new Date(block.end_at) > startDate) ? { resource_id: resource!.id, starts_at: "", ends_at: "", own: false } : null);
-      const advance = Math.round((startDate.getTime() - Date.now()) / 60000);
-      const validAdvance = advance >= resource!.minimum_advance_minutes && (resource!.maximum_advance_minutes == null || advance <= resource!.maximum_advance_minutes);
+      const validAdvance = isSlotWithinAdvanceWindow(startDate, endDate, resource!.minimum_advance_minutes, resource!.maximum_advance_minutes);
       result.push({ start: startLocal, end: endLocal, occupied: validAdvance ? occupied : { resource_id: resource!.id, starts_at: "", ends_at: "", own: false } });
     }
     return result;
@@ -73,8 +78,7 @@ export function ReservationAvailability({ resource, timeZone, reservations, bloc
       const endLocal = `${date}T${String(Math.floor(endMinute / 60)).padStart(2, "0")}:${String(endMinute % 60).padStart(2, "0")}`;
       const startDate = parseDateTimeInTimezone(startLocal, timeZone);
       const endDate = parseDateTimeInTimezone(endLocal, timeZone);
-      const advance = Math.round((startDate.getTime() - Date.now()) / 60000);
-      if (advance < resource.minimum_advance_minutes || (resource.maximum_advance_minutes != null && advance > resource.maximum_advance_minutes)) continue;
+      if (!isSlotWithinAdvanceWindow(startDate, endDate, resource.minimum_advance_minutes, resource.maximum_advance_minutes)) continue;
       if (resource.maximum_duration_minutes != null && resource.minimum_duration_minutes > resource.maximum_duration_minutes) continue;
       const occupied = (reservationDates.get(date) || []).some((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource.buffer_minutes * 60000 > startDate.getTime()) || blocks.some((block) => new Date(block.start_at) < endDate && new Date(block.end_at) > startDate);
       if (!occupied) return true;
