@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { resolvePanelHref } from "./app-shell";
+import { resolveNavigation } from "./app-shell";
 import type { AuthorizedContext } from "@/lib/auth/context";
 
 const condominium = (role: string): AuthorizedContext => ({ type: "condominium", id: "condo-1", name: "Condomínio", role });
 
 describe("Painel landing route", () => {
-  it("sends a resident without dashboard permission to Minhas Unidades", () => expect(resolvePanelHref(condominium("Morador"), false)).toBe("/app/my-units"));
-  it("keeps the administrative dashboard for a permitted condominium user", () => expect(resolvePanelHref(condominium("Síndico"), true)).toBe("/app/dashboard"));
+  it("shows residents only the operational menu", () => expect(resolveNavigation(condominium("Morador"), false, true)).toEqual({ resident: true, primary: [{ label: "Meu perfil", href: "/app/profile" }, { label: "Minhas Unidades", href: "/app/my-units" }, { label: "Reservas", href: "/app/reservations" }], showCondominiumSection: false }));
+  it("keeps the administrative dashboard and condominium section", () => expect(resolveNavigation(condominium("Síndico"), true, true)).toMatchObject({ resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }], showCondominiumSection: true }));
   it("keeps platform and administrator routes unchanged", () => {
-    expect(resolvePanelHref({ type: "platform", id: "platform", name: "CondoVia", role: "Admin" })).toBe("/app/platform");
-    expect(resolvePanelHref({ type: "administrator", id: "admin-1", name: "Admin", role: "Admin" })).toBe("/app/dashboard");
+    expect(resolveNavigation({ type: "platform", id: "platform", name: "CondoVia", role: "Admin" }).primary[0].href).toBe("/app/platform");
+    expect(resolveNavigation({ type: "administrator", id: "admin-1", name: "Admin", role: "Admin" }).primary[0].href).toBe("/app/dashboard");
   });
 });
