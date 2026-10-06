@@ -147,6 +147,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-form-grid > .cv-person-picker { grid-column: span 6; }
 .cv-import-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .cv-import-actions .button { width: 100%; min-height: 44px; white-space: nowrap; }
+.cv-import-form input[type="file"] { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .cv-person-picker .cv-field-lg { grid-column: auto; }
 .cv-person-picker label:nth-child(2) select { width: max-content; max-width: 100%; }
 .cv-filters label:not(.cv-search) { width: max-content; max-width: 100%; }
