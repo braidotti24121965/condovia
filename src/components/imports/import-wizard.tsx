@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { confirmImport, previewImport, type ImportActionState } from "@/lib/imports/actions";
 import { importEntities, importTemplates, type ImportEntity } from "@/lib/imports/types";
 const initial: ImportActionState = { ok:false };
@@ -7,6 +7,49 @@ export function ImportWizard() {
   const [state, action, pending] = useActionState(previewImport, initial);
   const [entity, setEntity] = useState<ImportEntity>("structures");
   const [fileName, setFileName] = useState("");
+  const [entityOpen, setEntityOpen] = useState(false);
+  const [activeEntity, setActiveEntity] = useState(0);
+  const entitySelectRef = useRef<HTMLDivElement>(null);
+  const selectedEntity = importEntities.find((item) => item.value === entity) ?? importEntities[0];
+
+  useEffect(() => {
+    const handleDocumentPointerDown = (event: PointerEvent) => {
+      if (!entitySelectRef.current?.contains(event.target as Node)) setEntityOpen(false);
+    };
+    const handleDocumentKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setEntityOpen(false);
+    };
+    document.addEventListener("pointerdown", handleDocumentPointerDown);
+    document.addEventListener("keydown", handleDocumentKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown);
+      document.removeEventListener("keydown", handleDocumentKeyDown);
+    };
+  }, []);
+
+  const selectEntity = (index: number) => {
+    const nextEntity = importEntities[index];
+    if (!nextEntity) return;
+    setEntity(nextEntity.value);
+    setActiveEntity(index);
+    setEntityOpen(false);
+  };
+
+  const handleEntityKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      setEntityOpen(true);
+      setActiveEntity((current) => (current + direction + importEntities.length) % importEntities.length);
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      if (entityOpen) selectEntity(activeEntity);
+      else {
+        setActiveEntity(importEntities.findIndex((item) => item.value === entity));
+        setEntityOpen(true);
+      }
+    }
+  };
   const [confirmState, confirmAction] = useActionState(async (_: ImportActionState, form: FormData): Promise<ImportActionState> => {
     const result = await confirmImport(form);
     return { ok: result.ok, message: result.message };
@@ -14,7 +57,18 @@ export function ImportWizard() {
   return <div className="cv-page">
     <section className="cv-panel"><div className="cv-panel-heading"><div><h2>Nova importação</h2><p>Um arquivo por entidade. O domínio só será gravado após a confirmação.</p></div></div>
       <form action={action} className="cv-form-grid cv-import-form" encType="multipart/form-data">
-        <label>Entidade<select name="entity" value={entity} onChange={(event)=>setEntity(event.target.value as ImportEntity)}>{importEntities.map((item)=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+        <div className="cv-import-entity-field">
+          <span className="cv-import-entity-label">Entidade</span>
+          <div className="cv-import-entity-select" ref={entitySelectRef}>
+            <input type="hidden" name="entity" value={entity} />
+            <button type="button" className="cv-import-entity-trigger" aria-haspopup="listbox" aria-expanded={entityOpen} aria-controls="import-entity-options" onClick={() => { setActiveEntity(importEntities.findIndex((item) => item.value === entity)); setEntityOpen((open) => !open); }} onKeyDown={handleEntityKeyDown}>
+              <span>{selectedEntity.label}</span><span aria-hidden="true">{entityOpen ? "▲" : "▼"}</span>
+            </button>
+            {entityOpen && <div id="import-entity-options" className="cv-import-entity-menu" role="listbox" aria-label="Entidade">
+              {importEntities.map((item, index) => <button key={item.value} type="button" role="option" aria-selected={item.value === entity} className={`cv-import-entity-option${index === activeEntity ? " is-active" : ""}`} onMouseEnter={() => setActiveEntity(index)} onClick={() => selectEntity(index)}>{item.label}</button>)}
+            </div>}
+          </div>
+        </div>
         <div className="cv-import-file-field">
           <span className="cv-import-file-label">Arquivo CSV</span>
           <div className="cv-import-file-control">
