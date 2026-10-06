@@ -27,8 +27,8 @@ export function validateResourceValues(values: { name: string; capacity: string;
   }
   if (values.capacity !== "" && Number(values.capacity) <= 0) errors.capacity = "A capacidade deve ser maior que zero.";
   if (values.usage_fee !== "" && (!Number.isFinite(Number(values.usage_fee)) || Number(values.usage_fee) < 0)) errors.usage_fee = "Informe um valor maior ou igual a zero.";
-  if (values.minimum_advance_minutes && values.maximum_advance_minutes && Number(values.maximum_advance_minutes) < Number(values.minimum_advance_minutes)) errors.maximum_advance_minutes = "A antecedência máxima deve ser maior ou igual à mínima.";
-  if (values.minimum_duration_minutes && values.maximum_duration_minutes && Number(values.maximum_duration_minutes) < Number(values.minimum_duration_minutes)) errors.maximum_duration_minutes = "A duração máxima deve ser maior ou igual à mínima.";
+  if (values.minimum_advance_minutes && values.maximum_advance_minutes && Number(values.maximum_advance_minutes) < Number(values.minimum_advance_minutes)) errors.maximum_advance_minutes = "A antecedência mínima não pode ser maior que a antecedência máxima.";
+  if (values.minimum_duration_minutes && values.maximum_duration_minutes && Number(values.maximum_duration_minutes) < Number(values.minimum_duration_minutes)) errors.maximum_duration_minutes = "A duração mínima não pode ser maior que a duração máxima.";
   return errors;
 }
 

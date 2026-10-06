@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { saveReservableResource } from "@/lib/reservations/resource-actions";
-import { formatCurrencyBRL } from "@/lib/reservations/resource-validation";
+import { formatCurrencyBRL, toMinutes, validateResourceValues, type MinuteUnit } from "@/lib/reservations/resource-validation";
 
 const weekdays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 type Hour = { weekday: number; start_time: string; end_time: string; active: boolean };
@@ -43,7 +43,7 @@ export function ResourceForm({ resource, hours = [] }: { resource?: Record<strin
     {open && <div role="dialog" aria-modal="true" className="cv-modal"><section className="cv-panel cv-resource-panel">
       <h2>{resource ? "Editar recurso" : "Novo recurso reservável"}</h2>
       {error && <p className="cv-alert cv-alert-error">{error}</p>}
-      <form action={async (form) => { setLoading(true); setError(""); try { await saveReservableResource(form); setOpen(false); window.location.reload(); } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível salvar."); } finally { setLoading(false); } }} className="cv-form">
+      <form action={async (form) => { setLoading(true); setError(""); try { const normalized = (key: string, fallback: string) => { const raw = String(form.get(`${key}_value`) ?? "").trim(); return raw ? String(toMinutes(raw, (String(form.get(`${key}_unit`) || "minutes")) as MinuteUnit)) : fallback; }; const validation = validateResourceValues({ name: String(form.get("name") ?? ""), capacity: String(form.get("capacity") ?? ""), minimum_advance_minutes: normalized("minimum_advance", "0"), maximum_advance_minutes: normalized("maximum_advance", ""), minimum_duration_minutes: normalized("minimum_duration", "30"), maximum_duration_minutes: normalized("maximum_duration", ""), buffer_minutes: normalized("buffer", "0"), cancellation_deadline_minutes: normalized("cancellation_deadline", "0"), usage_fee: String(form.get("usage_fee") ?? "") }); const firstError = Object.values(validation)[0]; if (firstError) throw new Error(firstError); await saveReservableResource(form); setOpen(false); window.location.reload(); } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível salvar."); } finally { setLoading(false); } }} className="cv-form">
         <section className="cv-form-section"><h3>Dados do recurso</h3><div className="cv-form-grid cv-resource-data-grid">
           <label className="cv-resource-name">Nome *<input name="name" defaultValue={String(resource?.name || "")} required /></label>
           <label className="cv-resource-location">Localização<input name="location" defaultValue={String(resource?.location || "")} /></label>
