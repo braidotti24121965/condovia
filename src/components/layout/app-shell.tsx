@@ -10,11 +10,25 @@ import type { AuthorizedContext } from "@/lib/auth/context";
 import { NotificationCenter } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 import { createClient } from "@/lib/supabase/browser";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false) {
   if (context.type === "platform") return { resident: false, primary: [{ label: "Plataforma", href: "/app/platform" }], showCondominiumSection: false };
   if (context.type === "condominium" && !dashboardAllowed) return { resident: true, primary: [{ label: "Meu perfil", href: "/app/profile" }, { label: "Minhas Unidades", href: "/app/my-units" }, ...(reservationsAllowed ? [{ label: "Reservas", href: "/app/reservations" }] : [])], showCondominiumSection: false };
   return { resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }], showCondominiumSection: context.type === "condominium" };
+}
+
+export function logReservationRealtimeStatus(status: string) {
+  if (status === "SUBSCRIBED") console.info("[reservations-realtime] status SUBSCRIBED");
+  if (status === "CHANNEL_ERROR") console.error("[reservations-realtime] status CHANNEL_ERROR");
+  if (status === "TIMED_OUT") console.warn("[reservations-realtime] status TIMED_OUT");
+  if (status === "CLOSED") console.info("[reservations-realtime] status CLOSED");
+}
+
+export function handleReservationRealtimeEvent(event: "INSERT" | "UPDATE", payload: { new?: { condominium_id?: unknown } }, condominiumId: string, refresh: () => void) {
+  const condominiumMatch = payload.new?.condominium_id === condominiumId;
+  console.info(`[reservations-realtime] event ${event}`, `condominium match=${condominiumMatch}`, "refresh=true");
+  refresh();
 }
 
 export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", userAccountId, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, dashboard: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; userAccountId?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; dashboard?: boolean } }) {
@@ -34,11 +48,10 @@ export function AppShell({ children, context, personName, notifications = [], no
     const supabase = createClient();
     if (!supabase) return;
     const channel = supabase.channel(`reservations:${context.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, () => router.refresh())
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, () => router.refresh())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, (payload: RealtimePostgresChangesPayload<{ condominium_id?: string }>) => handleReservationRealtimeEvent("INSERT", payload, context.id, () => router.refresh()))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, (payload: RealtimePostgresChangesPayload<{ condominium_id?: string }>) => handleReservationRealtimeEvent("UPDATE", payload, context.id, () => router.refresh()))
       .subscribe((status: string) => {
-        if (status === "CHANNEL_ERROR") console.error("Reservation realtime channel error");
-        if (status === "TIMED_OUT") console.warn("Reservation realtime channel timed out");
+        logReservationRealtimeStatus(status);
       });
     return () => { void supabase.removeChannel(channel); };
   }, [context.id, context.type, router]);
