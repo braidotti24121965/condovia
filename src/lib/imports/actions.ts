@@ -5,7 +5,7 @@ import { escapeCsvCell, fileHash, MAX_BYTES, normalizeRows, readTabularFile } fr
 import type { ImportEntity, ImportRow } from "./types";
 import { createHash } from "node:crypto";
 
-export type ImportActionState = { ok: boolean; message?: string; batchId?: string; headers?: string[]; rows?: ImportRow[]; structuralError?: string };
+export type ImportActionState = { ok: boolean; message?: string; batchId?: string; headers?: string[]; rows?: ImportRow[]; structuralError?: string; result?: { created: number; batch_id: string } };
 const text = (form: FormData, key: string) => String(form.get(key) || "").trim();
 function today(timeZone: string) { return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date()); }
 function safeImportError(error: unknown) {
