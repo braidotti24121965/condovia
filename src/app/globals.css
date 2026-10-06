@@ -330,7 +330,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-reservation-actions { display: flex; flex-wrap: nowrap; gap: 8px; }
 .cv-reservation-actions-cell { min-width: 280px; white-space: nowrap; }
 .cv-reservation-actions-header { min-width: 280px; }
-.cv-reservation-actions .button { min-height: 34px; padding: 6px 10px; font-size: 12px; }
+.cv-reservation-action-row > .button, .cv-reservation-actions .button { min-height: 34px; padding: 6px 10px; font-size: 12px; }
 .cv-reservation-filters { margin: 14px 0 16px; gap: 10px; }
 .cv-reservation-filters label { min-width: 150px; }
 .cv-reservation-filters label:last-child { min-width: 145px; }
