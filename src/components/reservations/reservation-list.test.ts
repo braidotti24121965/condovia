@@ -7,6 +7,12 @@ const rows = [
 ];
 
 describe("reservation list filters", () => {
+  it("shows all dates when the date filter is empty and restores them when cleared", () => {
+    expect(filterReservations(rows, "", "", "")).toHaveLength(2);
+    expect(filterReservations(rows, "", "", "2026-10-08")).toHaveLength(1);
+    expect(filterReservations(rows, "", "", "")).toHaveLength(2);
+  });
+
   it("filters by status, resource, date and combinations", () => {
     expect(filterReservations(rows, "pending", "", "")).toHaveLength(1);
     expect(filterReservations(rows, "", "Academia", "")).toHaveLength(1);
