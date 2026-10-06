@@ -15,8 +15,12 @@ type Resource = {
   hours: Array<{ weekday: number; start_time: string; end_time: string }>;
 };
 
-type OccupiedReservation = { starts_at: string; ends_at: string; own: boolean };
+type OccupiedReservation = { resource_id: string; starts_at: string; ends_at: string; own: boolean };
 type ResourceBlock = { start_at: string; end_at: string; status: string };
+
+export function filterReservationsForResource(reservations: OccupiedReservation[], resourceId: string) {
+  return reservations.filter((reservation) => reservation.resource_id === resourceId);
+}
 
 export function ReservationAvailability({ resource, timeZone, reservations, blocks = [], selectedDate: selectedDateProp = "", onSelect, onDateChange }: { resource: Resource | null; timeZone: string; reservations: OccupiedReservation[]; blocks?: ResourceBlock[]; selectedDate?: string; onSelect: (start: string, end: string) => void; onDateChange?: (date: string) => void }) {
   const [month, setMonth] = useState(() => new Date());
@@ -32,7 +36,8 @@ export function ReservationAvailability({ resource, timeZone, reservations, bloc
     return [...Array.from({ length: leading }, () => null), ...values];
   }, [month, monthKey]);
   const dayHours = resource && selectedDate ? resource.hours.filter((hour) => hour.weekday === new Date(`${selectedDate}T00:00:00Z`).getUTCDay()) : [];
-  const dayReservations = selectedDate ? reservations.filter((reservation) => new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(reservation.starts_at)) === selectedDate) : [];
+  const resourceReservations = filterReservationsForResource(reservations, resource?.id || "");
+  const dayReservations = selectedDate ? resourceReservations.filter((reservation) => new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(reservation.starts_at)) === selectedDate) : [];
   const slots = dayHours.flatMap((hour) => {
     const result: Array<{ start: string; end: string; occupied: OccupiedReservation | null }> = [];
     const start = Number(hour.start_time.slice(0, 2)) * 60 + Number(hour.start_time.slice(3, 5));
@@ -43,16 +48,16 @@ export function ReservationAvailability({ resource, timeZone, reservations, bloc
       const endLocal = `${selectedDate}T${String(Math.floor(endMinute / 60)).padStart(2, "0")}:${String(endMinute % 60).padStart(2, "0")}`;
       const startDate = parseDateTimeInTimezone(startLocal, timeZone);
       const endDate = parseDateTimeInTimezone(endLocal, timeZone);
-      const occupied = dayReservations.find((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource!.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource!.buffer_minutes * 60000 > startDate.getTime()) || (blocks.some((block) => new Date(block.start_at) < endDate && new Date(block.end_at) > startDate) ? { starts_at: "", ends_at: "", own: false } : null);
+      const occupied = dayReservations.find((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource!.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource!.buffer_minutes * 60000 > startDate.getTime()) || (blocks.some((block) => new Date(block.start_at) < endDate && new Date(block.end_at) > startDate) ? { resource_id: resource!.id, starts_at: "", ends_at: "", own: false } : null);
       const advance = Math.round((startDate.getTime() - Date.now()) / 60000);
       const validAdvance = advance >= resource!.minimum_advance_minutes && (resource!.maximum_advance_minutes == null || advance <= resource!.maximum_advance_minutes);
-      result.push({ start: startLocal, end: endLocal, occupied: validAdvance ? occupied : { starts_at: "", ends_at: "", own: false } });
+      result.push({ start: startLocal, end: endLocal, occupied: validAdvance ? occupied : { resource_id: resource!.id, starts_at: "", ends_at: "", own: false } });
     }
     return result;
   });
   const today = new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
   const reservationDates = new Map<string, OccupiedReservation[]>();
-  reservations.forEach((reservation) => {
+  resourceReservations.forEach((reservation) => {
     const date = new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(reservation.starts_at));
     reservationDates.set(date, [...(reservationDates.get(date) || []), reservation]);
   });

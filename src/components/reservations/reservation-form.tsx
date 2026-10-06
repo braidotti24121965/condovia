@@ -6,7 +6,7 @@ import { ReservationFeedbackModal } from "./reservation-feedback-modal";
 import { ReservationAvailability } from "./reservation-availability";
 
 type Resource = { id: string; name: string; reservation_mode: "day" | "time_slot"; minimum_advance_minutes: number; maximum_advance_minutes: number | null; minimum_duration_minutes: number; maximum_duration_minutes: number | null; buffer_minutes: number; hours: Array<{ weekday: number; start_time: string; end_time: string }> };
-type OccupiedReservation = { starts_at: string; ends_at: string; own: boolean };
+type OccupiedReservation = { resource_id: string; starts_at: string; ends_at: string; own: boolean };
 type ResourceBlock = { resource_id: string; start_at: string; end_at: string; status: string };
 
 export function ReservationForm({ resources, units, reservations, blocks, timeZone }: { resources: Resource[]; units: Array<{ id: string; code: string; display_name: string | null }>; reservations: OccupiedReservation[]; blocks: ResourceBlock[]; timeZone: string }) {
