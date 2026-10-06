@@ -321,7 +321,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-availability-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .cv-availability-legend i { width: 7px; height: 7px; display: inline-block; border-radius: 50%; background: var(--cv-brand-teal); }
 .cv-availability-legend i.is-occupied { background: #D97706; }.cv-availability-legend i.is-own { background: #7C3AED; }.cv-availability-legend i.is-unavailable { background: #94A3B8; }
-.cv-reservation-fields select { appearance: auto; }
+.cv-reservation-fields select { appearance: none; -webkit-appearance: none; padding-right: 36px; background-color: var(--cv-surface); background-image: linear-gradient(45deg, transparent 50%, var(--cv-text-muted) 50%), linear-gradient(135deg, var(--cv-text-muted) 50%, transparent 50%); background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
 .cv-availability-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 4px; }
 .cv-availability-date { grid-column: 1 / -1; margin-bottom: 2px; color: var(--cv-text-strong); font-size: 14px; line-height: 20px; text-transform: capitalize; }
 .cv-availability-slot { min-height: 50px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center; }
@@ -345,4 +345,19 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-reservation-pending { color: #9A6700; background: #FFF4CC; }.cv-reservation-approved { color: #087D5B; background: #DDF7ED; }.cv-reservation-rejected { color: #B42318; background: #FEE4E2; }.cv-reservation-cancelled { color: #64748B; background: #E2E8F0; }
 .cv-reservation-table small { color: var(--cv-text-muted); font-size: 12px; }
 .cv-reservation-cards { display: none; }
+.cv-my-reservations-section { margin-top: 16px; padding: 18px 20px; }
+.cv-my-reservations-section > h3 { margin: 0 0 4px; color: var(--cv-brand-navy); font-size: 16px; line-height: 22px; }
+.cv-my-reservations-list { display: grid; }
+.cv-my-reservation-row { display: grid; grid-template-columns: minmax(180px, 1.5fr) minmax(72px, .6fr) minmax(150px, 1fr) auto auto; align-items: center; gap: 14px; min-width: 0; padding: 12px 0; border-top: 1px solid var(--cv-border); }
+.cv-my-reservation-resource, .cv-my-reservation-unit, .cv-my-reservation-period { min-width: 0; color: var(--cv-text); font-size: 13px; }
+.cv-my-reservation-resource strong { display: block; overflow: hidden; color: var(--cv-text-strong); font-size: 14px; line-height: 19px; text-overflow: ellipsis; white-space: nowrap; }
+.cv-my-reservation-unit { color: var(--cv-text-muted); }
+.cv-my-reservation-period { display: grid; gap: 1px; white-space: nowrap; }
+.cv-my-reservation-period small { color: var(--cv-text-muted); font-size: 12px; }
+.cv-my-reservation-row .cv-reservation-action-row { justify-self: end; }
+.cv-reservation-table .cv-table th { padding: 10px 12px; vertical-align: middle; white-space: nowrap; }
+.cv-reservation-table .cv-table td { padding: 11px 12px; vertical-align: middle; }
+.cv-reservation-table .cv-table td:nth-child(4), .cv-reservation-table .cv-table td:nth-child(5) { white-space: nowrap; }
 @media (max-width: 767px) { .cv-reservation-table { display: none; }.cv-reservation-cards { display: grid; gap: 10px; }.cv-reservation-cards article { padding: 14px; display: grid; gap: 7px; }.cv-reservation-cards article > span { color: var(--cv-text-muted); font-size: 13px; }.cv-reservation-filters label { min-width: 0; flex: 1 1 140px; }.cv-reservation-action-row, .cv-reservation-actions { flex-wrap: wrap; white-space: normal; } }
+@media (max-width: 900px) { .cv-my-reservation-row { grid-template-columns: minmax(150px, 1.4fr) minmax(64px, .6fr) minmax(130px, 1fr) auto; }.cv-my-reservation-row .cv-reservation-action-row { grid-column: 1 / -1; justify-self: start; } }
+@media (max-width: 600px) { .cv-my-reservation-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }.cv-my-reservation-resource { grid-column: 1 / -1; }.cv-my-reservation-period { justify-self: end; text-align: right; }.cv-my-reservation-row .cv-reservation-badge { justify-self: start; }.cv-my-reservation-row .cv-reservation-action-row { grid-column: 1 / -1; } }
