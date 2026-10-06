@@ -36,7 +36,10 @@ export function AppShell({ children, context, personName, notifications = [], no
     const channel = supabase.channel(`reservations:${context.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, () => router.refresh())
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, () => router.refresh())
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === "CHANNEL_ERROR") console.error("Reservation realtime channel error");
+        if (status === "TIMED_OUT") console.warn("Reservation realtime channel timed out");
+      });
     return () => { void supabase.removeChannel(channel); };
   }, [context.id, context.type, router]);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;

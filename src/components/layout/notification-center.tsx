@@ -11,6 +11,18 @@ import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export function unreadNotificationCount(items: NotificationItem[]) { return items.filter((item) => !item.read_at).length; }
 
+export function notificationRealtimeFilter(userAccountId: string) { return `recipient_user_account_id=eq.${userAccountId}`; }
+
+type RealtimeNotification = NotificationItem & { condominium_id?: string; recipient_user_account_id?: string };
+
+export function mergeNotificationInsert(items: NotificationItem[], notification: NotificationItem) {
+  return items.some((item) => item.id === notification.id) ? items : [notification, ...items].slice(0, 25);
+}
+
+export function mergeNotificationUpdate(items: NotificationItem[], notification: NotificationItem) {
+  return items.map((item) => item.id === notification.id ? { ...item, ...notification } : item);
+}
+
 export function NotificationCenter({ initialNotifications, timeZone, condominiumId, userAccountId }: { initialNotifications: NotificationItem[]; timeZone: string; condominiumId?: string; userAccountId?: string }) {
   const [items, setItems] = useState(initialNotifications);
   const [open, setOpen] = useState(false);
@@ -21,17 +33,20 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
     const supabase = createClient();
     if (!supabase) return;
     const channel = supabase.channel(`notifications:${condominiumId}:${userAccountId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `condominium_id=eq.${condominiumId}` }, (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
-        const notification = payload.new as NotificationItem & { condominium_id?: string; recipient_user_account_id?: string };
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: notificationRealtimeFilter(userAccountId) }, (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
+        const notification = payload.new as RealtimeNotification;
         if (notification.condominium_id !== condominiumId || notification.recipient_user_account_id !== userAccountId) return;
-        setItems((current) => current.some((item) => item.id === notification.id) ? current : [notification, ...current].slice(0, 25));
+        setItems((current) => mergeNotificationInsert(current, notification));
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: `condominium_id=eq.${condominiumId}` }, (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
-        const notification = payload.new as NotificationItem & { condominium_id?: string; recipient_user_account_id?: string };
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: notificationRealtimeFilter(userAccountId) }, (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
+        const notification = payload.new as RealtimeNotification;
         if (notification.condominium_id !== condominiumId || notification.recipient_user_account_id !== userAccountId) return;
-        setItems((current) => current.map((item) => item.id === notification.id ? { ...item, read_at: notification.read_at } : item));
+        setItems((current) => mergeNotificationUpdate(current, notification));
       })
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === "CHANNEL_ERROR") console.error("Notification realtime channel error");
+        if (status === "TIMED_OUT") console.warn("Notification realtime channel timed out");
+      });
     return () => { void supabase.removeChannel(channel); };
   }, [condominiumId, userAccountId]);
   const markOne = async (id: string) => { if (items.find((item) => item.id === id)?.read_at) return; setItems((current) => current.map((item) => item.id === id ? { ...item, read_at: new Date().toISOString() } : item)); await markNotificationAsRead(id); };
