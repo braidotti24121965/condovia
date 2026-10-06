@@ -14,7 +14,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     supabase.rpc("has_permission", { permission_code: "residents.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "ownerships.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "gatehouse.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "reservations.resources.read", target_condominium_id: context.id }),
+    supabase.rpc("has_permission", { permission_code: "reservations.read", target_condominium_id: context.id }),
   ]).then(([overview, structures, units, people, residents, ownerships, gatehouse, reservations]) => ({
     overview: overview.data === true,
     structures: structures.data === true,

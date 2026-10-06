@@ -6,7 +6,7 @@ import { ResourceBlocks } from "@/components/reservations/resource-blocks";
 export const metadata = { title: "Recursos reserváveis" };
 
 export default async function ReservableResourcesPage() {
-  const { supabase, context } = await requireCondominiumPermission("reservations.resources.read");
+  const { supabase, context } = await requireCondominiumPermission("reservations.manage");
   const { data: resources } = await supabase.from("reservable_resources").select("*").eq("condominium_id", context.id).order("name");
   const resourceIds = (resources || []).map((resource) => resource.id);
   const { data: hours } = resourceIds.length ? await supabase.from("reservable_resource_hours").select("*").in("resource_id", resourceIds).eq("condominium_id", context.id).order("weekday").order("start_time") : { data: [] };

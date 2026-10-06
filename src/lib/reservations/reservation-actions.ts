@@ -8,7 +8,7 @@ import { formatReservationMinutes, reservationErrorMessage } from "./reservation
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
 export async function createReservation(form: FormData): Promise<{ success: boolean; error?: string; requiresApproval?: boolean }> {
-  const { supabase, context, user } = await requireCondominiumPermission("reservations.create");
+  const { supabase, context, user } = await requireCondominiumPermission("reservations.read");
   try {
     const resourceId = text(form, "resource_id"); const unitId = text(form, "unit_id"); const reservationDate = text(form, "reservation_date"); let localStart = text(form, "starts_at"); let localEnd = text(form, "ends_at");
     if (!resourceId || !unitId || (!reservationDate && (!localStart || !localEnd))) throw new Error("Informe recurso, unidade, início e fim.");

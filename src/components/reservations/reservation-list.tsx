@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ReservationManagementActions } from "./reservation-management-actions";
 import { reservationSituationLabels, reservationSituation, type ReservationMode, type ReservationStatus } from "@/lib/reservations/reservation-presenters";
 
-export type ReservationListRow = { id: string; resourceName: string; reservationMode: ReservationMode; unitCode: string; requesterName: string; date: string; schedule: string; status: ReservationStatus; endsAt?: string; notes?: string | null; usageFee?: number | null; requestedAt?: string; history?: Array<{ event: string; at: string; responsible?: string | null; reason?: string | null }> };
+export type ReservationListRow = { id: string; resourceName: string; reservationMode: ReservationMode; unitCode: string; requesterName: string; date: string; schedule: string; status: ReservationStatus; endsAt?: string; canCancel?: boolean; notes?: string | null; usageFee?: number | null; requestedAt?: string; history?: Array<{ event: string; at: string; responsible?: string | null; reason?: string | null }> };
 
 export function filterReservations(rows: ReservationListRow[], status: string, resource: string, date: string) {
   return rows.filter((row) => (!status || reservationSituation(row.status, row.endsAt || "") === status) && (!resource || row.resourceName === resource) && (!date || row.date === date));
