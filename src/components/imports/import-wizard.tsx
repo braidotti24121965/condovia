@@ -6,6 +6,7 @@ const initial: ImportActionState = { ok:false };
 export function ImportWizard() {
   const [state, action, pending] = useActionState(previewImport, initial);
   const [entity, setEntity] = useState<ImportEntity>("structures");
+  const [fileName, setFileName] = useState("");
   const [confirmState, confirmAction] = useActionState(async (_: ImportActionState, form: FormData): Promise<ImportActionState> => {
     const result = await confirmImport(form);
     return { ok: result.ok, message: result.message };
@@ -14,7 +15,12 @@ export function ImportWizard() {
     <section className="cv-panel"><div className="cv-panel-heading"><div><h2>Nova importação</h2><p>Um arquivo por entidade. O domínio só será gravado após a confirmação.</p></div></div>
       <form action={action} className="cv-form-grid cv-import-form" encType="multipart/form-data">
         <label>Entidade<select name="entity" value={entity} onChange={(event)=>setEntity(event.target.value as ImportEntity)}>{importEntities.map((item)=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-        <label>Arquivo CSV<input name="file" type="file" accept=".csv" required /></label>
+        <div className="cv-import-file-field">
+          <span className="cv-import-file-label">Arquivo CSV</span>
+          <input id="import-file" name="file" type="file" accept=".csv" required className="cv-import-file-input" onChange={(event)=>setFileName(event.target.files?.[0]?.name ?? "")} />
+          <label htmlFor="import-file" className="button button-outline cv-import-file-trigger">Escolher arquivo</label>
+          <span className="cv-import-file-name" aria-live="polite">{fileName || "Nenhum arquivo selecionado"}</span>
+        </div>
         <div className="cv-import-actions">
           <button className="button button-primary" type="submit" disabled={pending}>{pending ? "Lendo..." : "Ler e gerar prévia"}</button>
           <button type="button" className="button button-outline" onClick={()=>{const blob=new Blob([importTemplates[entity].join(",")+"\n"],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=entity+"-template.csv";a.click();URL.revokeObjectURL(url);}}>Baixar template oficial CSV</button>

@@ -147,7 +147,12 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-form-grid > .cv-person-picker { grid-column: span 6; }
 .cv-import-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .cv-import-actions .button { width: 100%; min-height: 44px; white-space: nowrap; }
-.cv-import-form input[type="file"] { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.cv-import-file-field { min-width: 0; display: grid; align-content: start; gap: 6px; color: var(--cv-text); font-size: 14px; font-weight: 500; }
+.cv-import-file-label { display: block; }
+.cv-import-file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.cv-import-file-trigger { width: max-content; max-width: 100%; }
+.cv-import-file-input:focus-visible + .cv-import-file-trigger { outline: 3px solid rgb(16 185 129 / 35%); outline-offset: 2px; }
+.cv-import-file-name { min-width: 0; color: var(--cv-text-muted); font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
 .cv-person-picker .cv-field-lg { grid-column: auto; }
 .cv-person-picker label:nth-child(2) select { width: max-content; max-width: 100%; }
 .cv-filters label:not(.cv-search) { width: max-content; max-width: 100%; }
