@@ -14,6 +14,17 @@ export function unreadNotificationCount(items: NotificationItem[]) { return item
 
 export function notificationRealtimeFilter(userAccountId: string) { return `recipient_user_account_id=eq.${userAccountId}`; }
 
+export function logNotificationRealtimeStatus(status: string) {
+  if (status === "SUBSCRIBED") console.info("[notifications-realtime] status SUBSCRIBED");
+  if (status === "CHANNEL_ERROR") console.error("[notifications-realtime] status CHANNEL_ERROR");
+  if (status === "TIMED_OUT") console.warn("[notifications-realtime] status TIMED_OUT");
+  if (status === "CLOSED") console.info("[notifications-realtime] status CLOSED");
+}
+
+export function logNotificationRealtimeInsert() {
+  console.info("[notifications-realtime] event INSERT received=true");
+}
+
 type RealtimeNotification = NotificationItem & { condominium_id?: string; recipient_user_account_id?: string };
 
 export function mergeNotificationInsert(items: NotificationItem[], notification: NotificationItem) {
@@ -47,6 +58,7 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
     if (!supabase) return;
     const channel = supabase.channel(`notifications:${condominiumId}:${userAccountId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: notificationRealtimeFilter(userAccountId) }, (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
+        logNotificationRealtimeInsert();
         const notification = payload.new as RealtimeNotification;
         handleRealtimeNotification(notification, condominiumId, userAccountId, () => setItems((current) => mergeNotificationInsert(current, notification)), () => router.refresh());
       })
@@ -56,8 +68,7 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
         setItems((current) => mergeNotificationUpdate(current, notification));
       })
       .subscribe((status: string) => {
-        if (status === "CHANNEL_ERROR") console.error("Notification realtime channel error");
-        if (status === "TIMED_OUT") console.warn("Notification realtime channel timed out");
+        logNotificationRealtimeStatus(status);
       });
     return () => { void supabase.removeChannel(channel); };
   }, [condominiumId, router, userAccountId]);

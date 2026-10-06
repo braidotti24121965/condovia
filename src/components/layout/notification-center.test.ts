@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { handleRealtimeNotification, mergeNotificationInsert, mergeNotificationUpdate, notificationRealtimeFilter, unreadNotificationCount } from "./notification-center";
+import { handleRealtimeNotification, logNotificationRealtimeInsert, logNotificationRealtimeStatus, mergeNotificationInsert, mergeNotificationUpdate, notificationRealtimeFilter, unreadNotificationCount } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 
 const item = (id: string, read_at: string | null, type: NotificationItem["notification_type"] = "reservation_requested"): NotificationItem => ({ id, read_at, notification_type: type, title: type, message: "Mensagem", entity_type: "reservation", entity_id: id, created_at: "2026-10-07T12:00:00Z" });
@@ -32,5 +32,20 @@ describe("notification center state", () => {
     expect(handleRealtimeNotification({ ...notification, condominium_id: "condo-2" }, "condo-1", "user-1", accept, refresh)).toBe(false);
     expect(handleRealtimeNotification({ ...notification, entity_type: "other" }, "condo-1", "user-1", accept, refresh)).toBe(true);
     expect(accept).toHaveBeenCalledOnce(); expect(refresh).not.toHaveBeenCalled();
+  });
+  it("makes all notification realtime statuses and INSERT observable without payload data", () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    for (const status of ["SUBSCRIBED", "CHANNEL_ERROR", "TIMED_OUT", "CLOSED"]) logNotificationRealtimeStatus(status);
+    logNotificationRealtimeInsert();
+    expect(info).toHaveBeenCalledWith("[notifications-realtime] status SUBSCRIBED");
+    expect(error).toHaveBeenCalledWith("[notifications-realtime] status CHANNEL_ERROR");
+    expect(warn).toHaveBeenCalledWith("[notifications-realtime] status TIMED_OUT");
+    expect(info).toHaveBeenCalledWith("[notifications-realtime] status CLOSED");
+    expect(info).toHaveBeenCalledWith("[notifications-realtime] event INSERT received=true");
+    expect(JSON.stringify([...info.mock.calls, ...error.mock.calls, ...warn.mock.calls])).not.toContain("payload");
+    expect(JSON.stringify([...info.mock.calls, ...error.mock.calls, ...warn.mock.calls])).not.toContain("user-1");
+    info.mockRestore(); error.mockRestore(); warn.mockRestore();
   });
 });
