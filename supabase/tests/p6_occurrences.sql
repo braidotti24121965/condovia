@@ -1,0 +1,53 @@
+create extension if not exists pgtap with schema extensions;
+begin;
+select plan(44);
+
+select has_table('public','occurrence_categories','categories table exists');
+select has_table('public','occurrences','occurrences table exists');
+select has_table('public','occurrence_history','history table exists');
+select has_table('public','occurrence_comments','comments table exists');
+select has_column('public','occurrences','occurrence_number','friendly number exists');
+select has_column('public','occurrences','confidential','confidential flag exists');
+select has_column('public','occurrences','requester_person_id','requester exists');
+select has_column('public','occurrences','related_unit_id','unit relation exists');
+select has_column('public','occurrence_comments','visibility','comment visibility exists');
+select has_column('public','occurrence_history','event_type','history event exists');
+
+select ok((select relrowsecurity from pg_class where oid='public.occurrences'::regclass),'occurrences RLS enabled');
+select ok((select relrowsecurity from pg_class where oid='public.occurrence_history'::regclass),'history RLS enabled');
+select ok((select relrowsecurity from pg_class where oid='public.occurrence_comments'::regclass),'comments RLS enabled');
+select ok((select relrowsecurity from pg_class where oid='public.occurrence_categories'::regclass),'categories RLS enabled');
+select is((select count(*)::int from pg_policies where tablename='occurrences'),3,'occurrences policies present');
+select is((select count(*)::int from pg_policies where tablename='occurrence_comments'),2,'comment policies present');
+select is((select count(*)::int from pg_policies where tablename='occurrence_history'),1,'history policy present');
+select is((select count(*)::int from pg_policies where tablename='occurrence_categories'),2,'category policies present');
+
+select has_function('public','create_occurrence','create RPC exists');
+select has_function('public','transition_occurrence','transition RPC exists');
+select has_function('public','add_occurrence_comment','comment RPC exists');
+select is((select count(*)::int from pg_proc where proname in ('create_occurrence','transition_occurrence','add_occurrence_comment') and prosecdef),3,'sensitive RPCs are security definer');
+select is((select count(*)::int from public.permissions where code like 'occurrences.%'),9,'P6 permissions exist');
+select is((select count(*)::int from pg_constraint where conrelid='public.occurrences'::regclass and contype='u'),2,'occurrence uniqueness constraints exist');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrences'::regclass and pg_get_constraintdef(oid) like '%open%triage%in_progress%resolved%closed%cancelled%'),'status constraint exists');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrence_comments'::regclass and pg_get_constraintdef(oid) like '%requester%internal%'),'comment visibility constraint exists');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrences'::regclass and pg_get_constraintdef(oid) like '%resolved_at%'),'resolved timestamp invariant exists');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrences'::regclass and pg_get_constraintdef(oid) like '%closed_at%'),'closed timestamp invariant exists');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrences'::regclass and pg_get_constraintdef(oid) like '%cancelled_at%'),'cancelled timestamp invariant exists');
+select ok(exists(select 1 from pg_indexes where tablename='occurrences' and indexname='occurrences_scope_idx'),'scope index exists');
+select ok(exists(select 1 from pg_indexes where tablename='occurrence_history' and indexname='occurrence_history_idx'),'history index exists');
+select ok(not has_table_privilege('anon','public.occurrences','select'),'anon cannot read occurrences');
+select ok(not has_table_privilege('anon','public.occurrence_comments','select'),'anon cannot read comments');
+select ok(not has_function_privilege('anon','public.create_occurrence(uuid,text,text,text,uuid,boolean,text)','execute'),'anon cannot execute create RPC');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrences'::regclass and pg_get_constraintdef(oid) like '%category_id%condominium_id%'),'category tenant FK exists');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrences'::regclass and pg_get_constraintdef(oid) like '%related_unit_id%condominium_id%'),'unit tenant FK exists');
+select ok(exists(select 1 from pg_constraint where conrelid='public.occurrence_history'::regclass and pg_get_constraintdef(oid) like '%occurrence_id%condominium_id%'),'history tenant FK exists');
+select ok(exists(select 1 from pg_trigger where tgrelid='public.reservations'::regclass and tgname='reservations_requested_notification'),'P5 notification trigger preserved');
+select has_function('public','emit_occurrence_notification','occurrence notification function exists');
+select ok((select prosecdef from pg_proc where proname='emit_occurrence_notification' limit 1),'occurrence notifications use security definer');
+select ok(exists(select 1 from pg_proc where proname='emit_occurrence_notification' and prosrc like '%on conflict do nothing%'),'occurrence notifications are idempotent');
+select ok(exists(select 1 from pg_proc where proname='transition_occurrence' and prosrc like '%Responsável inválido%'),'assignment tenant validation exists');
+select ok(exists(select 1 from pg_proc where proname='create_occurrence' and prosrc like '%gatehouse%'),'gatehouse origin is derived in RPC');
+select ok(exists(select 1 from pg_proc where proname='add_occurrence_comment' and prosrc like '%occurrence_commented%'),'comment notification path exists');
+
+select * from finish();
+rollback;
