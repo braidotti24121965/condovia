@@ -275,6 +275,13 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-feedback-modal h2 { margin: 0; color: var(--cv-brand-navy); font-size: 18px; line-height: 24px; }
 .cv-feedback-modal p { max-width: 340px; margin: 0 0 8px; color: var(--cv-text-muted); font-size: 14px; line-height: 21px; }
 .cv-feedback-modal .button { min-height: 38px; padding: 7px 20px; }
+.cv-rejection-modal { width: min(100%, 500px); gap: 14px; }
+.cv-rejection-description { max-width: 410px; margin: 0; color: var(--cv-text-muted); font-size: 14px; line-height: 21px; text-align: center; }
+.cv-rejection-field { width: 100%; display: grid; gap: 6px; color: var(--cv-text-strong); font-size: 13px; text-align: left; }
+.cv-rejection-field textarea { width: 100%; min-height: 100px; resize: vertical; }
+.cv-rejection-modal .cv-resource-actions { justify-content: center; gap: 12px; width: 100%; }
+.cv-button-danger { color: #FFFFFF; background: #DC2626; border-color: #DC2626; }
+.cv-button-danger:hover { background: #B91C1C; border-color: #B91C1C; }
 .cv-reservation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .cv-reservation-actions .button { min-height: 34px; padding: 6px 10px; font-size: 12px; }
 .cv-reservation-filters { margin: 14px 0 16px; gap: 10px; }
