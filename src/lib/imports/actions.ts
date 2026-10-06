@@ -64,18 +64,7 @@ export async function previewImport(_: ImportActionState, form: FormData): Promi
 export async function confirmImport(form: FormData) {
   const { supabase } = await requireCondominiumPermission("imports.manage");
   const batchId = text(form,"batch_id"); const { data, error } = await supabase.rpc("confirm_import_batch",{p_batch_id:batchId});
-  if(error) {
-    // TEMP Gate 6 diagnosis: remove after the production RPC failure is identified.
-    console.error("[TEMP][Gate6] confirm_import_batch", {
-      operation: "confirm_import_batch",
-      p_batch_id: batchId,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-    });
-    return { ok:false,message:safeImportError(error) };
-  }
+  if(error) return { ok:false,message:safeImportError(error) };
   revalidatePath("/app/condominium/imports"); revalidatePath("/app/condominium/units"); revalidatePath("/app/condominium/people"); revalidatePath("/app/condominium/owners"); revalidatePath("/app/condominium/residents");
   return { ok:true,message:"Importação confirmada.",result:data };
 }

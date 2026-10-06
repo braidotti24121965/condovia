@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(35);
+select plan(41);
 select has_table('public','import_batches','import batches table exists');
 select has_table('public','import_batch_rows','import rows table exists');
 select ok((select relrowsecurity from pg_class where oid='public.import_batches'::regclass),'batch RLS enabled');
@@ -98,6 +98,24 @@ insert into public.import_batch_rows (batch_id,condominium_id,row_number,classif
  ('9c000000-0000-4000-8000-000000000006','92000000-0000-4000-8000-000000000001',3,'new',jsonb_build_object('structure_type','invalid','name','Rollback Nova B'));
 select throws_ok($$select public.confirm_import_batch('9c000000-0000-4000-8000-000000000006')$$,'23514',null,'constraint failure rolls back the batch');
 select is((select count(*)::int from public.condominium_structures where name like 'Rollback Nova%'),0,'rollback removed all new structures');
+
+-- Optional UUID fields: empty root, valid parent, invalid non-empty UUID, and atomic rollback.
+insert into public.import_batches (id,condominium_id,created_by_user_account_id,entity_type,file_name,file_hash,total_rows,new_rows)
+values
+ ('9c000000-0000-4000-8000-000000000007','92000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001','structures','p73-root.csv','p73-root-1',1,1),
+ ('9c000000-0000-4000-8000-000000000008','92000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001','structures','p73-child.csv','p73-child-1',1,1),
+ ('9c000000-0000-4000-8000-000000000009','92000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001','structures','p73-invalid-uuid.csv','p73-invalid-uuid-1',2,2);
+insert into public.import_batch_rows (batch_id,condominium_id,row_number,classification,normalized_data) values
+ ('9c000000-0000-4000-8000-000000000007','92000000-0000-4000-8000-000000000001',2,'new',jsonb_build_object('structure_type','block','name','Estrutura Raiz P7.3','parent_id','')),
+ ('9c000000-0000-4000-8000-000000000008','92000000-0000-4000-8000-000000000001',2,'new',jsonb_build_object('structure_type','sector','name','Estrutura Filha P7.3','parent_id','98000000-0000-4000-8000-000000000001')),
+ ('9c000000-0000-4000-8000-000000000009','92000000-0000-4000-8000-000000000001',2,'new',jsonb_build_object('structure_type','block','name','UUID Válido Antes do Erro','parent_id','')),
+ ('9c000000-0000-4000-8000-000000000009','92000000-0000-4000-8000-000000000001',3,'new',jsonb_build_object('structure_type','block','name','UUID Inválido P7.3','parent_id','not-a-uuid'));
+select lives_ok($$select public.confirm_import_batch('9c000000-0000-4000-8000-000000000007')$$,'empty parent_id confirms a root structure');
+select is((select parent_id is null from public.condominium_structures where name='Estrutura Raiz P7.3'),true,'empty parent_id is persisted as NULL');
+select lives_ok($$select public.confirm_import_batch('9c000000-0000-4000-8000-000000000008')$$,'valid parent_id confirms a child structure');
+select is((select parent_id::text from public.condominium_structures where name='Estrutura Filha P7.3'),'98000000-0000-4000-8000-000000000001','valid parent_id is preserved');
+select throws_ok($$select public.confirm_import_batch('9c000000-0000-4000-8000-000000000009')$$,'22P02',null,'invalid non-empty parent_id is rejected atomically');
+select is((select count(*)::int from public.condominium_structures where name in ('UUID Válido Antes do Erro','UUID Inválido P7.3')),0,'invalid UUID rollback removes all rows in the batch');
 
 -- An authenticated resident cannot read or confirm a batch from another condominium.
 reset role;
