@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Building2, CalendarDays, ChevronDown, CircleUserRound, Command, House, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, UserRound, Network, DoorOpen, Users, KeyRound, Shield } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
@@ -9,6 +9,7 @@ import { Brand } from "@/components/layout/brand";
 import type { AuthorizedContext } from "@/lib/auth/context";
 import { NotificationCenter } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
+import { createClient } from "@/lib/supabase/browser";
 
 export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false) {
   if (context.type === "platform") return { resident: false, primary: [{ label: "Plataforma", href: "/app/platform" }], showCondominiumSection: false };
@@ -16,9 +17,10 @@ export function resolveNavigation(context: AuthorizedContext, dashboardAllowed =
   return { resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }], showCondominiumSection: context.type === "condominium" };
 }
 
-export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, dashboard: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; dashboard?: boolean } }) {
+export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", userAccountId, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, dashboard: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; userAccountId?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; dashboard?: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const drawerToggleRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -27,6 +29,16 @@ export function AppShell({ children, context, personName, notifications = [], no
       mainContentRef.current?.focus({ preventScroll: true });
     }
   }, [pathname]);
+  useEffect(() => {
+    if (context.type !== "condominium") return;
+    const supabase = createClient();
+    if (!supabase) return;
+    const channel = supabase.channel(`reservations:${context.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, () => router.refresh())
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, () => router.refresh())
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [context.id, context.type, router]);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
   const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations);
   const nav = navigation.primary.map((item) => ({ ...item, Icon: item.label === "Meu perfil" ? UserRound : LayoutDashboard }));
@@ -45,7 +57,7 @@ export function AppShell({ children, context, personName, notifications = [], no
         <label htmlFor="drawer-toggle" className="icon-button mobile-menu-open" aria-label="Abrir menu"><Menu size={20} /></label>
         <div className="mobile-brand"><Brand /></div>
         <div className="search-box"><Search size={17} /><input aria-label="Buscar" placeholder="Buscar no CondoVia" /><kbd>⌘ K</kbd></div>
-        <div className="topbar-actions"><NotificationCenter initialNotifications={notifications} timeZone={notificationTimeZone} /><div className="topbar-divider" /><details className="user-menu"><summary><span className="user-avatar"><CircleUserRound size={21} /></span><span className="user-name"><strong>{personName || "Minha conta"}</strong><small>{context.role}</small></span><ChevronDown size={15} /></summary><div className="user-dropdown"><form action={signOut}><button type="submit"><LogOut size={16} /> Sair da conta</button></form></div></details></div>
+        <div className="topbar-actions"><NotificationCenter initialNotifications={notifications} timeZone={notificationTimeZone} condominiumId={context.type === "condominium" ? context.id : undefined} userAccountId={userAccountId} /><div className="topbar-divider" /><details className="user-menu"><summary><span className="user-avatar"><CircleUserRound size={21} /></span><span className="user-name"><strong>{personName || "Minha conta"}</strong><small>{context.role}</small></span><ChevronDown size={15} /></summary><div className="user-dropdown"><form action={signOut}><button type="submit"><LogOut size={16} /> Sair da conta</button></form></div></details></div>
       </header>
       <main ref={mainContentRef} tabIndex={-1} className="main-content">{children}</main>
     </div>
