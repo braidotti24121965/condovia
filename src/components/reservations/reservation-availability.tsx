@@ -24,6 +24,10 @@ export function isSlotWithinAdvanceWindow(start: Date, end: Date, minimumAdvance
   return start.getTime() >= minimumAt && end.getTime() <= maximumAt;
 }
 
+export function getTimeSlotStepMinutes(minimumDurationMinutes: number) {
+  return Math.max(1, minimumDurationMinutes);
+}
+
 export function filterReservationsForResource(reservations: OccupiedReservation[], resourceId: string) {
   return reservations.filter((reservation) => reservation.resource_id === resourceId);
 }
@@ -48,7 +52,7 @@ export function ReservationAvailability({ resource, timeZone, reservations, bloc
     const result: Array<{ start: string; end: string; occupied: OccupiedReservation | null }> = [];
     const start = Number(hour.start_time.slice(0, 2)) * 60 + Number(hour.start_time.slice(3, 5));
     const end = Number(hour.end_time.slice(0, 2)) * 60 + Number(hour.end_time.slice(3, 5));
-    for (let minute = start; minute + resource!.minimum_duration_minutes <= end; minute += 30) {
+    for (let minute = start; minute + resource!.minimum_duration_minutes <= end; minute += getTimeSlotStepMinutes(resource!.minimum_duration_minutes)) {
       const startLocal = `${selectedDate}T${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
       const endMinute = minute + resource!.minimum_duration_minutes;
       const endLocal = `${selectedDate}T${String(Math.floor(endMinute / 60)).padStart(2, "0")}:${String(endMinute % 60).padStart(2, "0")}`;
@@ -72,7 +76,7 @@ export function ReservationAvailability({ resource, timeZone, reservations, bloc
     if (hour.weekday !== weekday) return false;
     const start = Number(hour.start_time.slice(0, 2)) * 60 + Number(hour.start_time.slice(3, 5));
     const end = Number(hour.end_time.slice(0, 2)) * 60 + Number(hour.end_time.slice(3, 5));
-    for (let minute = start; minute + resource.minimum_duration_minutes <= end; minute += 30) {
+    for (let minute = start; minute + resource.minimum_duration_minutes <= end; minute += getTimeSlotStepMinutes(resource.minimum_duration_minutes)) {
       const startLocal = `${date}T${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
       const endMinute = minute + resource.minimum_duration_minutes;
       const endLocal = `${date}T${String(Math.floor(endMinute / 60)).padStart(2, "0")}:${String(endMinute % 60).padStart(2, "0")}`;

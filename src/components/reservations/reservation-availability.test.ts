@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterReservationsForResource, isSlotWithinAdvanceWindow } from "./reservation-availability";
+import { filterReservationsForResource, getTimeSlotStepMinutes, isSlotWithinAdvanceWindow } from "./reservation-availability";
 
 const reservations = [
   { resource_id: "hall", starts_at: "2026-10-08T14:00:00Z", ends_at: "2026-10-08T15:00:00Z", own: false },
@@ -32,5 +32,12 @@ describe("time slot advance window", () => {
   });
   it("accepts an open maximum window", () => {
     expect(isSlotWithinAdvanceWindow(new Date("2026-10-07T12:00:00Z"), new Date("2026-10-07T13:00:00Z"), 60, null, now)).toBe(true);
+  });
+});
+
+describe("time slot duration", () => {
+  it("uses the resource minimum duration as the slot step", () => {
+    expect(getTimeSlotStepMinutes(60)).toBe(60);
+    expect(getTimeSlotStepMinutes(30)).toBe(30);
   });
 });

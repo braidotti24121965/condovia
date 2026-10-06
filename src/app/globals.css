@@ -321,11 +321,12 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-availability-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .cv-availability-legend i { width: 7px; height: 7px; display: inline-block; border-radius: 50%; background: var(--cv-brand-teal); }
 .cv-availability-legend i.is-occupied { background: #D97706; }.cv-availability-legend i.is-own { background: #7C3AED; }.cv-availability-legend i.is-unavailable { background: #94A3B8; }
-.cv-availability-slots { display: grid; gap: 8px; }
+.cv-availability-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .cv-availability-slot { min-height: 36px; padding: 8px 10px; text-align: left; }
 .cv-availability-slot.is-available:hover { border-color: var(--cv-brand-teal); }
 .cv-availability-slot.is-occupied { color: var(--cv-text-muted); background: #F1F5F9; cursor: not-allowed; }
-@media (max-width: 600px) { .cv-availability-heading { align-items: flex-start; flex-direction: column; }.cv-availability-days, .cv-availability-weekdays { gap: 4px; }.cv-availability-day { min-height: 30px; font-size: 12px; } }
+@media (max-width: 900px) { .cv-availability-slots { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .cv-availability-heading { align-items: flex-start; flex-direction: column; }.cv-availability-days, .cv-availability-weekdays { gap: 4px; }.cv-availability-day { min-height: 30px; font-size: 12px; }.cv-availability-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }.cv-availability-slot { min-height: 56px; padding: 8px; } }
 .cv-reservation-action-row { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; white-space: nowrap; }
 .cv-reservation-actions { display: flex; flex-wrap: nowrap; gap: 8px; }
 .cv-reservation-actions-cell { min-width: 280px; white-space: nowrap; }
