@@ -17,9 +17,11 @@ export function ImportWizard() {
         <label>Entidade<select name="entity" value={entity} onChange={(event)=>setEntity(event.target.value as ImportEntity)}>{importEntities.map((item)=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
         <div className="cv-import-file-field">
           <span className="cv-import-file-label">Arquivo CSV</span>
-          <input id="import-file" name="file" type="file" accept=".csv" required className="cv-import-file-input" onChange={(event)=>setFileName(event.target.files?.[0]?.name ?? "")} />
-          <label htmlFor="import-file" className="button button-outline cv-import-file-trigger">Escolher arquivo</label>
-          <span className="cv-import-file-name" aria-live="polite">{fileName || "Nenhum arquivo selecionado"}</span>
+          <div className="cv-import-file-control">
+            <input id="import-file" name="file" type="file" accept=".csv" required className="cv-import-file-input" onChange={(event)=>setFileName(event.target.files?.[0]?.name ?? "")} />
+            <span className="cv-import-file-name" aria-live="polite">{fileName || "Nenhum arquivo selecionado"}</span>
+            <label htmlFor="import-file" className="button button-outline cv-import-file-trigger">Escolher arquivo</label>
+          </div>
         </div>
         <div className="cv-import-actions">
           <button className="button button-primary" type="submit" disabled={pending}>{pending ? "Lendo..." : "Ler e gerar prévia"}</button>
