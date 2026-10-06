@@ -1,0 +1,25 @@
+begin;
+select plan(20);
+
+select has_function('public', 'prevent_reservation_buffer_conflict', 'buffer trigger function exists');
+select has_function('public', 'get_reservation_availability', 'availability RPC exists');
+select is((select count(*)::int from pg_trigger where tgname = 'reservations_buffer_guard'), 1, 'buffer trigger is installed');
+select is((select count(*)::int from pg_proc where proname = 'get_reservation_availability' and prosecdef), 1, 'availability RPC is security definer');
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability' and pg_get_function_result(p.oid) like '%is_own_reservation%'), 1, 'RPC returns ownership flag');
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability' and pg_get_functiondef(p.oid) like '%requester_person_id = public.current_person_id()%'), 1, 'ownership is calculated server side');
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability' and pg_get_functiondef(p.oid) like '%has_permission(''reservations.resources.read''%'), 1, 'RPC enforces tenant permission');
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability' and pg_get_functiondef(p.oid) not like '%full_name%' and pg_get_functiondef(p.oid) not like '%email%'), 1, 'RPC does not select personal fields');
+select is((select count(*)::int from pg_trigger where tgrelid = 'public.reservations'::regclass and tgname = 'reservations_buffer_guard'), 1, 'buffer guard is attached to reservations');
+select ok((select pg_get_functiondef(p.oid) like '%pg_advisory_xact_lock%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'prevent_reservation_buffer_conflict'), 'buffer uses transaction advisory lock');
+select ok((select pg_get_functiondef(p.oid) like '%status in (''pending'', ''approved'')%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'prevent_reservation_buffer_conflict'), 'pending and approved are protected');
+select ok((select pg_get_functiondef(p.oid) not like '%status in (''rejected'', ''cancelled'')%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'prevent_reservation_buffer_conflict'), 'rejected and cancelled do not create buffer');
+select ok((select pg_get_functiondef(p.oid) like '%buffer_minutes%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'prevent_reservation_buffer_conflict'), 'resource buffer is read by backend guard');
+select ok((select pg_get_functiondef(p.oid) like '%make_interval(mins => buffer_minutes)%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'prevent_reservation_buffer_conflict'), 'buffer is applied before and after reservations');
+select ok((select pg_get_functiondef(p.oid) like '%r.resource_id = new.resource_id%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'prevent_reservation_buffer_conflict'), 'different resources do not conflict');
+select ok((select pg_get_functiondef(p.oid) like '%r.id <> new.id%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'prevent_reservation_buffer_conflict'), 'same reservation is excluded from conflict check');
+select ok((select pg_get_functiondef(p.oid) like '%starts_at < p_to%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability'), 'RPC applies upper time bound');
+select ok((select pg_get_functiondef(p.oid) like '%ends_at > p_from%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability'), 'RPC applies lower time bound');
+select ok((select pg_get_functiondef(p.oid) like '%rr.status = ''active''%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability'), 'RPC excludes inactive resources');
+select ok((select pg_get_functiondef(p.oid) like '%r.resource_id = p_resource_id%' from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'get_reservation_availability'), 'RPC scopes to requested resource');
+select * from finish();
+rollback;
