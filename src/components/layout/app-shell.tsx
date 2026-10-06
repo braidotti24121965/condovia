@@ -10,7 +10,11 @@ import type { AuthorizedContext } from "@/lib/auth/context";
 import { NotificationCenter } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 
-export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean } }) {
+export function resolvePanelHref(context: AuthorizedContext, dashboardAllowed = false) {
+  return context.type === "condominium" && !dashboardAllowed ? "/app/my-units" : context.type === "platform" ? "/app/platform" : "/app/dashboard";
+}
+
+export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, dashboard: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; dashboard?: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const drawerToggleRef = useRef<HTMLInputElement>(null);
@@ -24,7 +28,7 @@ export function AppShell({ children, context, personName, notifications = [], no
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
   const nav = context.type === "platform"
     ? [{ label: "Plataforma", href: "/app/platform", Icon: LayoutDashboard, active: true }]
-    : [{ label: "Painel", href: "/app/dashboard", Icon: LayoutDashboard, active: true }, { label: "Meu perfil", href: "/app/profile", Icon: UserRound, active: false }];
+    : [{ label: "Painel", href: resolvePanelHref(context, condominiumNavigation.dashboard), Icon: LayoutDashboard, active: true }, { label: "Meu perfil", href: "/app/profile", Icon: UserRound, active: false }];
   return <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
     <input ref={drawerToggleRef} className="drawer-toggle" type="checkbox" id="drawer-toggle" aria-hidden="true" />
     <label className="drawer-backdrop" htmlFor="drawer-toggle" aria-label="Fechar menu" />

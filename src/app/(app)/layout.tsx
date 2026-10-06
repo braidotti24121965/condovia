@@ -16,7 +16,8 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     supabase.rpc("has_permission", { permission_code: "ownerships.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "gatehouse.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "reservations.read", target_condominium_id: context.id }),
-  ]).then(([overview, structures, units, people, residents, ownerships, gatehouse, reservations]) => ({
+    supabase.rpc("has_permission", { permission_code: "dashboard.read", target_condominium_id: context.id }),
+  ]).then(([overview, structures, units, people, residents, ownerships, gatehouse, reservations, dashboard]) => ({
     overview: overview.data === true,
     structures: structures.data === true,
     units: units.data === true,
@@ -25,6 +26,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     ownerships: ownerships.data === true,
     gatehouse: gatehouse.data === true,
     reservations: reservations.data === true,
+    dashboard: dashboard.data === true,
   })) : undefined;
   const { data: account } = await supabase.from("user_accounts").select("people(full_name, preferred_name)").eq("auth_user_id", user.id).maybeSingle();
   const person = account?.people as unknown as { full_name: string; preferred_name: string | null } | null;
