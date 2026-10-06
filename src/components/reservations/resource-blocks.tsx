@@ -1,0 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { cancelResourceBlock, createResourceBlock } from "@/lib/reservations/resource-block-actions";
+
+export function ResourceBlocks({ resourceId, reservationMode, blocks = [] }: { resourceId: string; reservationMode: "day" | "time_slot"; blocks?: Array<{ id: string; start_at: string; end_at: string; reason: string }> }) {
+  const [open, setOpen] = useState(false); const [error, setError] = useState("");
+  return <div><button className="button button-outline" type="button" onClick={() => setOpen((value) => !value)}>Bloqueios</button>{open && <section className="cv-panel"><h3>Bloqueios administrativos</h3><form action={async (form) => { try { await createResourceBlock(form); window.location.reload(); } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível criar o bloqueio."); } }} className="cv-form-grid"><input type="hidden" name="resource_id" value={resourceId} /><input type="hidden" name="reservation_mode" value={reservationMode} /><label>Data<input name="date" type="date" required /></label>{reservationMode === "time_slot" && <><label>Início<input name="start_time" type="time" required /></label><label>Fim<input name="end_time" type="time" required /></label></>}<label>Motivo<input name="reason" required minLength={2} /></label><button className="button button-primary" type="submit">Criar bloqueio</button></form>{error && <p className="cv-alert cv-alert-error">{error}</p>}<div>{blocks.map((block) => <div key={block.id}><span>{new Intl.DateTimeFormat("pt-BR").format(new Date(block.start_at))} · {block.reason}</span><form action={async (form) => { await cancelResourceBlock(form); window.location.reload(); }}><input type="hidden" name="block_id" value={block.id} /><button className="button button-outline" type="submit">Cancelar bloqueio</button></form></div>)}</div></section>}</div>;
+}

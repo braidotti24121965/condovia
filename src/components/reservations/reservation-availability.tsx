@@ -16,8 +16,9 @@ type Resource = {
 };
 
 type OccupiedReservation = { starts_at: string; ends_at: string; own: boolean };
+type ResourceBlock = { start_at: string; end_at: string; status: string };
 
-export function ReservationAvailability({ resource, timeZone, reservations, selectedDate: selectedDateProp = "", onSelect, onDateChange }: { resource: Resource | null; timeZone: string; reservations: OccupiedReservation[]; selectedDate?: string; onSelect: (start: string, end: string) => void; onDateChange?: (date: string) => void }) {
+export function ReservationAvailability({ resource, timeZone, reservations, blocks = [], selectedDate: selectedDateProp = "", onSelect, onDateChange }: { resource: Resource | null; timeZone: string; reservations: OccupiedReservation[]; blocks?: ResourceBlock[]; selectedDate?: string; onSelect: (start: string, end: string) => void; onDateChange?: (date: string) => void }) {
   const [month, setMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState("");
   const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
@@ -42,7 +43,7 @@ export function ReservationAvailability({ resource, timeZone, reservations, sele
       const endLocal = `${selectedDate}T${String(Math.floor(endMinute / 60)).padStart(2, "0")}:${String(endMinute % 60).padStart(2, "0")}`;
       const startDate = parseDateTimeInTimezone(startLocal, timeZone);
       const endDate = parseDateTimeInTimezone(endLocal, timeZone);
-      const occupied = dayReservations.find((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource!.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource!.buffer_minutes * 60000 > startDate.getTime()) || null;
+      const occupied = dayReservations.find((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource!.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource!.buffer_minutes * 60000 > startDate.getTime()) || (blocks.some((block) => new Date(block.start_at) < endDate && new Date(block.end_at) > startDate) ? { starts_at: "", ends_at: "", own: false } : null);
       const advance = Math.round((startDate.getTime() - Date.now()) / 60000);
       const validAdvance = advance >= resource!.minimum_advance_minutes && (resource!.maximum_advance_minutes == null || advance <= resource!.maximum_advance_minutes);
       result.push({ start: startLocal, end: endLocal, occupied: validAdvance ? occupied : { starts_at: "", ends_at: "", own: false } });
@@ -70,7 +71,7 @@ export function ReservationAvailability({ resource, timeZone, reservations, sele
       const advance = Math.round((startDate.getTime() - Date.now()) / 60000);
       if (advance < resource.minimum_advance_minutes || (resource.maximum_advance_minutes != null && advance > resource.maximum_advance_minutes)) continue;
       if (resource.maximum_duration_minutes != null && resource.minimum_duration_minutes > resource.maximum_duration_minutes) continue;
-      const occupied = (reservationDates.get(date) || []).some((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource.buffer_minutes * 60000 > startDate.getTime());
+      const occupied = (reservationDates.get(date) || []).some((reservation) => new Date(reservation.starts_at) < new Date(endDate.getTime() + resource.buffer_minutes * 60000) && new Date(reservation.ends_at).getTime() + resource.buffer_minutes * 60000 > startDate.getTime()) || blocks.some((block) => new Date(block.start_at) < endDate && new Date(block.end_at) > startDate);
       if (!occupied) return true;
     }
     return false;
@@ -84,7 +85,7 @@ export function ReservationAvailability({ resource, timeZone, reservations, sele
     const endDate = parseDateTimeInTimezone(`${date}T${hour.end_time.slice(0, 5)}`, timeZone);
     const advance = Math.round((startDate.getTime() - Date.now()) / 60000);
     if (advance < resource.minimum_advance_minutes || (resource.maximum_advance_minutes != null && advance > resource.maximum_advance_minutes)) return false;
-    return !(reservationDates.get(date) || []).some((reservation) => new Date(reservation.starts_at) < endDate && new Date(reservation.ends_at) > startDate);
+    return !(reservationDates.get(date) || []).some((reservation) => new Date(reservation.starts_at) < endDate && new Date(reservation.ends_at) > startDate) && !blocks.some((block) => new Date(block.start_at) < endDate && new Date(block.end_at) > startDate);
   };
   const isDay = resource?.reservation_mode === "day";
   const isAvailable = (date: string, weekday: number) => isDay ? dateHasValidDay(date, weekday) : dateHasValidSlot(date, weekday);
