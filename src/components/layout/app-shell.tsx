@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Building2, CalendarDays, ChevronDown, CircleUserRound, Command, House, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, UserRound, Network, DoorOpen, Users, KeyRound, Shield } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
@@ -9,8 +9,6 @@ import { Brand } from "@/components/layout/brand";
 import type { AuthorizedContext } from "@/lib/auth/context";
 import { NotificationCenter } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
-import { createClient } from "@/lib/supabase/browser";
-import type { RealtimePostgresChangesPayload, SupabaseClient } from "@supabase/supabase-js";
 
 export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false) {
   if (context.type === "platform") return { resident: false, primary: [{ label: "Plataforma", href: "/app/platform" }], showCondominiumSection: false };
@@ -18,44 +16,9 @@ export function resolveNavigation(context: AuthorizedContext, dashboardAllowed =
   return { resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }], showCondominiumSection: context.type === "condominium" };
 }
 
-export function logReservationRealtimeStatus(status: string) {
-  if (status === "SUBSCRIBED") console.info("[reservations-realtime] status SUBSCRIBED");
-  if (status === "CHANNEL_ERROR") console.error("[reservations-realtime] status CHANNEL_ERROR");
-  if (status === "TIMED_OUT") console.warn("[reservations-realtime] status TIMED_OUT");
-  if (status === "CLOSED") console.info("[reservations-realtime] status CLOSED");
-}
-
-export function handleReservationRealtimeEvent(event: "INSERT" | "UPDATE", payload: { new?: { condominium_id?: unknown } }, condominiumId: string, refresh: () => void) {
-  const condominiumMatch = payload.new?.condominium_id === condominiumId;
-  console.info(`[reservations-realtime] event ${event}`, `condominium match=${condominiumMatch}`, "refresh=true");
-  refresh();
-}
-
-export function setupReservationRealtimeDiagnostics(supabase: SupabaseClient, condominiumId: string) {
-  const setup = (label: "filtered" | "unfiltered", filter?: string) => {
-    const config = { event: "INSERT" as const, schema: "public", table: "reservations", ...(filter ? { filter } : {}) };
-    const channel = supabase.channel(`reservations-diag-${label}:${condominiumId}`)
-      .on("postgres_changes", config, () => console.info(`[reservations-diag-${label}] INSERT received=true`))
-      .subscribe((status: string) => {
-        if (status === "SUBSCRIBED") console.info(`[reservations-diag-${label}] status SUBSCRIBED`);
-        if (status === "CHANNEL_ERROR") console.error(`[reservations-diag-${label}] status CHANNEL_ERROR`);
-        if (status === "TIMED_OUT") console.warn(`[reservations-diag-${label}] status TIMED_OUT`);
-        if (status === "CLOSED") console.info(`[reservations-diag-${label}] status CLOSED`);
-      });
-    return channel;
-  };
-  const filtered = setup("filtered", `condominium_id=eq.${condominiumId}`);
-  const unfiltered = setup("unfiltered");
-  return () => {
-    void supabase.removeChannel(filtered);
-    void supabase.removeChannel(unfiltered);
-  };
-}
-
 export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", userAccountId, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, dashboard: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; userAccountId?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; dashboard?: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
   const drawerToggleRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -64,19 +27,6 @@ export function AppShell({ children, context, personName, notifications = [], no
       mainContentRef.current?.focus({ preventScroll: true });
     }
   }, [pathname]);
-  useEffect(() => {
-    if (context.type !== "condominium") return;
-    const supabase = createClient();
-    if (!supabase) return;
-    const channel = supabase.channel(`reservations:${context.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, (payload: RealtimePostgresChangesPayload<{ condominium_id?: string }>) => handleReservationRealtimeEvent("INSERT", payload, context.id, () => router.refresh()))
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "reservations", filter: `condominium_id=eq.${context.id}` }, (payload: RealtimePostgresChangesPayload<{ condominium_id?: string }>) => handleReservationRealtimeEvent("UPDATE", payload, context.id, () => router.refresh()))
-      .subscribe((status: string) => {
-        logReservationRealtimeStatus(status);
-      });
-    const removeDiagnostics = context.role === "Síndico" ? setupReservationRealtimeDiagnostics(supabase, context.id) : () => undefined;
-    return () => { void supabase.removeChannel(channel); removeDiagnostics(); };
-  }, [context.id, context.role, context.type, router]);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
   const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations);
   const nav = navigation.primary.map((item) => ({ ...item, Icon: item.label === "Meu perfil" ? UserRound : LayoutDashboard }));
