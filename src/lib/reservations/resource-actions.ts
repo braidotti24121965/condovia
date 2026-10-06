@@ -22,6 +22,7 @@ export async function saveReservableResource(form: FormData) {
   const id = value(form, "id");
   const payload = {
     condominium_id: context.id, name: value(form, "name"), description: value(form, "description") || null, location: value(form, "location") || null,
+    reservation_mode: value(form, "reservation_mode") === "day" ? "day" : "time_slot",
     capacity: numberOrNull(form, "capacity"), status: value(form, "status") || "active", requires_approval: form.get("requires_approval") === "on",
     minimum_advance_minutes: Number(values.minimum_advance_minutes), maximum_advance_minutes: values.maximum_advance_minutes === "" ? null : Number(values.maximum_advance_minutes), minimum_duration_minutes: Number(values.minimum_duration_minutes), maximum_duration_minutes: values.maximum_duration_minutes === "" ? null : Number(values.maximum_duration_minutes), buffer_minutes: Number(values.buffer_minutes), cancellation_allowed: form.get("cancellation_allowed") === "on", cancellation_deadline_minutes: Number(values.cancellation_deadline_minutes), usage_fee: usageFee === "" ? null : Number(usageFee), instructions: value(form, "instructions") || null, updated_at: new Date().toISOString(),
   };

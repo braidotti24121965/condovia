@@ -9,7 +9,7 @@ export const metadata = { title: "Reservas" };
 export default async function ReservationsPage() {
   const { supabase, context, user } = await requireCondominiumPermission("reservations.resources.read");
   const [{ data: resources }, { data: units }, { data: reservations }, { data: condo }, { data: account }] = await Promise.all([
-    supabase.from("reservable_resources").select("id,name,minimum_advance_minutes,maximum_advance_minutes,minimum_duration_minutes,maximum_duration_minutes,buffer_minutes,hours:reservable_resource_hours(weekday,start_time,end_time)").eq("condominium_id", context.id).eq("status", "active").order("name"),
+    supabase.from("reservable_resources").select("id,name,reservation_mode,minimum_advance_minutes,maximum_advance_minutes,minimum_duration_minutes,maximum_duration_minutes,buffer_minutes,hours:reservable_resource_hours(weekday,start_time,end_time)").eq("condominium_id", context.id).eq("status", "active").order("name"),
     supabase.from("units").select("id,code,display_name").eq("condominium_id", context.id).eq("operational_status", "active").order("code"),
     supabase.from("reservations").select("id,requester_person_id,starts_at,ends_at,status,created_at,resource:reservable_resources(name),unit:units(code),requester:person_condominium_links!reservations_requester_person_id_condominium_id_fkey(person:people(full_name))").eq("condominium_id", context.id).order("starts_at", { ascending: false }).limit(20),
     supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle(),

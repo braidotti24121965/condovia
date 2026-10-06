@@ -47,6 +47,7 @@ export function ResourceForm({ resource, hours = [] }: { resource?: Record<strin
           <label className="cv-resource-name">Nome *<input name="name" defaultValue={String(resource?.name || "")} required /></label>
           <label className="cv-resource-location">Localização<input name="location" defaultValue={String(resource?.location || "")} /></label>
           <label className="cv-resource-capacity">Capacidade<input name="capacity" type="number" min="1" defaultValue={resource?.capacity == null ? "" : String(resource.capacity)} /></label>
+          <label className="cv-resource-mode">Modalidade de reserva *<select name="reservation_mode" defaultValue={String(resource?.reservation_mode || "time_slot")}><option value="day">Dia inteiro</option><option value="time_slot">Por horário</option></select></label>
           <label className="cv-resource-status">Status<select name="status" defaultValue={String(resource?.status || "active")}><option value="active">Ativo</option><option value="inactive">Inativo</option></select></label>
           <label className="cv-resource-description">Descrição<textarea name="description" defaultValue={String(resource?.description || "")} /></label>
         </div></section>
