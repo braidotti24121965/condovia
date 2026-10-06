@@ -7,7 +7,7 @@ import { reservationErrorMessage } from "./reservation-presenters";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
-export async function createReservation(form: FormData): Promise<{ success: boolean; error?: string }> {
+export async function createReservation(form: FormData): Promise<{ success: boolean; error?: string; requiresApproval?: boolean }> {
   const { supabase, context, user } = await requireCondominiumPermission("reservations.create");
   try {
     const resourceId = text(form, "resource_id"); const unitId = text(form, "unit_id"); const localStart = text(form, "starts_at"); const localEnd = text(form, "ends_at");
@@ -31,7 +31,7 @@ export async function createReservation(form: FormData): Promise<{ success: bool
     const { error } = await supabase.from("reservations").insert({ condominium_id: context.id, resource_id: resourceId, unit_id: unitId, requester_person_id: account.person_id, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: resource.requires_approval ? "pending" : "approved", notes: text(form, "notes") || null, usage_fee: resource.usage_fee });
     if (error) throw new Error(error.code === "23P01" ? "Já existe uma reserva nesse período." : error.message);
     revalidatePath("/app/reservations");
-    return { success: true };
+    return { success: true, requiresApproval: resource.requires_approval };
   } catch (error) {
     return { success: false, error: reservationErrorMessage(error) };
   }
