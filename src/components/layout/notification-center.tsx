@@ -3,12 +3,22 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Check, ExternalLink, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "@/lib/notifications/notification-actions";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
 export function unreadNotificationCount(items: NotificationItem[]) { return items.filter((item) => !item.read_at).length; }
+
+export const NOTIFICATION_POLL_INTERVAL_MS = 5000;
+
+export function canPollNotifications(visibilityState: DocumentVisibilityState, inFlight: boolean) {
+  return visibilityState === "visible" && !inFlight;
+}
+
+export function refreshReservationView(refresh: () => void, transition: (callback: () => void) => void = startTransition) {
+  transition(refresh);
+}
 
 export function mergeNotificationInsert(items: NotificationItem[], notification: NotificationItem) {
   return items.some((item) => item.id === notification.id) ? items : [notification, ...items].slice(0, 25);
@@ -48,7 +58,7 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
   const pollingActiveRef = useRef(true);
   const unread = unreadNotificationCount(items);
   const synchronize = useCallback(async () => {
-    if (document.visibilityState !== "visible" || pollingInFlightRef.current) return;
+    if (!canPollNotifications(document.visibilityState, pollingInFlightRef.current)) return;
     pollingInFlightRef.current = true;
     const previous = itemsRef.current;
     try {
@@ -59,7 +69,7 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
         itemsRef.current = merged;
         setItems(merged);
       }
-      if (hasNewReservationNotification(previous, notifications)) router.refresh();
+      if (hasNewReservationNotification(previous, notifications)) refreshReservationView(() => router.refresh());
     } finally {
       pollingInFlightRef.current = false;
     }
@@ -68,7 +78,7 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
     if (!condominiumId || !userAccountId) return;
     pollingActiveRef.current = true;
     void synchronize();
-    const interval = window.setInterval(() => void synchronize(), 5000);
+    const interval = window.setInterval(() => void synchronize(), NOTIFICATION_POLL_INTERVAL_MS);
     const handleVisibilityChange = () => { if (document.visibilityState === "visible") void synchronize(); };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => { pollingActiveRef.current = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", handleVisibilityChange); };

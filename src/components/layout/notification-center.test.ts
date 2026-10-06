@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { hasNewReservationNotification, hasNotificationChanges, isReservationNotification, mergeNotificationInsert, mergeNotificationUpdate, mergePolledNotifications, unreadNotificationCount } from "./notification-center";
+import { describe, expect, it, vi } from "vitest";
+import { canPollNotifications, hasNewReservationNotification, hasNotificationChanges, isReservationNotification, mergeNotificationInsert, mergeNotificationUpdate, mergePolledNotifications, NOTIFICATION_POLL_INTERVAL_MS, refreshReservationView, unreadNotificationCount } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 
 const item = (id: string, read_at: string | null, type: NotificationItem["notification_type"] = "reservation_requested"): NotificationItem => ({ id, read_at, notification_type: type, title: type, message: "Mensagem", entity_type: "reservation", entity_id: id, created_at: "2026-10-07T12:00:00Z" });
@@ -30,5 +30,15 @@ describe("notification center state", () => {
     expect(hasNotificationChanges([notification], [notification])).toBe(false);
     expect(hasNewReservationNotification([notification], [notification])).toBe(false);
     expect(hasNewReservationNotification([], [{ ...notification, entity_type: "other" }])).toBe(false);
+  });
+
+  it("keeps polling visible, suspends hidden/overlapping work, and schedules a transition refresh", () => {
+    expect(NOTIFICATION_POLL_INTERVAL_MS).toBe(5000);
+    expect(canPollNotifications("visible", false)).toBe(true);
+    expect(canPollNotifications("hidden", false)).toBe(false);
+    expect(canPollNotifications("visible", true)).toBe(false);
+    const refresh = vi.fn(); const transition = vi.fn((callback: () => void) => callback());
+    refreshReservationView(refresh, transition);
+    expect(transition).toHaveBeenCalledOnce(); expect(refresh).toHaveBeenCalledOnce();
   });
 });
