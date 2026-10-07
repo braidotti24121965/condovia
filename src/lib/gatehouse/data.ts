@@ -72,6 +72,10 @@ export async function getGatehouseDashboardSummary(condominiumId: string): Promi
       .order("received_at", { ascending: false }),
   ]);
 
+  for (const [block, response] of [["gatehouse_presence", presenceRes], ["gatehouse_authorizations", authsTodayRes], ["gatehouse_access_requests", requestsRes], ["gatehouse_packages", packagesRes]] as const) {
+    if (response.error) console.error("DASHBOARD_ERROR", `block=${block}`, `code=${response.error.code || ""}`, `message=${response.error.message || ""}`, `details=${response.error.details || ""}`, `hint=${response.error.hint || ""}`);
+  }
+
   const presenceList = (presenceRes.data || []) as GatehousePresence[];
   const authorizationsToday = (authsTodayRes.data || []) as unknown as AccessAuthorization[];
   const pendingRequests = (requestsRes.data || []) as unknown as AccessRequest[];
