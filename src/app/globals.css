@@ -577,7 +577,16 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .occurrences-kpis .occurrence-progress .v2-kpi-icon { color: var(--cv-info); background: #EAF2FF; }
 .occurrences-kpis .occurrence-urgent .v2-kpi-icon { color: var(--cv-error); background: #FEEBEC; }
 .occurrence-create-panel { padding: 18px 20px 20px; }
-.occurrence-form { margin-top: 18px; }
+.occurrence-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; margin-top: 18px; }
+.occurrence-form > label { grid-column: auto; }
+.occurrence-form > label:not(.checkbox-field) { min-width: 0; display: grid; align-content: start; gap: 6px; color: var(--cv-text); font-size: var(--cv-font-label); font-weight: 600; }
+.occurrence-form input:not([type="checkbox"]):not([type="hidden"]), .occurrence-form select, .occurrence-form textarea { width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); outline: none; color: var(--cv-text-strong); background: var(--cv-surface); font: inherit; font-size: var(--cv-font-body); font-weight: 400; }
+.occurrence-form textarea { min-height: 96px; resize: vertical; }
+.occurrence-form input:not([type="checkbox"]):not([type="hidden"]):focus-visible, .occurrence-form select:focus-visible, .occurrence-form textarea:focus-visible { border-color: var(--cv-brand-teal); box-shadow: var(--cv-focus-ring); }
+.occurrence-form .checkbox-field { min-height: 40px; display: flex; align-items: center; gap: 9px; color: var(--cv-text); font-size: var(--cv-font-label); font-weight: 600; }
+.occurrence-form .checkbox-field input { width: 18px; min-height: 18px; accent-color: var(--cv-brand-teal); }
+.occurrence-form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.occurrence-form-actions .button { white-space: nowrap; }
 .occurrences-list-panel { padding: 14px 16px 16px; }
 .occurrences-filters { margin-bottom: 12px; padding-bottom: 14px; }
 .occurrences-filters .cv-search { min-width: 260px; }
@@ -591,6 +600,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .occurrence-priority-low { color: #475569; background: #F1F5F9; }.occurrence-priority-normal { color: #1D4ED8; background: #DBEAFE; }.occurrence-priority-high { color: #92400E; background: #FEF3C7; }.occurrence-priority-urgent { color: #B91C1C; background: #FEE2E2; }
 .occurrence-status-open { color: #166534; background: #DCFCE7; }.occurrence-status-triage { color: #92400E; background: #FEF3C7; }.occurrence-status-in-progress { color: #1D4ED8; background: #DBEAFE; }.occurrence-status-resolved { color: #0F766E; background: #CCFBF1; }.occurrence-status-closed, .occurrence-status-cancelled { color: #475569; background: #F1F5F9; }
 .occurrence-row-actions { display: flex; gap: 6px; }.occurrence-row-actions form { margin: 0; }
+@media (max-width: 767px) { .occurrence-form { grid-template-columns: 1fr; }.occurrence-form > label { grid-column: 1 / -1; }.occurrence-form input:not([type="checkbox"]):not([type="hidden"]), .occurrence-form select, .occurrence-form textarea, .occurrence-form-actions .button { min-height: var(--cv-touch-target); }.occurrence-form-actions { align-items: stretch; flex-wrap: wrap; }.occurrence-form-actions .button { flex: 1 1 140px; } }
 .gatehouse-v2 { max-width: 1440px; }
 .gatehouse-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .gatehouse-kpis .v2-kpi-icon { color: var(--cv-brand-teal); background: #E7F8F1; }
