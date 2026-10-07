@@ -22,7 +22,7 @@ export default async function VisitorsPage({
   const visitors = await getVisitors(context.id, q);
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -31,7 +31,7 @@ export default async function VisitorsPage({
         <strong>Visitantes</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">CADASTRO DE VISITANTES</p>
           <h1>Visitantes</h1>
@@ -42,8 +42,8 @@ export default async function VisitorsPage({
 
       <GatehouseNav />
 
-      <section className="cv-panel">
-        <form method="GET" className="cv-filters">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
+        <div className="v2-panel-heading"><div><h2>Visitantes cadastrados</h2><p>Identidades disponíveis para autorizações e controle de acesso.</p></div></div><form method="GET" className="cv-filters gatehouse-filters">
           <div className="cv-search">
             <Search size={16} />
             <input
@@ -53,7 +53,7 @@ export default async function VisitorsPage({
               aria-label="Buscar visitante"
             />
           </div>
-          <button type="submit" className="button button-secondary">Buscar</button>
+          <button type="submit" className="button button-outline">Buscar</button>
         </form>
 
         {visitors.length === 0 ? (

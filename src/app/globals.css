@@ -581,6 +581,23 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .occurrence-priority-low { color: #475569; background: #F1F5F9; }.occurrence-priority-normal { color: #1D4ED8; background: #DBEAFE; }.occurrence-priority-high { color: #92400E; background: #FEF3C7; }.occurrence-priority-urgent { color: #B91C1C; background: #FEE2E2; }
 .occurrence-status-open { color: #166534; background: #DCFCE7; }.occurrence-status-triage { color: #92400E; background: #FEF3C7; }.occurrence-status-in-progress { color: #1D4ED8; background: #DBEAFE; }.occurrence-status-resolved { color: #0F766E; background: #CCFBF1; }.occurrence-status-closed, .occurrence-status-cancelled { color: #475569; background: #F1F5F9; }
 .occurrence-row-actions { display: flex; gap: 6px; }.occurrence-row-actions form { margin: 0; }
+.gatehouse-v2 { max-width: 1440px; }
+.gatehouse-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.gatehouse-kpis .v2-kpi-icon { color: var(--cv-brand-teal); background: #E7F8F1; }
+.gatehouse-kpis .gatehouse-kpi-authorizations .v2-kpi-icon { color: var(--cv-info); background: #EAF2FF; }
+.gatehouse-kpis .gatehouse-kpi-pending .v2-kpi-icon { color: var(--cv-warning); background: #FFF4DE; }
+.gatehouse-kpis .gatehouse-kpi-packages .v2-kpi-icon { color: var(--cv-warning); background: #FFF4DE; }
+.gatehouse-kpis .v2-kpi span:not(.v2-kpi-icon) { color: var(--cv-text-muted); font-size: 11px; }
+.gatehouse-kpis .v2-kpi small { font-size: 10px; }
+.gatehouse-main-grid { grid-template-columns: 1fr; }
+.gatehouse-main-grid > section { min-width: 0; }
+.gatehouse-v2 .cv-quick-actions-bar { margin: 0 0 16px; }
+.gatehouse-list-panel { padding: 17px; }
+.gatehouse-list-panel .v2-panel-heading { margin-bottom: 13px; }
+.gatehouse-filters { margin-bottom: 12px; padding-bottom: 14px; }
+.gatehouse-v2 .cv-status { border-radius: 999px; font-size: 10px; font-weight: 700; }
+@media (max-width: 1050px) { .gatehouse-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .gatehouse-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }.gatehouse-v2 .cv-quick-actions-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }.gatehouse-v2 .cv-table-wrap { display: block; overflow-x: auto; }.gatehouse-v2 .cv-table { min-width: 640px; }.gatehouse-list-panel { padding: 13px; } }
 .v2-resident-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
 .v2-residents-panel { padding: 14px 16px 16px; }
 .v2-resident-filters { margin-bottom: 12px; padding-bottom: 14px; }
