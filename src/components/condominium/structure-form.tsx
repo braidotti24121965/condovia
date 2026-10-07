@@ -5,7 +5,7 @@ type Structure = { id: string; parent_id: string | null; name: string; code: str
 const options = [["block","Bloco"],["tower","Torre"],["sector","Setor"],["building","Edifício"],["wing","Ala"],["street","Rua"],["phase","Fase"],["other","Outro"]];
 
 export function StructureForm({ structures, current }: { structures: Structure[]; current?: Structure }) {
-  return <form action={saveStructure} className="cv-form">
+  return <form action={saveStructure} className="cv-form cv-structure-form">
     {current && <input type="hidden" name="id" value={current.id} />}
     <div className="cv-form-grid">
       <label className="cv-field-auto">Tipo<select name="structure_type" defaultValue={current?.structure_type ?? "tower"}>{options.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
@@ -15,6 +15,6 @@ export function StructureForm({ structures, current }: { structures: Structure[]
       <label className="cv-field-xs">Ordem<input name="sort_order" type="number" defaultValue={current?.sort_order ?? 0} /></label>
       {current && <label className="cv-field-auto">Status<select name="status" defaultValue={current.status}><option value="active">Ativa</option><option value="inactive" disabled={current.status !== "inactive"}>Inativa — use a confirmação de inativação</option></select></label>}
     </div>
-    <Button type="submit">{current ? "Salvar estrutura" : "Criar estrutura"}</Button>
+    <Button variant="primary" size="default" type="submit">{current ? "Salvar estrutura" : "Criar estrutura"}</Button>
   </form>;
 }
