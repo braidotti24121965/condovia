@@ -5,6 +5,8 @@ import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { saveCondominiumProfile } from "@/lib/condominium/actions";
 import { Alert } from "@/components/ui/feedback";
 import { friendlyDatabaseError } from "@/lib/condominium/format";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export const metadata = { title: "Visão geral do condomínio" };
 const types: Record<string,string> = { vertical:"Vertical", horizontal:"Horizontal", mixed:"Misto", other:"Outro" };
@@ -34,7 +36,7 @@ export default async function CondominiumOverview({ searchParams }: { searchPara
   const address = data.addresses as unknown as { postal_code: string | null; street: string; number: string | null; complement: string | null; district: string | null; city: string; state: string; country_code: string } | null;
   return <div className="cv-page">
     <div className="breadcrumbs"><Link href="/app/dashboard">Início</Link><ChevronRight size={14}/><strong>Condomínio</strong></div>
-    <section className="page-heading"><div><p className="page-overline">CONDOMÍNIO</p><h1>Visão geral</h1><p>Dados cadastrais e configurações de {context.name}.</p></div><span className={`cv-status cv-status-${data.status}`}>{data.status === "active" ? "Ativo" : data.status === "suspended" ? "Suspenso" : "Encerrado"}</span></section>
+    <section className="page-heading"><div><p className="page-overline">CONDOMÍNIO</p><h1>Visão geral</h1><p>Dados cadastrais e configurações de {context.name}.</p></div><StatusBadge variant={data.status === "active" ? "success" : data.status === "suspended" ? "warning" : "neutral"}>{data.status === "active" ? "Ativo" : data.status === "suspended" ? "Suspenso" : "Encerrado"}</StatusBadge></section>
     {params.saved && <Alert tone="success">Dados do condomínio salvos.</Alert>}{params.error && <Alert tone="error">{params.error}</Alert>}
     <section className="cv-stat-grid" aria-label="Resumo do condomínio"><article><span>Estruturas</span><strong>{structuresCount ?? "—"}</strong></article><article><span>Unidades</span><strong>{unitsCount ?? "—"}</strong></article><article><span>Tipo</span><strong>{types[data.condominium_type] ?? "Outro"}</strong></article></section>
     <section className="cv-panel"><div className="cv-panel-heading"><div><h2><Pencil size={18}/> Dados gerais e contato</h2><p>Informações administrativas do condomínio</p></div></div>
@@ -48,7 +50,7 @@ export default async function CondominiumOverview({ searchParams }: { searchPara
           <label className="cv-field-sm">CEP<input name="postal_code" inputMode="numeric" defaultValue={address?.postal_code ?? ""}/></label><label className="cv-field-lg">Logradouro<input name="street" defaultValue={address?.street ?? ""}/></label><label className="cv-field-xs">Número<input name="number" defaultValue={address?.number ?? ""}/></label><label className="cv-field-md">Complemento<input name="complement" defaultValue={address?.complement ?? ""}/></label><label className="cv-field-md">Bairro<input name="district" defaultValue={address?.district ?? ""}/></label><label className="cv-field-md">Cidade<input name="city" defaultValue={address?.city ?? ""}/></label><label className="cv-field-sm">Estado<input name="state" maxLength={60} defaultValue={address?.state ?? ""}/></label><label className="cv-field-xs">País (código)<input name="country_code" required maxLength={2} defaultValue={address?.country_code ?? "BR"}/></label>
         </div><p className="cv-form-hint">Se informar um logradouro, cidade e estado também são obrigatórios. O CEP brasileiro deve ter 8 dígitos.</p></div>
         <div className="cv-form-section"><h3>Configurações</h3><div className="cv-form-grid"><label className="cv-field-lg">Fuso horário IANA<input name="timezone" required defaultValue={data.timezone}/></label></div></div>
-        <button className="button button-primary" type="submit">Salvar alterações</button>
+        <Button type="submit">Salvar alterações</Button>
       </form> : <div className="cv-read-grid"><p><span>Nome</span><strong>{data.name}</strong></p><p><span>Razão social</span><strong>{data.legal_name || "Não informado"}</strong></p><p><span>Documento</span><strong>{data.document_number || "Não informado"}</strong></p><p><span>E-mail</span><strong>{data.email || "Não informado"}</strong></p><p><span>Telefone</span><strong>{data.phone || "Não informado"}</strong></p><p><span>Fuso horário</span><strong>{data.timezone}</strong></p><p className="cv-read-wide"><span>Endereço</span><strong>{address ? [address.street, address.number, address.complement, address.district, address.city, address.state, address.postal_code].filter(Boolean).join(", ") : "Não informado"}</strong></p></div>}
     </section>
   </div>;

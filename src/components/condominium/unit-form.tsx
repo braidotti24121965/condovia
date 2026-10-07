@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { saveUnit } from "@/lib/condominium/actions";
 
 type Structure = { id: string; name: string; status: string };
@@ -18,6 +19,6 @@ export function UnitForm({ structures, current }: { structures: Structure[]; cur
       {current && <label className="cv-field-auto">Status<select name="operational_status" defaultValue={current.operational_status}><option value="active">Ativa</option><option value="inactive" disabled={current.operational_status !== "inactive"}>Inativa — use a confirmação de inativação</option><option value="under_construction">Em construção</option><option value="blocked">Bloqueada</option></select></label>}
       <label className="cv-form-wide">Observações<textarea name="notes" rows={3} defaultValue={current?.notes ?? ""} /></label>
     </div>
-    <button className="button button-primary" type="submit">{current ? "Salvar unidade" : "Criar unidade"}</button>
+    <Button type="submit">{current ? "Salvar unidade" : "Criar unidade"}</Button>
   </form>;
 }

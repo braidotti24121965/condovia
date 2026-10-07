@@ -108,7 +108,7 @@ export function QuickActions({
   return (
     <>
       <div className="cv-quick-actions-bar">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => { setError(null); setSuccess(null); setActiveModal("entry"); }}
           className="cv-action-card"
@@ -120,9 +120,9 @@ export function QuickActions({
             <strong>Registrar entrada</strong>
             <small className="cv-muted" style={{ display: "block" }}>Autorizações ativas</small>
           </div>
-        </button>
+        </Button>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => { setError(null); setSuccess(null); setActiveModal("exit"); }}
           className="cv-action-card"
@@ -134,9 +134,9 @@ export function QuickActions({
             <strong>Registrar saída</strong>
             <small className="cv-muted" style={{ display: "block" }}>Pessoas dentro agora</small>
           </div>
-        </button>
+        </Button>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => { setError(null); setSuccess(null); setActiveModal("request"); }}
           className="cv-action-card"
@@ -148,9 +148,9 @@ export function QuickActions({
             <strong>Solicitar autorização</strong>
             <small className="cv-muted" style={{ display: "block" }}>Envio ao morador</small>
           </div>
-        </button>
+        </Button>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => { setError(null); setSuccess(null); setActiveModal("package"); }}
           className="cv-action-card"
@@ -162,7 +162,7 @@ export function QuickActions({
             <strong>Receber encomenda</strong>
             <small className="cv-muted" style={{ display: "block" }}>Nova entrega na portaria</small>
           </div>
-        </button>
+        </Button>
       </div>
 
       {activeModal && (
@@ -190,14 +190,14 @@ export function QuickActions({
                 {activeModal === "request" && <><FileQuestion size={20} /> Solicitar Autorização</>}
                 {activeModal === "package" && <><PackagePlus size={20} /> Receber Encomenda</>}
               </h2>
-              <button
+              <Button variant="icon"
                 type="button"
                 className="icon-button"
                 onClick={reset}
                 aria-label="Fechar"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
 
             {error && <div style={{ marginBottom: "16px" }}><Alert tone="error">{error}</Alert></div>}

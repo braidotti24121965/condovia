@@ -6,6 +6,7 @@ import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
 import { ProviderDisplay } from "@/components/gatehouse/provider-display";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDateTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import {
   getAccessAuthorizations,
@@ -86,7 +87,7 @@ export default async function AuthorizationsPage() {
                   return (
                     <tr key={r.id}>
                       <td>{r.service_provider ? <ProviderDisplay name={name || "Sem nome"} company={r.service_provider.company_name} /> : <strong>{name}</strong>}</td>
-                      <td><span className="cv-status">{type}</span></td>
+                      <td><StatusBadge variant="info">{type}</StatusBadge></td>
                       <td>Unidade {r.unit?.code}</td>
                       <td>{formatDateTimeInTimezone(r.requested_at, timeZone)}</td>
                       <td>{r.notes || "—"}</td>
@@ -136,14 +137,14 @@ export default async function AuthorizationsPage() {
                   return (
                     <tr key={a.id}>
                       <td>{a.service_provider ? <ProviderDisplay name={name || "Sem nome"} company={a.service_provider.company_name} /> : <strong>{name}</strong>}</td>
-                      <td><span className="cv-status">{type}</span></td>
+                      <td><StatusBadge variant="info">{type}</StatusBadge></td>
                       <td>Unidade {a.unit?.code}</td>
                       <td>{formatDateTimeInTimezone(a.valid_from, timeZone)}</td>
                       <td>{formatDateTimeInTimezone(a.valid_until, timeZone)}</td>
                       <td>
-                        <span className={`cv-status cv-status-${!isDbApproved ? "inactive" : opStatus.tone}`}>
+                        <StatusBadge variant={!isDbApproved ? "neutral" : opStatus.tone === "inactive" ? "neutral" : opStatus.tone === "info" ? "info" : "warning"}>
                           {!isDbApproved ? a.status : opStatus.label}
-                        </span>
+                        </StatusBadge>
                       </td>
                     </tr>
                   );

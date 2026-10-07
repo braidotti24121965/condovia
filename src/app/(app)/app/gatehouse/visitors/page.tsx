@@ -4,6 +4,8 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { VisitorForm } from "@/components/gatehouse/visitor-form";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { getVisitors } from "@/lib/gatehouse/data";
 import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 
@@ -53,7 +55,7 @@ export default async function VisitorsPage({
               aria-label="Buscar visitante"
             />
           </div>
-          <button type="submit" className="button button-outline">Buscar</button>
+          <Button type="submit" variant="secondary">Buscar</Button>
         </form>
 
         {visitors.length === 0 ? (
@@ -81,9 +83,9 @@ export default async function VisitorsPage({
                     <td>{v.phone ? formatBrazilianPhone(v.phone) : "—"}</td>
                     <td>{v.notes || "—"}</td>
                     <td>
-                      <span className={`cv-status cv-status-${v.status}`}>
+                      <StatusBadge variant={v.status === "active" ? "success" : "neutral"}>
                         {v.status === "active" ? "Ativo" : "Inativo"}
-                      </span>
+                      </StatusBadge>
                     </td>
                   </tr>
                 ))}

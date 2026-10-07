@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { addPersonRelationship, inviteResident, savePerson, savePersonContact, setPersonCpf, updatePerson } from "@/lib/condominium/actions";
 import { ConfirmedRelationshipForm } from "@/components/condominium/confirmed-relationship-form";
 import { PersonPicker } from "@/components/condominium/person-picker";
@@ -17,7 +18,7 @@ export function PersonForm({ returnPath = "", returnKind = "" }: { returnPath?: 
       <label className="cv-field-lg">E-mail<input type="email" name="email" autoComplete="email" maxLength={254}/></label>
       <label className="cv-field-md">Telefone<input type="tel" name="phone" autoComplete="tel" maxLength={20} placeholder="+55 11 99999-9999"/></label>
     </div><p className="cv-form-hint">O CPF é opcional. Pessoas com o mesmo nome podem ser cadastradas; e-mail ou telefone já usados no condomínio pedem revisão antes de um novo cadastro.</p></div>
-    <button className="button button-primary" type="submit">Cadastrar pessoa</button>
+    <Button type="submit">Cadastrar pessoa</Button>
   </form>;
 }
 
@@ -46,11 +47,11 @@ export function PersonEditForm({ person }: { person: { id:string; full_name:stri
   return <form action={updatePerson} className="cv-form"><input type="hidden" name="person_id" value={person.id}/><div className="cv-form-grid">
     <label className="cv-field-lg">Nome completo<input name="full_name" required defaultValue={person.full_name}/></label><label className="cv-field-lg">Nome preferencial<input name="preferred_name" defaultValue={person.preferred_name||""}/></label>
     <label className="cv-field-md">Data de nascimento<input name="birth_date" type="date" defaultValue={person.birth_date||""}/></label><label className="cv-field-auto">Situação<select name="status" defaultValue={person.status}><option value="active">Ativa</option><option value="inactive">Inativa</option><option value="suspended">Suspensa</option><option value="archived">Arquivada</option></select></label>
-  </div><button className="button button-primary" type="submit">Salvar dados</button></form>;
+  </div><Button type="submit">Salvar dados</Button></form>;
 }
 
 export function PersonCpfForm({ personId, currentCpf }: { personId:string; currentCpf:string|null }) {
-  return <form action={setPersonCpf} className="cv-form"><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-md">Novo CPF<input name="cpf" inputMode="numeric" required placeholder="000.000.000-00"/></label><label className="cv-checkbox-label"><input name="confirm" type="checkbox" value="yes" required/> Confirmo a alteração do documento</label></div><p className="cv-form-hint">{currentCpf?"O documento anterior será preservado no histórico e não será exibido após a troca.":"A inclusão será registrada no histórico."} Um CPF que pertence a outra identidade não pode ser usado.</p><button className="button button-secondary" type="submit">{currentCpf?"Alterar CPF":"Adicionar CPF"}</button></form>;
+  return <form action={setPersonCpf} className="cv-form"><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-md">Novo CPF<input name="cpf" inputMode="numeric" required placeholder="000.000.000-00"/></label><label className="cv-checkbox-label"><input name="confirm" type="checkbox" value="yes" required/> Confirmo a alteração do documento</label></div><p className="cv-form-hint">{currentCpf?"O documento anterior será preservado no histórico e não será exibido após a troca.":"A inclusão será registrada no histórico."} Um CPF que pertence a outra identidade não pode ser usado.</p><Button variant="secondary" type="submit">{currentCpf?"Alterar CPF":"Adicionar CPF"}</Button></form>;
 }
 
 export function PersonContactForms({ personId, emails, phones, canManage }: {
@@ -76,7 +77,7 @@ function ContactForm({personId,contactType,contactId,value,kind,isPrimary,isWhat
     {contactType==="phone"&&<label className="cv-field-auto">Tipo<select name="kind" defaultValue={kind}><option value="mobile">Celular</option><option value="landline">Fixo</option><option value="work">Comercial</option><option value="other">Outro</option></select></label>}
     <label className="cv-checkbox-label"><input name="is_primary" type="checkbox" value="yes" defaultChecked={isPrimary}/> Principal</label>
     {contactType==="phone"&&<label className="cv-checkbox-label"><input name="is_whatsapp" type="checkbox" value="yes" defaultChecked={isWhatsapp}/> WhatsApp</label>}
-    <button className="button button-outline button-small" type="submit">{contactId?"Salvar contato":"Adicionar contato"}</button>
+    <Button variant="secondary" size="compact" type="submit">{contactId?"Salvar contato":"Adicionar contato"}</Button>
   </form>;
 }
 
@@ -84,6 +85,6 @@ export function ResidentInviteForm({ personId, emails, canInvite }: { personId:s
   if(!canInvite)return null;
   const ordered=[...emails].sort((a,b)=>Number(b.is_primary)-Number(a.is_primary));
   return <section className="cv-panel"><h2>Convidar para acesso residente</h2>
-    {!ordered.length?<p className="cv-muted">Cadastre um e-mail antes de enviar o convite.</p>:<form action={inviteResident} className="cv-form cv-inline-form"><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-lg">E-mail do convite<select name="email" required defaultValue={ordered[0].email}>{ordered.map((item)=><option value={item.email} key={item.email}>{item.email}{item.is_primary?" · Principal":""}</option>)}</select></label></div><p className="cv-form-hint">Convite disponível somente para pessoa ativa com vínculo de propriedade ou moradia vigente/futuro neste condomínio. Responsabilidade financeira isolada não habilita acesso.</p><button className="button button-primary" type="submit">Enviar convite</button></form>}
+    {!ordered.length?<p className="cv-muted">Cadastre um e-mail antes de enviar o convite.</p>:<form action={inviteResident} className="cv-form cv-inline-form"><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-lg">E-mail do convite<select name="email" required defaultValue={ordered[0].email}>{ordered.map((item)=><option value={item.email} key={item.email}>{item.email}{item.is_primary?" · Principal":""}</option>)}</select></label></div><p className="cv-form-hint">Convite disponível somente para pessoa ativa com vínculo de propriedade ou moradia vigente/futuro neste condomínio. Responsabilidade financeira isolada não habilita acesso.</p><Button type="submit">Enviar convite</Button></form>}
   </section>;
 }

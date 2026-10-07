@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickExitButton } from "@/components/gatehouse/quick-exit-button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { formatTimeInTimezone } from "@/lib/gatehouse/timezone";
 import {
   getGatehousePresence,
@@ -83,9 +84,9 @@ export default async function AccessPresencePage() {
                       {p.company_name && <small className="cv-muted">{p.company_name}</small>}
                     </td>
                     <td>
-                      <span className="cv-status">
+                      <StatusBadge variant="info">
                         {p.target_kind === "visitor" ? "Visitante" : "Prestador"}
-                      </span>
+                      </StatusBadge>
                     </td>
                     <td>{p.document_number ? `${p.document_type?.toUpperCase() || "DOC"}: ${p.document_number}` : "—"}</td>
                     <td>Unidade {p.unit_code}</td>

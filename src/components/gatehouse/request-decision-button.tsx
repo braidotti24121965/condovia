@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { decideAccessRequestAction } from "@/lib/gatehouse/actions";
 
 interface Props {
@@ -26,10 +27,10 @@ export function RequestDecisionButtons({ requestId }: Props) {
   };
 
   if (done === "approved") {
-    return <span className="cv-status cv-status-active">Aprovado</span>;
+    return <StatusBadge variant="success">Aprovado</StatusBadge>;
   }
   if (done === "denied") {
-    return <span className="cv-status cv-status-inactive">Recusado</span>;
+    return <StatusBadge variant="danger">Recusado</StatusBadge>;
   }
 
   return (
@@ -37,7 +38,7 @@ export function RequestDecisionButtons({ requestId }: Props) {
       <Button
         type="button"
         variant="primary"
-        className="button-small"
+        size="compact"
         disabled={loading}
         onClick={() => handleDecision("approved")}
         title="Aprovar entrada"
@@ -47,7 +48,7 @@ export function RequestDecisionButtons({ requestId }: Props) {
       <Button
         type="button"
         variant="destructive"
-        className="button-small"
+        size="compact"
         disabled={loading}
         onClick={() => handleDecision("denied")}
         title="Recusar entrada"

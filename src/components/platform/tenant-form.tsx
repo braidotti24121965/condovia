@@ -6,6 +6,7 @@ import { formatBrazilianCnpj, formatBrazilianPhone, formatBrazilianPostalCode, n
 import { createTenant } from "@/lib/platform/actions";
 import { initialTenantState, tenantFieldNames, validateTenantValues, type TenantFieldErrors, type TenantFieldName, type TenantFormValues } from "@/lib/platform/tenant-form";
 import { lookupBrazilianPostalCode } from "@/lib/platform/postal-code";
+import { Button } from "@/components/ui/button";
 
 const fieldOrder: TenantFieldName[] = [...tenantFieldNames];
 
@@ -109,6 +110,6 @@ export function TenantForm() {
       <label className="cv-width-flexible">E-mail<input {...fieldProps("admin_email")} type="email" autoComplete="email"/>{error("admin_email")}</label>
       <label className="cv-width-phone">Telefone (opcional)<input {...fieldProps("admin_phone")} type="tel" autoComplete="tel" inputMode="tel" placeholder="(00) 00000-0000" onChange={(event) => update("admin_phone", formatBrazilianPhone(event.target.value))}/>{error("admin_phone")}</label>
     </div><p className="cv-form-hint">O convidado ativará as próprias credenciais e receberá exclusivamente a role condominium.syndic.</p></div>
-    <button className="button button-primary" type="submit" disabled={pending}>{pending ? "Criando tenant…" : "Criar tenant e enviar convite"}</button>
+    <Button type="submit" disabled={pending}>{pending ? "Criando tenant…" : "Criar tenant e enviar convite"}</Button>
   </form>;
 }

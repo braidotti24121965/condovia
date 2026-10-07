@@ -57,14 +57,14 @@ export function ReceivePackageButton({ units }: Props) {
           <div className="cv-panel" style={{ width: "min(100%, 500px)" }}>
             <div className="cv-panel-heading" style={{ marginBottom: "16px" }}>
               <h2><PackagePlus size={18} /> Registrar Recebimento de Encomenda</h2>
-              <button
+              <Button variant="icon"
                 type="button"
                 className="icon-button"
                 onClick={() => setOpen(false)}
                 aria-label="Fechar"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
 
             {error && <div style={{ marginBottom: "16px" }}><Alert tone="error">{error}</Alert></div>}

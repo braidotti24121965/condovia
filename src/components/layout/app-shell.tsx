@@ -9,6 +9,7 @@ import { Brand } from "@/components/layout/brand";
 import type { AuthorizedContext } from "@/lib/auth/context";
 import { NotificationCenter } from "./notification-center";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
+import { Button } from "@/components/ui/button";
 
 export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false, occurrencesAllowed = false, importsAllowed = false) {
   if (context.type === "platform") return { resident: false, primary: [{ label: "Plataforma", href: "/app/platform" }], showCondominiumSection: false };
@@ -60,7 +61,7 @@ export function AppShell({ children, context, personName, notifications = [], no
         <label htmlFor="drawer-toggle" className="icon-button mobile-menu-open" aria-label="Abrir menu"><Menu size={20} /></label>
         <div className="mobile-brand"><Brand /></div>
         <div className="search-box"><Search size={17} /><input aria-label="Buscar" placeholder="Buscar no CondoVia" /><kbd>⌘ K</kbd></div>
-        <div className="topbar-actions"><NotificationCenter initialNotifications={notifications} timeZone={notificationTimeZone} condominiumId={context.type === "condominium" ? context.id : undefined} userAccountId={userAccountId} /><div className="topbar-divider" />{context.actingAsPlatform && <form action={endPlatformTenantContext}><button className="button button-secondary" type="submit">Voltar para Plataforma</button></form>}<details className="user-menu"><summary><span className="user-avatar"><CircleUserRound size={21} /></span><span className="user-name"><strong>{personName || "Minha conta"}</strong><small>{context.actingAsPlatform ? "Administrador da Plataforma" : context.role}</small></span><ChevronDown size={15} /></summary><div className="user-dropdown"><form action={signOut}><button type="submit"><LogOut size={16} /> Sair da conta</button></form></div></details></div>
+        <div className="topbar-actions"><NotificationCenter initialNotifications={notifications} timeZone={notificationTimeZone} condominiumId={context.type === "condominium" ? context.id : undefined} userAccountId={userAccountId} /><div className="topbar-divider" />{context.actingAsPlatform && <form action={endPlatformTenantContext}><Button variant="secondary" size="compact" type="submit">Voltar para Plataforma</Button></form>}<details className="user-menu"><summary><span className="user-avatar"><CircleUserRound size={21} /></span><span className="user-name"><strong>{personName || "Minha conta"}</strong><small>{context.actingAsPlatform ? "Administrador da Plataforma" : context.role}</small></span><ChevronDown size={15} /></summary><div className="user-dropdown"><form action={signOut}><button type="submit"><LogOut size={16} /> Sair da conta</button></form></div></details></div>
       </header>
       <main ref={mainContentRef} tabIndex={-1} className="main-content">{children}</main>
     </div>

@@ -65,12 +65,20 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .brand-condo { color: var(--cv-brand-navy); }.brand-via { color: var(--cv-brand-teal); }.brand-by { margin-left: 7px; color: var(--cv-text-muted); font-size: 10px; font-weight: 500; letter-spacing: 0; }
 .brand-light .brand-condo, .brand-light .brand-by { color: #fff; }
 .button { min-height: var(--cv-button-height); padding: 0 14px; border: 1px solid transparent; border-radius: var(--cv-radius-md); display: inline-flex; justify-content: center; align-items: center; gap: 8px; font-size: var(--cv-font-body); line-height: 20px; font-weight: 600; cursor: pointer; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+.button-compact { min-height: 34px; padding-inline: 12px; font-size: 13px; }
 .button:active:not(:disabled) { transform: translateY(1px); }
 .button-primary { color: #fff; background: var(--cv-brand-teal); }.button-primary:hover:not(:disabled) { background: #0da271; }
-.button-secondary { color: var(--cv-brand-navy); background: #EAF0F6; }.button-secondary:hover:not(:disabled) { background: #DEE7F0; }
+.button-secondary { color: var(--cv-brand-navy); background: white; border-color: #CBD5E1; }.button-secondary:hover:not(:disabled) { background: #F8FAFC; }
 .button-outline { color: var(--cv-text); background: white; border-color: #CBD5E1; }.button-outline:hover:not(:disabled) { background: #F8FAFC; }
 .button-ghost { color: var(--cv-text-muted); background: transparent; }.button-ghost:hover:not(:disabled) { color: var(--cv-text-strong); background: #F1F5F9; }
 .button-destructive { color: #fff; background: var(--cv-error); }
+.button-icon { width: var(--cv-touch-target); min-width: var(--cv-touch-target); padding: 0; }
+.status-badge { width: fit-content; min-height: 24px; padding: 2px 8px; display: inline-flex; align-items: center; border: 1px solid transparent; border-radius: 999px; font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap; }
+.status-badge-success { border-color: #A7E3C8; color: #087D5B; background: #F0FBF6; }
+.status-badge-neutral { border-color: #CBD5E1; color: #475569; background: #F8FAFC; }
+.status-badge-warning { border-color: #F6D58A; color: #92400E; background: #FFFBEB; }
+.status-badge-danger { border-color: #F5B4B4; color: #B91C1C; background: #FFF5F5; }
+.status-badge-info { border-color: #B9D4F6; color: #1D4ED8; background: #F3F8FF; }
 .field { display: grid; gap: 6px; }.field label { color: var(--cv-text-strong); font-size: var(--cv-font-label); line-height: 18px; font-weight: 600; }
 .field input, .field select { width: 100%; min-width: 0; min-height: var(--cv-control-height); padding: 0 12px; border: 1px solid var(--cv-control-border); border-radius: var(--cv-radius-md); outline: none; color: var(--cv-text-strong); background: white; font-size: var(--cv-font-body); transition: border .15s, box-shadow .15s; }
 .field input::placeholder { color: #94A3B8; }.field input:focus, .field select:focus { border-color: var(--cv-brand-teal); box-shadow: var(--cv-focus-ring); }.field input[aria-invalid=true], .field select[aria-invalid=true] { border-color: var(--cv-error); }
@@ -608,7 +616,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
   .gatehouse-access-point-list .cv-table tr { min-width: 0; padding: 10px 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); }
   .gatehouse-access-point-list .cv-table td { height: auto; min-width: 0; padding: 0; display: grid; gap: 2px; border-bottom: 0; overflow-wrap: anywhere; }
   .gatehouse-access-point-list .cv-table td::before { content: attr(data-label); color: var(--cv-text-muted); font-size: 10px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
-  .gatehouse-access-point-list .cv-table td[data-label="Status"] .cv-status { width: fit-content; min-width: 0; min-height: 24px; padding: 2px 8px; align-self: flex-start; justify-self: start; border-radius: 999px; font-size: 12px; line-height: 16px; font-weight: 600; box-shadow: none; }
+  .gatehouse-access-point-list .cv-table td[data-label="Status"] .status-badge { align-self: flex-start; justify-self: start; }
   .gatehouse-access-point-list .cv-table td[data-label="Ação"] .button { width: fit-content; min-width: 0; height: 36px; min-height: 36px; padding: 0 12px; align-self: flex-start; justify-self: start; border-radius: var(--cv-radius-md); font-size: 13px; line-height: 20px; box-shadow: none; }
   .gatehouse-access-point-list .cv-table td[colspan] { display: block; grid-column: 1 / -1; }
   .gatehouse-access-point-list .cv-table td[colspan]::before { display: none; }

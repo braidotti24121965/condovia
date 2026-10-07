@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Alert } from "@/components/ui/feedback";
 import { updateAccessPointAction } from "@/lib/gatehouse/actions";
 import type { AccessPoint } from "@/lib/gatehouse/types";
@@ -24,7 +25,7 @@ export function AccessPointList({ accessPoints }: { accessPoints: AccessPoint[] 
       {accessPoints.map((point) => editing === point.id ? (
         <tr key={point.id}><td colSpan={4}><form onSubmit={submit} className="cv-form" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", alignItems: "end", gap: "8px" }}><input type="hidden" name="id" value={point.id} /><label>Nome<input name="name" defaultValue={point.name} required minLength={2} /></label><label>Tipo<select name="type" defaultValue={point.type}>{Object.entries(accessPointTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Status<select name="status" defaultValue={point.status}><option value="active">Ativo</option><option value="inactive">Inativo</option></select></label><Button type="submit" disabled={loading}>{loading ? "..." : "Salvar"}</Button></form></td></tr>
       ) : (
-        <tr key={point.id}><td data-label="Nome"><strong>{point.name}</strong></td><td data-label="Tipo">{accessPointTypeLabels[point.type]}</td><td data-label="Status"><span className={`cv-status cv-status-${point.status}`}>{point.status === "active" ? "Ativo" : "Inativo"}</span></td><td data-label="Ação"><Button type="button" variant="outline" onClick={() => setEditing(point.id)}>Editar</Button></td></tr>
+        <tr key={point.id}><td data-label="Nome"><strong>{point.name}</strong></td><td data-label="Tipo">{accessPointTypeLabels[point.type]}</td><td data-label="Status"><StatusBadge variant={point.status === "active" ? "success" : "neutral"}>{point.status === "active" ? "Ativo" : "Inativo"}</StatusBadge></td><td data-label="Ação"><Button type="button" size="compact" onClick={() => setEditing(point.id)}>Editar</Button></td></tr>
       ))}
     </tbody></table></div>
   </>;

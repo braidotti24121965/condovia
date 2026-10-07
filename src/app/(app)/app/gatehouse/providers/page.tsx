@@ -4,6 +4,8 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { ProviderForm } from "@/components/gatehouse/provider-form";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { getServiceProviders } from "@/lib/gatehouse/data";
 import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 
@@ -53,7 +55,7 @@ export default async function ProvidersPage({
               aria-label="Buscar prestador"
             />
           </div>
-          <button type="submit" className="button button-secondary">Buscar</button>
+          <Button type="submit" variant="secondary">Buscar</Button>
         </form>
 
         {providers.length === 0 ? (
@@ -83,9 +85,9 @@ export default async function ProvidersPage({
                     <td>{p.document_number ? `${p.document_type?.toUpperCase() || "DOC"}: ${p.document_type?.toLowerCase() === "cpf" ? formatBrazilianCpf(p.document_number) : p.document_number}` : "—"}</td>
                     <td>{p.phone ? formatBrazilianPhone(p.phone) : "—"}</td>
                     <td>
-                      <span className={`cv-status cv-status-${p.status}`}>
+                      <StatusBadge variant={p.status === "active" ? "success" : "neutral"}>
                         {p.status === "active" ? "Ativo" : "Inativo"}
-                      </span>
+                      </StatusBadge>
                     </td>
                   </tr>
                 ))}

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { saveStructure } from "@/lib/condominium/actions";
 
 type Structure = { id: string; parent_id: string | null; name: string; code: string | null; structure_type: string; sort_order: number; status: string };
@@ -14,6 +15,6 @@ export function StructureForm({ structures, current }: { structures: Structure[]
       <label className="cv-field-xs">Ordem<input name="sort_order" type="number" defaultValue={current?.sort_order ?? 0} /></label>
       {current && <label className="cv-field-auto">Status<select name="status" defaultValue={current.status}><option value="active">Ativa</option><option value="inactive" disabled={current.status !== "inactive"}>Inativa — use a confirmação de inativação</option></select></label>}
     </div>
-    <button className="button button-primary" type="submit">{current ? "Salvar estrutura" : "Criar estrutura"}</button>
+    <Button type="submit">{current ? "Salvar estrutura" : "Criar estrutura"}</Button>
   </form>;
 }
