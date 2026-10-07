@@ -7,6 +7,10 @@ import { createHash } from "node:crypto";
 
 export type ImportActionState = { ok: boolean; message?: string; batchId?: string; headers?: string[]; rows?: ImportRow[]; structuralError?: string; result?: { created: number; batch_id: string } };
 const text = (form: FormData, key: string) => String(form.get(key) || "").trim();
+type PersistedImportRow = { row_number: number; classification: ImportRow["classification"]; normalized_data: Record<string, string>; message: string | null };
+export function restorePreviewRows(rows: PersistedImportRow[]): ImportRow[] {
+  return rows.map((row) => ({ rowNumber: row.row_number, classification: row.classification, data: row.normalized_data, message: row.message || undefined }));
+}
 function today(timeZone: string) { return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date()); }
 function safeImportError(error: unknown) {
   const message = error instanceof Error ? error.message.toLowerCase() : "";
@@ -27,7 +31,14 @@ export async function previewImport(_: ImportActionState, form: FormData): Promi
   try { parsed = normalizeRows(readTabularFile(bytes),entity,today((await supabase.from("condominiums").select("timezone").eq("id",context.id).maybeSingle()).data?.timezone || "America/Sao_Paulo")); } catch(error) { return { ok:false, message:error instanceof Error ? error.message : "Não foi possível ler o arquivo." }; }
   if(parsed.structuralError) return { ok:false, message:parsed.structuralError, headers:parsed.headers, rows:parsed.rows, structuralError:parsed.structuralError };
   const hash = fileHash(bytes);
-  const { data: existingBatch } = await supabase.from("import_batches").select("id,status").eq("condominium_id",context.id).eq("file_hash",hash).maybeSingle();
+  const { data: existingBatch } = await supabase.from("import_batches").select("id,status,entity_type,mapping").eq("condominium_id",context.id).eq("file_hash",hash).maybeSingle();
+  if(existingBatch?.status === "preview") {
+    const { data: persistedRows, error: persistedRowsError } = await supabase.from("import_batch_rows").select("row_number,classification,normalized_data,message").eq("batch_id",existingBatch.id).order("row_number");
+    if(persistedRowsError) return { ok:false, message:safeImportError(persistedRowsError) };
+    const rows = restorePreviewRows((persistedRows || []) as PersistedImportRow[]);
+    const mapping = existingBatch.mapping as { headers?: string[] } | null;
+    return { ok:true, batchId:existingBatch.id, headers:mapping?.headers || parsed.headers, rows };
+  }
   if(existingBatch) return { ok:false, message:"Este arquivo já possui um lote registrado (" + existingBatch.status + ")." };
   const seen = new Set<string>();
   const rows = parsed.rows.map((row) => {
