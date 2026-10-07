@@ -19,7 +19,7 @@ export default async function GatehouseHistoryPage() {
   const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -28,7 +28,7 @@ export default async function GatehouseHistoryPage() {
         <strong>Histórico de Acesso</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">REGISTRO HISTÓRICO FACTUAL</p>
           <h1>Histórico de Entradas e Saídas</h1>
@@ -38,7 +38,7 @@ export default async function GatehouseHistoryPage() {
 
       <GatehouseNav />
 
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><History size={18} /> Eventos de Portaria ({events.length})</h2>
           <p>Ordenados cronologicamente do mais recente ao mais antigo.</p>

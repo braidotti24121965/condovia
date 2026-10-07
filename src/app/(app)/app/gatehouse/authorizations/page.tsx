@@ -35,7 +35,7 @@ export default async function AuthorizationsPage() {
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -44,7 +44,7 @@ export default async function AuthorizationsPage() {
         <strong>Autorizações e Solicitações</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">AUTORIZAÇÕES DE ACESSO</p>
           <h1>Autorizações e Solicitações</h1>
@@ -56,7 +56,7 @@ export default async function AuthorizationsPage() {
       <GatehouseNav />
 
       {/* Solicitações Pendentes */}
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><FileQuestion size={18} /> Solicitações Aguardando Decisão ({pendingRequests.length})</h2>
           <p>Solicitações geradas na portaria para autorização do morador.</p>
@@ -103,7 +103,7 @@ export default async function AuthorizationsPage() {
       </section>
 
       {/* Todas as Autorizações */}
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><KeyRound size={18} /> Autorizações Cadastradas ({authorizations.length})</h2>
           <p>Lista de liberações emitidas para visitantes e prestadores.</p>

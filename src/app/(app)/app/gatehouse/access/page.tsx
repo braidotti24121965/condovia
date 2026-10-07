@@ -27,7 +27,7 @@ export default async function AccessPresencePage() {
   const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -36,7 +36,7 @@ export default async function AccessPresencePage() {
         <strong>Presença e Controle de Acesso</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">STATUS EM TEMPO REAL</p>
           <h1>Dentro Agora — {context.name}</h1>
@@ -50,7 +50,7 @@ export default async function AccessPresencePage() {
 
       <GatehouseNav />
 
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><Users size={18} /> Pessoas Dentro do Condomínio ({presenceList.length})</h2>
           <p>Derivado factualmente dos eventos de entrada sem saída correspondente.</p>

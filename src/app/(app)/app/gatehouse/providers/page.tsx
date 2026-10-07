@@ -22,7 +22,7 @@ export default async function ProvidersPage({
   const providers = await getServiceProviders(context.id, q);
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -31,7 +31,7 @@ export default async function ProvidersPage({
         <strong>Prestadores de Serviço</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">CADASTRO DE PRESTADORES</p>
           <h1>Prestadores de Serviço</h1>
@@ -42,7 +42,7 @@ export default async function ProvidersPage({
 
       <GatehouseNav />
 
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <form method="GET" className="cv-filters">
           <div className="cv-search">
             <Search size={16} />
