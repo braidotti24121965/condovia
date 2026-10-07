@@ -17,8 +17,13 @@ export function UnitForm({ structures, current }: { structures: Structure[]; cur
       <label className="cv-field-md">Área (m²)<input name="area" type="number" min="0.01" step="0.01" defaultValue={current?.area ?? ""} /></label>
       <label className="cv-field-md">Fração ideal (%)<input name="ownership_fraction" type="number" min="0" max="100" step="0.000001" defaultValue={current?.ownership_fraction ?? ""} /></label>
       {current && <label className="cv-field-auto">Status<select name="operational_status" defaultValue={current.operational_status}><option value="active">Ativa</option><option value="inactive" disabled={current.operational_status !== "inactive"}>Inativa — use a confirmação de inativação</option><option value="under_construction">Em construção</option><option value="blocked">Bloqueada</option></select></label>}
-      <label className="cv-form-wide">Observações<textarea name="notes" rows={3} defaultValue={current?.notes ?? ""} /></label>
-      <Button variant="primary" size="default" type="submit">{current ? "Salvar unidade" : "Criar unidade"}</Button>
+      <div className="cv-unit-form-notes-row">
+        <label htmlFor="unit-notes">Observações</label>
+        <div className="cv-unit-form-notes-controls">
+          <textarea id="unit-notes" name="notes" rows={3} defaultValue={current?.notes ?? ""} />
+          <Button variant="primary" size="default" type="submit">{current ? "Salvar unidade" : "Criar unidade"}</Button>
+        </div>
+      </div>
     </div>
   </form>;
 }
