@@ -20,11 +20,11 @@ export function AccessPointList({ accessPoints }: { accessPoints: AccessPoint[] 
 
   return <>
     {error && <div style={{ marginBottom: "16px" }}><Alert tone="error">{error}</Alert></div>}
-    <div className="cv-table-wrap"><table className="cv-table"><thead><tr><th>Nome</th><th>Tipo</th><th>Status</th><th>Ação</th></tr></thead><tbody>
+    <div className="cv-table-wrap gatehouse-access-point-list"><table className="cv-table"><thead><tr><th>Nome</th><th>Tipo</th><th>Status</th><th>Ação</th></tr></thead><tbody>
       {accessPoints.map((point) => editing === point.id ? (
         <tr key={point.id}><td colSpan={4}><form onSubmit={submit} className="cv-form" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", alignItems: "end", gap: "8px" }}><input type="hidden" name="id" value={point.id} /><label>Nome<input name="name" defaultValue={point.name} required minLength={2} /></label><label>Tipo<select name="type" defaultValue={point.type}>{Object.entries(accessPointTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Status<select name="status" defaultValue={point.status}><option value="active">Ativo</option><option value="inactive">Inativo</option></select></label><Button type="submit" disabled={loading}>{loading ? "..." : "Salvar"}</Button></form></td></tr>
       ) : (
-        <tr key={point.id}><td><strong>{point.name}</strong></td><td>{accessPointTypeLabels[point.type]}</td><td><span className={`cv-status cv-status-${point.status}`}>{point.status === "active" ? "Ativo" : "Inativo"}</span></td><td><Button type="button" variant="outline" onClick={() => setEditing(point.id)}>Editar</Button></td></tr>
+        <tr key={point.id}><td data-label="Nome"><strong>{point.name}</strong></td><td data-label="Tipo">{accessPointTypeLabels[point.type]}</td><td data-label="Status"><span className={`cv-status cv-status-${point.status}`}>{point.status === "active" ? "Ativo" : "Inativo"}</span></td><td data-label="Ação"><Button type="button" variant="outline" onClick={() => setEditing(point.id)}>Editar</Button></td></tr>
       ))}
     </tbody></table></div>
   </>;
