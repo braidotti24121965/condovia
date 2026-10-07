@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,20 @@ const emailSchema = z.string().trim().email();
 const passwordSchema = z.string().min(8);
 
 export type ActionState = { error?: string; success?: string };
+
+const displayNameSchema = z.string().trim().min(1).max(120);
+
+export async function updateMyDisplayName(_previous: ActionState, formData: FormData): Promise<ActionState> {
+  const name = displayNameSchema.safeParse(formData.get("preferred_name"));
+  if (!name.success) return { error: "Informe um nome de exibição entre 1 e 120 caracteres." };
+  const supabase = await createClient();
+  if (!supabase) return { error: "Não foi possível atualizar o nome de exibição." };
+  const { error } = await supabase.rpc("update_my_display_name", { p_preferred_name: name.data });
+  if (error) return { error: "Não foi possível atualizar o nome de exibição." };
+  revalidatePath("/app/profile");
+  revalidatePath("/app", "layout");
+  return { success: "Nome de exibição atualizado." };
+}
 
 export async function signIn(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const email = emailSchema.safeParse(formData.get("email"));
