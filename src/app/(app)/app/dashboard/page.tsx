@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, CalendarDays, ChevronRight, FileUp, Home, Pack
 import { DashboardPeriodFilter } from "@/components/dashboard/dashboard-period-filter";
 import { EmptyState } from "@/components/ui/feedback";
 import { requireCurrentContext } from "@/lib/auth/context";
+import { redirect } from "next/navigation";
 import { getCondominiumDashboard, type DashboardDistribution, type DashboardPeriod } from "@/lib/dashboard/data";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 export const metadata: Metadata = { title: "Painel" };
@@ -12,7 +13,7 @@ const iconMap = { units: Home, residents: Users, visitors: UserRound, packages: 
 function Kpi({ id, label, value, note, permission }: { id: keyof typeof iconMap; label: string; value: number | null; note?: string; permission: boolean }) { if (!permission) return null; const Icon = iconMap[id]; return <article className="v2-kpi"><span className="v2-kpi-icon"><Icon size={17} /></span><div><small>{label}</small><strong>{value ?? "—"}</strong>{note && <em>{note}</em>}</div></article>; }
 function Distribution({ title, items, empty }: { title: string; items: DashboardDistribution[]; empty: string }) { const total = items.reduce((sum, item) => sum + item.value, 0); return <section className="cv-panel v2-analytic"><h2>{title}</h2>{!items.length ? <EmptyState title={empty} description="Nenhum dado real disponível para o período selecionado." /> : <div className="v2-bars">{items.map((item) => <div className="v2-bar-row" key={item.label}><span title={item.label}>{item.label}</span><div><i style={{ width: (total ? Math.max(3, item.value / total * 100) : 0) + "%" }} /></div><strong>{item.value}</strong></div>)}</div>}</section>; }
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
-  const context = await requireCurrentContext(); if (context.type !== "condominium") return null;
+  const context = await requireCurrentContext(); if (context.type === "platform") redirect("/app/platform"); if (context.type !== "condominium") return null;
   const requested = (await searchParams).period; const period = periods.has(requested as DashboardPeriod) ? requested as DashboardPeriod : "today"; const dashboard = await getCondominiumDashboard(context.id, period); const p = dashboard.permissions;
   const quick = [{ label: "Nova ocorrência", href: "/app/occurrences", icon: Plus, show: p["occurrences.create"] }, { label: "Nova reserva", href: "/app/reservations", icon: CalendarDays, show: p["reservations.resources.read"] }, { label: "Novo morador", href: "/app/condominium/people/new", icon: Users, show: p["people.manage"] }, { label: "Registrar encomenda", href: "/app/gatehouse/packages", icon: Package, show: p["gatehouse.manage"] }, { label: "Importar dados", href: "/app/condominium/imports", icon: FileUp, show: p["imports.manage"] }].filter((item) => item.show);
   return <div className="cv-page dashboard-v2"><div className="breadcrumbs"><Link href="/app/dashboard">Início</Link><ChevronRight size={13} /><strong>Painel</strong></div>

@@ -78,3 +78,25 @@ export async function selectContext(formData: FormData) {
   });
   redirect(canReadDashboard === true ? "/app/dashboard" : "/app/my-units");
 }
+
+export async function beginPlatformTenantContext(formData: FormData) {
+  const id = z.string().uuid().safeParse(formData.get("condominiumId"));
+  if (!id.success) redirect("/app/platform?error=invalid-tenant");
+  const supabase = await createClient();
+  if (!supabase) redirect("/app/platform?error=unavailable");
+  const { error } = await supabase.rpc("begin_platform_tenant_context", { p_condominium_id: id.data });
+  if (error) redirect("/app/platform?error=tenant-access-denied");
+  const cookieStore = await cookies();
+  cookieStore.set("condovia_context", id.data, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 30 });
+  cookieStore.set("condovia_acting_context", "platform", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 30 });
+  redirect("/app/dashboard");
+}
+
+export async function endPlatformTenantContext() {
+  const supabase = await createClient();
+  if (supabase) await supabase.rpc("end_platform_tenant_context");
+  const cookieStore = await cookies();
+  cookieStore.delete("condovia_context");
+  cookieStore.delete("condovia_acting_context");
+  redirect("/app/platform");
+}
