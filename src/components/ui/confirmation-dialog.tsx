@@ -19,11 +19,11 @@ export function ConfirmationDialog({
 }) {
   if (!open) return null;
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="confirmation-title" style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.5)", display: "grid", placeItems: "center", zIndex: 60, padding: "16px" }}>
-      <div className="cv-panel" style={{ width: "min(100%, 440px)" }}>
+    <div className="cv-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="confirmation-title">
+      <div className="cv-panel cv-dialog-panel">
         <h2 id="confirmation-title">{title}</h2>
         <p className="cv-muted">{description}</p>
-        <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "20px" }}>
+        <div className="cv-dialog-actions">
           <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
           <Button type="button" onClick={onConfirm}>{confirmLabel}</Button>
         </div>
