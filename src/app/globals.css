@@ -608,10 +608,13 @@ button:disabled { cursor: not-allowed; opacity: .62; }
   .gatehouse-access-point-list .cv-table tr { min-width: 0; padding: 10px 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); }
   .gatehouse-access-point-list .cv-table td { height: auto; min-width: 0; padding: 0; display: grid; gap: 2px; border-bottom: 0; overflow-wrap: anywhere; }
   .gatehouse-access-point-list .cv-table td::before { content: attr(data-label); color: var(--cv-text-muted); font-size: 10px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
-  .gatehouse-access-point-list .cv-table td[data-label="Status"] .cv-status { width: fit-content; justify-self: start; }
-  .gatehouse-access-point-list .cv-table td[data-label="Ação"] .button { width: fit-content; justify-self: start; }
+  .gatehouse-access-point-list .cv-table td[data-label="Status"] .cv-status { width: fit-content; min-width: 0; min-height: 24px; padding: 2px 8px; align-self: flex-start; justify-self: start; border-radius: 999px; font-size: 12px; line-height: 16px; font-weight: 600; box-shadow: none; }
+  .gatehouse-access-point-list .cv-table td[data-label="Ação"] .button { width: fit-content; min-width: 0; height: 36px; min-height: 36px; padding: 0 12px; align-self: flex-start; justify-self: start; border-radius: var(--cv-radius-md); font-size: 13px; line-height: 20px; box-shadow: none; }
   .gatehouse-access-point-list .cv-table td[colspan] { display: block; grid-column: 1 / -1; }
   .gatehouse-access-point-list .cv-table td[colspan]::before { display: none; }
+}
+@media (max-width: 767px) {
+  .gatehouse-access-point-list .cv-table td[data-label="Ação"] .button { min-height: 44px; }
 }
 @media (min-width: 768px) and (max-width: 1279px) {
   .gatehouse-history .cv-table-wrap { display: block; overflow: visible; }
