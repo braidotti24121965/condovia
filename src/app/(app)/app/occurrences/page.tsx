@@ -7,6 +7,7 @@ import { EmptyState, Alert } from "@/components/ui/feedback";
 export const metadata = { title: "Ocorrências" };
 type SearchParams = { new?: string; saved?: string; updated?: string; error?: string; q?: string; status?: string; priority?: string; category?: string; unit?: string };
 type Occurrence = { id: string; occurrence_number: number; title: string; priority: string; status: string; confidential: boolean; created_at: string; category: { name?: string } | null; related_unit: { code?: string; display_name?: string | null } | null };
+type SupabaseError = { code?: string; message?: string; details?: string; hint?: string };
 const statusLabels: Record<string, string> = { open: "Aberta", triage: "Em triagem", in_progress: "Em andamento", resolved: "Resolvida", closed: "Encerrada", cancelled: "Cancelada" };
 const priorityLabels: Record<string, string> = { low: "Baixa", normal: "Normal", high: "Alta", urgent: "Urgente" };
 const statusClasses: Record<string, string> = { open: "open", triage: "triage", in_progress: "in-progress", resolved: "resolved", closed: "closed", cancelled: "cancelled" };
@@ -19,11 +20,20 @@ export default async function OccurrencesPage({ searchParams }: { searchParams: 
   const q = params.q?.trim() || "";
   const status = ["open", "triage", "in_progress", "resolved", "closed", "cancelled"].includes(params.status || "") ? params.status! : "";
   const priority = ["low", "normal", "high", "urgent"].includes(params.priority || "") ? params.priority! : "";
-  const [{ data: categories }, { data: units }, { data: canCreate }] = await Promise.all([
+  const loggedBlocks = new Set<string>();
+  const reportError = (block: string, error: SupabaseError | null | undefined) => {
+    if (!error) return;
+    loggedBlocks.add(block);
+    console.error("OCCURRENCIES_ERROR", `block=${block}`, { block, code: error.code, message: error.message, details: error.details, hint: error.hint, error });
+  };
+  const [{ data: categories, error: categoriesError }, { data: units, error: unitsError }, { data: canCreate, error: canCreateError }] = await Promise.all([
     supabase.from("occurrence_categories").select("id,name,default_priority").eq("condominium_id", context.id).eq("is_active", true).order("sort_order"),
     supabase.from("units").select("id,code,display_name").eq("condominium_id", context.id).eq("operational_status", "active").order("code"),
     supabase.rpc("has_permission", { permission_code: "occurrences.create", target_condominium_id: context.id }),
   ]);
+  reportError("occurrence_categories", categoriesError);
+  reportError("occurrence_units", unitsError);
+  reportError("occurrences_create_permission", canCreateError);
   const category = categories?.some((item) => item.id === params.category) ? params.category! : "";
   const unit = units?.some((item) => item.id === params.unit) ? params.unit! : "";
   const query = supabase.from("occurrences").select("id,occurrence_number,title,priority,status,confidential,created_at,category:occurrence_categories(name),related_unit:units(code,display_name)").eq("condominium_id", context.id).order("created_at", { ascending: false }).limit(50);
@@ -32,7 +42,9 @@ export default async function OccurrencesPage({ searchParams }: { searchParams: 
   if (category) query.eq("category_id", category);
   if (unit) query.eq("related_unit_id", unit);
   if (q) { const number = Number(q); if (Number.isSafeInteger(number) && String(number) === q) query.eq("occurrence_number", number); else query.ilike("title", `%${q.replace(/[%_]/g, "\\$&")}%`); }
-  const [{ data: occurrences, error }, counts] = await Promise.all([query, getKpis(supabase, context.id)]);
+  const [{ data: occurrences, error }, counts] = await Promise.all([query, getKpis(supabase, context.id, reportError)]);
+  reportError("occurrences_list", error);
+  if (error && loggedBlocks.size === 0) reportError("unknown_occurrences_load", error);
   const filterQuery = new URLSearchParams();
   for (const [key, value] of [["q", q], ["status", status], ["priority", priority], ["category", category], ["unit", unit]] as const) if (value) filterQuery.set(key, value);
   const newHref = `/app/occurrences?${filterQuery.toString()}${filterQuery.size ? "&" : ""}new=1`;
@@ -51,4 +63,4 @@ export default async function OccurrencesPage({ searchParams }: { searchParams: 
 
 function Kpi({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: number; className: string }) { return <article className={`v2-kpi ${className}`}><span className="v2-kpi-icon">{icon}</span><div><small>{label}</small><strong>{value}</strong><em>Dados do condomínio</em></div></article>; }
 function formatDate(value: string) { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(new Date(value)); }
-async function getKpis(supabase: Awaited<ReturnType<typeof requireUser>>["supabase"], condominiumId: string) { const blank = { open: 0, triage: 0, inProgress: 0, urgent: 0 }; if (!supabase) return blank; const [open, triage, inProgress, urgent] = await Promise.all([supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("status", "open"), supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("status", "triage"), supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("status", "in_progress"), supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("priority", "urgent").not("status", "in", "(closed,cancelled)")]); return { open: open.count || 0, triage: triage.count || 0, inProgress: inProgress.count || 0, urgent: urgent.count || 0 }; }
+async function getKpis(supabase: Awaited<ReturnType<typeof requireUser>>["supabase"], condominiumId: string, reportError: (block: string, error: SupabaseError | null | undefined) => void) { const blank = { open: 0, triage: 0, inProgress: 0, urgent: 0 }; if (!supabase) return blank; const [open, triage, inProgress, urgent] = await Promise.all([supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("status", "open"), supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("status", "triage"), supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("status", "in_progress"), supabase.from("occurrences").select("id", { count: "exact", head: true }).eq("condominium_id", condominiumId).eq("priority", "urgent").not("status", "in", "(closed,cancelled)")]); reportError("occurrences_kpi_open", open.error); reportError("occurrences_kpi_triage", triage.error); reportError("occurrences_kpi_in_progress", inProgress.error); reportError("occurrences_kpi_urgent", urgent.error); return { open: open.count || 0, triage: triage.count || 0, inProgress: inProgress.count || 0, urgent: urgent.count || 0 }; }
