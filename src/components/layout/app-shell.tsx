@@ -16,6 +16,13 @@ export function resolveNavigation(context: AuthorizedContext, dashboardAllowed =
   return { resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }, ...(occurrencesAllowed ? [{ label: "Ocorrências", href: "/app/occurrences" }] : []), ...(importsAllowed ? [{ label: "Importação", href: "/app/condominium/imports" }] : [])], showCondominiumSection: context.type === "condominium" };
 }
 
+export function closeDrawerOnEscape(event: KeyboardEvent, drawerToggle: HTMLInputElement, mainContent?: HTMLElement | null) {
+  if (event.key !== "Escape" || !drawerToggle.checked) return false;
+  drawerToggle.checked = false;
+  mainContent?.focus({ preventScroll: true });
+  return true;
+}
+
 export function AppShell({ children, context, personName, notifications = [], notificationTimeZone = "America/Sao_Paulo", userAccountId, condominiumNavigation = { overview: false, structures: false, units: false, people: false, residents: false, ownerships: false, gatehouse: false, reservations: false, occurrences: false, dashboard: false, imports: false } }: { children: React.ReactNode; context: AuthorizedContext; personName?: string | null; notifications?: NotificationItem[]; notificationTimeZone?: string; userAccountId?: string; condominiumNavigation?: { overview: boolean; structures: boolean; units: boolean; people?: boolean; residents?: boolean; ownerships?: boolean; gatehouse?: boolean; reservations?: boolean; occurrences?: boolean; dashboard?: boolean; imports?: boolean } }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
@@ -27,6 +34,14 @@ export function AppShell({ children, context, personName, notifications = [], no
       mainContentRef.current?.focus({ preventScroll: true });
     }
   }, [pathname]);
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const drawerToggle = drawerToggleRef.current;
+      if (drawerToggle) closeDrawerOnEscape(event, drawerToggle, mainContentRef.current);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
   const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations, condominiumNavigation.occurrences, condominiumNavigation.imports);
   const nav = navigation.primary.map((item) => ({ ...item, Icon: item.label === "Meu perfil" ? UserRound : LayoutDashboard }));

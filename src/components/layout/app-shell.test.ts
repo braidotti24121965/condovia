@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { resolveNavigation } from "./app-shell";
+import { describe, expect, it, vi } from "vitest";
+import { closeDrawerOnEscape, resolveNavigation } from "./app-shell";
 import type { AuthorizedContext } from "@/lib/auth/context";
 
 const condominium = (role: string): AuthorizedContext => ({ type: "condominium", id: "condo-1", name: "Condomínio", role });
@@ -10,5 +10,25 @@ describe("Painel landing route", () => {
   it("keeps platform and administrator routes unchanged", () => {
     expect(resolveNavigation({ type: "platform", id: "platform", name: "CondoVia", role: "Admin" }).primary[0].href).toBe("/app/platform");
     expect(resolveNavigation({ type: "administrator", id: "admin-1", name: "Admin", role: "Admin" }).primary[0].href).toBe("/app/dashboard");
+  });
+});
+
+describe("mobile drawer", () => {
+  it("closes the open drawer when Escape is pressed", () => {
+    const drawerToggle = { checked: false } as HTMLInputElement;
+    const focus = vi.fn();
+    const mainContent = { focus } as unknown as HTMLElement;
+
+    expect(drawerToggle.checked).toBe(false);
+
+    drawerToggle.checked = true;
+    expect(drawerToggle.checked).toBe(true);
+
+    expect(closeDrawerOnEscape({ key: "Enter" } as KeyboardEvent, drawerToggle, mainContent)).toBe(false);
+    expect(drawerToggle.checked).toBe(true);
+
+    expect(closeDrawerOnEscape({ key: "Escape" } as KeyboardEvent, drawerToggle, mainContent)).toBe(true);
+    expect(drawerToggle.checked).toBe(false);
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 });
