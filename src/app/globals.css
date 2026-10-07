@@ -236,8 +236,8 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 @media (max-width: 1100px) { .cv-semantic-row { flex-wrap: wrap; }.cv-width-document,.cv-width-medium,.cv-width-phone,.cv-width-compact,.cv-width-code { flex-grow: 1; }.cv-width-flexible { flex-basis: 320px; } }
 @media (max-width: 767px) { .cv-semantic-row { display: grid; grid-template-columns: minmax(0,1fr); }.cv-semantic-row > label { width: 100%; } }
 .cv-form-grid > .cv-person-picker { grid-column: span 6; }
-.cv-import-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.cv-import-actions .button { width: 100%; min-height: 44px; white-space: nowrap; }
+.cv-import-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.cv-import-actions .button { width: fit-content; min-height: var(--cv-button-height); white-space: nowrap; }
 .cv-import-summary { margin: 16px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .cv-import-summary > div { min-width: 0; padding: 8px 10px; display: flex; align-items: baseline; gap: 8px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-sm); background: var(--cv-background); }
 .cv-import-summary strong { color: var(--cv-brand-navy); font-size: 20px; line-height: 22px; }
@@ -293,7 +293,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-contact-form .button { min-height: 44px; }
 .cv-invite-note { color: var(--cv-text-muted); font-size: 13px; }
 @media (max-width: 767px) { .cv-form-grid > .cv-field-lg select,.cv-person-picker label:nth-child(2) select { width: 100%; } }
-@media (max-width: 767px) { .cv-import-actions { grid-template-columns: 1fr; } }
+@media (max-width: 767px) { .cv-import-actions { display: grid; grid-template-columns: 1fr; }.cv-import-actions .button { width: 100%; min-height: var(--cv-touch-target); } }
 @media (max-width: 767px) { .cv-import-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }.cv-import-summary > div { padding: 6px 8px; gap: 6px; }.cv-import-summary strong { font-size: 19px; line-height: 21px; } }
 @media (max-width: 767px) { .cv-import-file-control { align-items: stretch; flex-direction: column; padding: 8px; }.cv-import-file-name { flex: 0 0 auto; }.cv-import-file-trigger { width: 100%; justify-content: center; } }
 @media (min-width: 768px) and (max-width: 1279px) { .cv-import-form > .cv-import-entity-field,.cv-import-form > .cv-import-file-field { grid-column: 1 / -1; }.cv-import-file-control { align-items: center; flex-direction: row; padding: 8px; }.cv-import-file-name { flex: 1 1 auto; }.cv-import-file-trigger { width: fit-content; justify-content: center; order: 0; } }
