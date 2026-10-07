@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
+import { friendlyDatabaseError } from "@/lib/condominium/format";
+import { redirect } from "next/navigation";
 
 export async function createOccurrenceAction(formData: FormData) {
   const { supabase } = await requireUser();
@@ -16,9 +18,9 @@ export async function createOccurrenceAction(formData: FormData) {
     p_confidential: formData.get("confidential") === "on",
     p_origin: String(formData.get("origin") || "resident"),
   });
-  if (error) return;
+  if (error) redirect(`/app/occurrences?error=${encodeURIComponent(friendlyDatabaseError(error.message))}`);
   revalidatePath("/app/occurrences");
-  return;
+  redirect("/app/occurrences?saved=1");
 }
 
 export async function transitionOccurrenceAction(formData: FormData) {
@@ -31,9 +33,9 @@ export async function transitionOccurrenceAction(formData: FormData) {
     p_reason: String(formData.get("reason") || "") || null,
     p_assignee_user_account_id: String(formData.get("assignee_user_account_id") || "") || null,
   });
-  if (error) return;
+  if (error) redirect(`/app/occurrences?error=${encodeURIComponent(friendlyDatabaseError(error.message))}`);
   revalidatePath("/app/occurrences");
-  return;
+  redirect("/app/occurrences?updated=1");
 }
 
 export async function addOccurrenceCommentAction(formData: FormData) {

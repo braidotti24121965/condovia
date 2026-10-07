@@ -560,6 +560,27 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 
 /* Dashboard Professional Compact V2 */
 .dashboard-v2 { max-width: 1440px; }
+.occurrences-v2 { max-width: 1440px; }
+.occurrences-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.occurrences-kpis .occurrence-open .v2-kpi-icon { color: var(--cv-error); background: #FEEBEC; }
+.occurrences-kpis .occurrence-triage .v2-kpi-icon { color: var(--cv-warning); background: #FFF4DE; }
+.occurrences-kpis .occurrence-progress .v2-kpi-icon { color: var(--cv-info); background: #EAF2FF; }
+.occurrences-kpis .occurrence-urgent .v2-kpi-icon { color: var(--cv-error); background: #FEEBEC; }
+.occurrence-create-panel { padding: 18px 20px 20px; }
+.occurrence-form { margin-top: 18px; }
+.occurrences-list-panel { padding: 14px 16px 16px; }
+.occurrences-filters { margin-bottom: 12px; padding-bottom: 14px; }
+.occurrences-filters .cv-search { min-width: 260px; }
+.occurrences-table th { height: 42px; padding: 8px 12px; background: #F8FAFC; color: var(--cv-brand-navy); font-size: 11px; }
+.occurrences-table td { height: 58px; padding: 9px 12px; vertical-align: middle; }
+.occurrences-table td small, .occurrence-title small { display: block; margin-top: 3px; color: var(--cv-text-muted); font-size: 11px; }
+.occurrence-number, .occurrence-title { color: var(--cv-brand-navy); text-decoration: none; }
+.occurrence-number { font-weight: 700; }
+.occurrence-title strong { display: block; font-weight: 600; }
+.occurrence-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.occurrence-priority-low { color: #475569; background: #F1F5F9; }.occurrence-priority-normal { color: #1D4ED8; background: #DBEAFE; }.occurrence-priority-high { color: #92400E; background: #FEF3C7; }.occurrence-priority-urgent { color: #B91C1C; background: #FEE2E2; }
+.occurrence-status-open { color: #166534; background: #DCFCE7; }.occurrence-status-triage { color: #92400E; background: #FEF3C7; }.occurrence-status-in-progress { color: #1D4ED8; background: #DBEAFE; }.occurrence-status-resolved { color: #0F766E; background: #CCFBF1; }.occurrence-status-closed, .occurrence-status-cancelled { color: #475569; background: #F1F5F9; }
+.occurrence-row-actions { display: flex; gap: 6px; }.occurrence-row-actions form { margin: 0; }
 .v2-resident-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
 .v2-residents-panel { padding: 14px 16px 16px; }
 .v2-resident-filters { margin-bottom: 12px; padding-bottom: 14px; }
