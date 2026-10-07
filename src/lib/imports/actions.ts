@@ -3,14 +3,11 @@ import { revalidatePath } from "next/cache";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { escapeCsvCell, fileHash, MAX_BYTES, normalizeRows, readTabularFile } from "./parser";
 import type { ImportEntity, ImportRow } from "./types";
+import { restorePreviewRows, type PersistedImportRow } from "./preview";
 import { createHash } from "node:crypto";
 
 export type ImportActionState = { ok: boolean; message?: string; batchId?: string; headers?: string[]; rows?: ImportRow[]; structuralError?: string; result?: { created: number; batch_id: string } };
 const text = (form: FormData, key: string) => String(form.get(key) || "").trim();
-type PersistedImportRow = { row_number: number; classification: ImportRow["classification"]; normalized_data: Record<string, string>; message: string | null };
-export function restorePreviewRows(rows: PersistedImportRow[]): ImportRow[] {
-  return rows.map((row) => ({ rowNumber: row.row_number, classification: row.classification, data: row.normalized_data, message: row.message || undefined }));
-}
 function today(timeZone: string) { return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date()); }
 function safeImportError(error: unknown) {
   const message = error instanceof Error ? error.message.toLowerCase() : "";

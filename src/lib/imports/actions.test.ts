@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { restorePreviewRows } from "./actions";
+import { restorePreviewRows } from "./preview";
 
 describe("retomada de prévia de importação", () => {
   it("restaura classificação, dados e mensagens das linhas persistidas", () => {
