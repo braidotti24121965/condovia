@@ -82,22 +82,22 @@ export default async function GatehouseDashboardPage() {
       {/* KPI Stats Grid */}
       <section className="v2-kpi-grid gatehouse-kpis" aria-label="Indicadores operacionais">
         <article className="v2-kpi gatehouse-kpi-inside"><span className="v2-kpi-icon"><Users size={17}/></span><div>
-          <span>Dentro agora</span>
+          <span className="v2-kpi-label">Dentro agora</span>
           <strong>{summary.insideNowCount}</strong>
           <small className="cv-muted">Pessoas no condomínio</small>
         </div></article>
         <article className="v2-kpi gatehouse-kpi-authorizations"><span className="v2-kpi-icon"><Clock size={17}/></span><div>
-          <span>Autorizações hoje</span>
+          <span className="v2-kpi-label">Autorizações hoje</span>
           <strong>{summary.authorizationsTodayCount}</strong>
           <small className="cv-muted">Válidas para a data de hoje</small>
         </div></article>
         <article className="v2-kpi gatehouse-kpi-pending"><span className="v2-kpi-icon"><FileQuestion size={17}/></span><div>
-          <span>Aguardando autorização</span>
+          <span className="v2-kpi-label">Aguardando autorização</span>
           <strong>{summary.pendingRequestsCount}</strong>
           <small className="cv-muted">Solicitações de moradores pendentes</small>
         </div></article>
         <article className="v2-kpi gatehouse-kpi-packages"><span className="v2-kpi-icon"><PackageIcon size={17}/></span><div>
-          <span>Encomendas na portaria</span>
+          <span className="v2-kpi-label">Encomendas na portaria</span>
           <strong>{summary.waitingPackagesCount}</strong>
           <small className="cv-muted">Aguardando retirada pelos moradores</small>
         </div></article>

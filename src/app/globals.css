@@ -684,9 +684,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .profile-fields span { font-weight: 600; }
 .v2-page-header h1 { font-weight: 600; }
 .v2-page-header p:last-child strong { color: var(--cv-text-strong); font-weight: 600; }
-.v2-kpi small { font-weight: 600; }
-.v2-kpi > div > small { font-weight: 600; }
-.gatehouse-kpis .v2-kpi > div > span:not(.v2-kpi-icon) { font-weight: 600; }
+.v2-kpi-label { font-weight: 600; }
 .v2-kpi strong { font-size: 20px; line-height: 24px; font-weight: 700; }
 .v2-kpi em { font-weight: 400; }
 .v2-panel h2,.v2-analytic h2 { font-size: 13px; line-height: 19px; font-weight: 600; }
