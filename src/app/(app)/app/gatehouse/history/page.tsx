@@ -19,7 +19,7 @@ export default async function GatehouseHistoryPage() {
   const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
-    <div className="cv-page gatehouse-v2">
+    <div className="cv-page gatehouse-v2 gatehouse-history">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -68,20 +68,20 @@ export default async function GatehouseHistoryPage() {
                   const isEntry = e.event_type === "entry";
                   return (
                     <tr key={e.id}>
-                      <td>
+                      <td data-label="Data e hora">
                         <strong>{formatEventDateTimeInTimezone(e.occurred_at, timeZone)}</strong>
                       </td>
-                      <td>
+                      <td data-label="Evento">
                         <span className={`cv-status ${isEntry ? "cv-badge-entry" : "cv-badge-exit"}`}>
                           {isEntry ? <><LogIn size={13} style={{ marginRight: "4px" }} /> Entrada</> : <><LogOut size={13} style={{ marginRight: "4px" }} /> Saída</>}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Pessoa">
                         {e.service_provider ? <ProviderDisplay name={name} company={e.service_provider.company_name} /> : <strong>{name}</strong>}
                       </td>
-                      <td>Unidade {e.unit?.code}</td>
-                      <td>{e.access_point?.name || "Portaria"}</td>
-                      <td>{e.notes || "—"}</td>
+                      <td data-label="Destino">Unidade {e.unit?.code}</td>
+                      <td data-label="Ponto de acesso">{e.access_point?.name || "Portaria"}</td>
+                      <td data-label="Observações">{e.notes || "—"}</td>
                     </tr>
                   );
                 })}
