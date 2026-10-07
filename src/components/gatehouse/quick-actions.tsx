@@ -237,7 +237,7 @@ export function QuickActions({
                 </label>
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                  <Button type="button" variant="outline" onClick={reset}>Cancelar</Button>
+                  <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
                   <Button type="submit" disabled={loading}>
                     {loading ? "Registrando..." : "Confirmar Entrada"}
                   </Button>
@@ -288,7 +288,7 @@ export function QuickActions({
                 </label>
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                  <Button type="button" variant="outline" onClick={reset}>Cancelar</Button>
+                  <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
                   <Button type="submit" disabled={loading}>
                     {loading ? "Registrando..." : "Confirmar Saída"}
                   </Button>
@@ -361,7 +361,7 @@ export function QuickActions({
                 </label>
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                  <Button type="button" variant="outline" onClick={reset}>Cancelar</Button>
+                  <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
                   <Button type="submit" disabled={loading}>
                     {loading ? "Enviando..." : "Enviar Solicitação"}
                   </Button>
@@ -397,7 +397,7 @@ export function QuickActions({
                 </label>
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                  <Button type="button" variant="outline" onClick={reset}>Cancelar</Button>
+                  <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
                   <Button type="submit" disabled={loading}>
                     {loading ? "Recebendo..." : "Confirmar Recebimento"}
                   </Button>

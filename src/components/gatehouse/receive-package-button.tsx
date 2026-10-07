@@ -97,7 +97,7 @@ export function ReceivePackageButton({ units }: Props) {
               </label>
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={loading}>
                   {loading ? "Registrando..." : "Confirmar Recebimento"}
                 </Button>

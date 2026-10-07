@@ -39,7 +39,7 @@ export function AccessPointForm() {
                   <option value="pedestrian">Pedestres</option><option value="vehicle">Veículos</option><option value="service">Serviço</option><option value="mixed">Misto</option>
                 </select>
               </label>
-              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button><Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button></div>
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button><Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button></div>
             </form>
           </div>
         </div>

@@ -24,7 +24,7 @@ export function ConfirmationDialog({
         <h2 id="confirmation-title">{title}</h2>
         <p className="cv-muted">{description}</p>
         <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "20px" }}>
-          <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
+          <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
           <Button type="button" onClick={onConfirm}>{confirmLabel}</Button>
         </div>
       </div>
