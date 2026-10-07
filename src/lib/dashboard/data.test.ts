@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { aggregateDashboardDates, aggregateDashboardValues, applyDashboardCount, countActiveUrgentOccurrences, dashboardPeriodDays, shouldQueryDashboardModule } from "./data";
+import { aggregateDashboardDates, aggregateDashboardValues, applyDashboardCount, countActiveUrgentOccurrences, dashboardOccurrencesSelect, dashboardPeriodDays, shouldQueryDashboardModule } from "./data";
 
 describe("dashboard query hardening", () => {
+  it("disambiguates the condominium-scoped occurrence category relationship", () => {
+    expect(dashboardOccurrencesSelect).toContain("occurrence_categories!occurrences_category_id_condominium_id_fkey(name)");
+  });
   it("propagates real query errors without converting them to zero", () => {
     const result = { error: null as string | null, units: null as number | null };
     const applied = applyDashboardCount(result, { error: new Error("database unavailable") }, (value) => { result.units = value; }, null);
