@@ -60,7 +60,8 @@ alter table public.audit_events add constraint audit_events_entity_type_check ch
   'access_request', 'address', 'condominium', 'condominium_structure',
   'package', 'person', 'person_condominium_link', 'person_email', 'person_phone',
   'platform_acting_context', 'unit', 'unit_occupancy', 'unit_ownership',
-  'maintenance_equipment',
+  'person_document', 'unit_financial_responsibility', 'visitor',
+  'service_provider', 'access_point', 'package_collection', 'maintenance_equipment',
   'maintenance_equipment_category', 'maintenance_settings'
 ));
 
@@ -72,11 +73,13 @@ begin
   new.manufacturer := nullif(btrim(new.manufacturer), '');
   new.model := nullif(btrim(new.model), '');
   new.serial_number := nullif(btrim(new.serial_number), '');
-  if tg_op = 'UPDATE' and new.condominium_id is distinct from old.condominium_id then
-    raise exception 'Equipment tenant cannot be changed' using errcode = '23514';
-  end if;
-  if new.status <> 'active' and old.status is distinct from new.status then
-    new.updated_at := now();
+  if tg_op = 'UPDATE' then
+    if new.condominium_id is distinct from old.condominium_id then
+      raise exception 'Equipment tenant cannot be changed' using errcode = '23514';
+    end if;
+    if new.status <> 'active' and old.status is distinct from new.status then
+      new.updated_at := now();
+    end if;
   end if;
   return new;
 end $$;
