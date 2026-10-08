@@ -10,6 +10,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   const condominiumNavigation = context.type === "condominium" ? await Promise.all([
     supabase.rpc("has_permission", { permission_code: "condominium.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "structures.read", target_condominium_id: context.id }),
+    supabase.rpc("has_permission", { permission_code: "maintenance.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "units.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "people.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "residents.read", target_condominium_id: context.id }),
@@ -20,9 +21,10 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     supabase.rpc("has_permission", { permission_code: "occurrences.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "dashboard.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "imports.read", target_condominium_id: context.id }),
-  ]).then(([overview, structures, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports]) => ({
+  ]).then(([overview, structures, maintenance, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports]) => ({
     overview: overview.data === true,
     structures: structures.data === true,
+    maintenance: maintenance.data === true,
     units: units.data === true,
     people: people.data === true,
     residents: residents.data === true,
