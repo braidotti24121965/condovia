@@ -3,6 +3,7 @@ export type AuthorizedContext = {
   id: string;
   name: string;
   role: string;
+  actingAsPlatform?: boolean;
 };
 
 type CondominiumRow = { condominium_id: string; condominium_name: string; role_name: string };

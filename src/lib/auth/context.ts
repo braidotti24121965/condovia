@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { buildAuthorizedContexts, resolveCurrentContext, type AuthorizedContext } from "@/lib/auth/context-data";
 export type { AuthorizedContext } from "@/lib/auth/context-data";
@@ -16,7 +17,17 @@ export async function getAuthorizedContexts(): Promise<AuthorizedContext[]> {
     supabase.rpc("get_authorized_administrators"),
     supabase.rpc("has_platform_permission", { permission_code: "platform.manage" }),
   ]);
-  return buildAuthorizedContexts(condominiumRows ?? [], adminRows ?? [], platformAdmin === true);
+  const contexts = buildAuthorizedContexts(condominiumRows ?? [], adminRows ?? [], platformAdmin === true);
+  if (platformAdmin === true) {
+    const cookieStore = await cookies();
+    const actingId = cookieStore.get("condovia_context")?.value;
+    const actingMarker = cookieStore.get("condovia_acting_context")?.value;
+    if (actingMarker === "platform" && actingId && /^[0-9a-f-]{36}$/i.test(actingId)) {
+      const { data: tenant } = await supabase.from("condominiums").select("id,name").eq("id", actingId).eq("status", "active").maybeSingle();
+      if (tenant) contexts.unshift({ type: "condominium", id: tenant.id, name: tenant.name, role: "Administrador da Plataforma", actingAsPlatform: true });
+    }
+  }
+  return contexts;
 }
 
 export async function requireCurrentContext() {

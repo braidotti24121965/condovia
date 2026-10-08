@@ -1,0 +1,1 @@
+export const occurrencesListSelect = "id,occurrence_number,title,priority,status,confidential,created_at,category:occurrence_categories!occurrences_category_id_condominium_id_fkey(name),related_unit:units!occurrences_related_unit_id_condominium_id_fkey(code,display_name)";

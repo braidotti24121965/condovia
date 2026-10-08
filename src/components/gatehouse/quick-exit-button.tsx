@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Alert } from "@/components/ui/feedback";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { registerExitAction } from "@/lib/gatehouse/actions";
@@ -37,13 +38,13 @@ export function QuickExitButton({ targetKind, targetId, accessPointId, targetNam
   };
 
   if (done) {
-    return <span className="cv-status">Saída registrada</span>;
+    return <StatusBadge variant="success">Saída registrada</StatusBadge>;
   }
 
   return (
     <>
       {error && <Alert tone="error">{error}</Alert>}
-      <Button type="button" variant="outline" className="button-small" disabled={loading} onClick={() => setConfirming(true)} title="Registrar saída imediata">
+      <Button type="button" variant="primary" size="compact" disabled={loading} onClick={() => setConfirming(true)} title="Registrar saída imediata">
         <LogOut size={14} /> Registrar saída
       </Button>
       <ConfirmationDialog open={confirming} title="Confirmar saída" description={`A saída de ${targetName} será registrada agora e a pessoa deixará de aparecer como presente.`} confirmLabel="Confirmar saída" onCancel={() => setConfirming(false)} onConfirm={handleExit} />

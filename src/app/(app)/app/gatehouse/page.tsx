@@ -62,17 +62,17 @@ export default async function GatehouseDashboardPage() {
   const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
         <strong>Portaria</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">OPERAÇÃO DE CONTROLE DE ACESSO</p>
-          <h1>Portaria — {context.name}</h1>
+          <h1>Portaria</h1>
           <p>Visão em tempo real de presença, chegadas esperadas, autorizações e encomendas.</p>
         </div>
       </section>
@@ -80,27 +80,27 @@ export default async function GatehouseDashboardPage() {
       <GatehouseNav />
 
       {/* KPI Stats Grid */}
-      <section className="cv-stat-grid" aria-label="Indicadores operacionais">
-        <article>
-          <span>Dentro agora</span>
+      <section className="v2-kpi-grid gatehouse-kpis" aria-label="Indicadores operacionais">
+        <article className="v2-kpi gatehouse-kpi-inside"><span className="v2-kpi-icon"><Users size={17}/></span><div>
+          <span className="v2-kpi-label">Dentro agora</span>
           <strong>{summary.insideNowCount}</strong>
           <small className="cv-muted">Pessoas no condomínio</small>
-        </article>
-        <article>
-          <span>Autorizações hoje</span>
+        </div></article>
+        <article className="v2-kpi gatehouse-kpi-authorizations"><span className="v2-kpi-icon"><Clock size={17}/></span><div>
+          <span className="v2-kpi-label">Autorizações hoje</span>
           <strong>{summary.authorizationsTodayCount}</strong>
           <small className="cv-muted">Válidas para a data de hoje</small>
-        </article>
-        <article>
-          <span>Aguardando autorização</span>
+        </div></article>
+        <article className="v2-kpi gatehouse-kpi-pending"><span className="v2-kpi-icon"><FileQuestion size={17}/></span><div>
+          <span className="v2-kpi-label">Aguardando autorização</span>
           <strong>{summary.pendingRequestsCount}</strong>
           <small className="cv-muted">Solicitações de moradores pendentes</small>
-        </article>
-        <article>
-          <span>Encomendas na portaria</span>
+        </div></article>
+        <article className="v2-kpi gatehouse-kpi-packages"><span className="v2-kpi-icon"><PackageIcon size={17}/></span><div>
+          <span className="v2-kpi-label">Encomendas na portaria</span>
           <strong>{summary.waitingPackagesCount}</strong>
           <small className="cv-muted">Aguardando retirada pelos moradores</small>
-        </article>
+        </div></article>
       </section>
 
       {/* Quick Actions Bar */}
@@ -115,7 +115,7 @@ export default async function GatehouseDashboardPage() {
       />
 
       {/* 2x2 Grid with Operational Panels */}
-      <div className="cv-dashboard-split">
+      <div className="v2-main-grid gatehouse-main-grid">
         {/* Pessoas dentro agora */}
         <section className="cv-panel">
           <div className="cv-panel-heading">

@@ -2,6 +2,9 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { loadLocalE2EEnv } from "./load-env";
+
+loadLocalE2EEnv();
 
 const localURL = "http://127.0.0.1:15421";
 const localProjectId = "condovia-mvp0";
@@ -22,6 +25,7 @@ const fixture = {
   residentLink: "f9700000-0000-4000-8000-000000000009",
   doormanAssignment: "f9700000-0000-4000-8000-000000000014",
   residentAssignment: "f9700000-0000-4000-8000-000000000013",
+  residentSyndicAssignment: "f9700000-0000-4000-8000-000000000017",
   ownership: "f9700000-0000-4000-8000-000000000015",
   occupancy: "f9700000-0000-4000-8000-000000000016",
 } as const;
@@ -209,6 +213,11 @@ on conflict (id) do update set user_account_id = excluded.user_account_id, role_
 insert into public.role_assignments (id, user_account_id, role_id, condominium_id, status)
 select ${sqlLiteral(fixture.residentAssignment)}, ${sqlLiteral(fixture.residentAccount)}, r.id, ${sqlLiteral(fixture.condominium)}, 'active'
 from public.roles r where r.code = 'condominium.resident'
+on conflict (id) do update set user_account_id = excluded.user_account_id, role_id = excluded.role_id, condominium_id = excluded.condominium_id, administrator_id = null, platform_scope = false, status = 'active', ends_at = null;
+
+insert into public.role_assignments (id, user_account_id, role_id, condominium_id, status)
+select ${sqlLiteral(fixture.residentSyndicAssignment)}, ${sqlLiteral(fixture.residentAccount)}, r.id, ${sqlLiteral(fixture.condominium)}, 'active'
+from public.roles r where r.code = 'condominium.syndic'
 on conflict (id) do update set user_account_id = excluded.user_account_id, role_id = excluded.role_id, condominium_id = excluded.condominium_id, administrator_id = null, platform_scope = false, status = 'active', ends_at = null;
 
 insert into public.unit_ownerships (id, condominium_id, unit_id, person_id, ownership_percentage, starts_at)

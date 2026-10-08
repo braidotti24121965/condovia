@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Check, ExternalLink, X } from "lucide-react";
-import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useId, useRef, useState } from "react";
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "@/lib/notifications/notification-actions";
 import type { NotificationItem } from "@/lib/notifications/notification-types";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
+import { Button } from "@/components/ui/button";
 
 export function unreadNotificationCount(items: NotificationItem[]) { return items.filter((item) => !item.read_at).length; }
 
@@ -56,6 +57,10 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
   const itemsRef = useRef(initialNotifications);
   const pollingInFlightRef = useRef(false);
   const pollingActiveRef = useRef(true);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLElement>(null);
+  const popoverId = useId();
   const unread = unreadNotificationCount(items);
   const synchronize = useCallback(async () => {
     if (!canPollNotifications(document.visibilityState, pollingInFlightRef.current)) return;
@@ -85,5 +90,42 @@ export function NotificationCenter({ initialNotifications, timeZone, condominium
   }, [condominiumId, synchronize, userAccountId]);
   const markOne = async (id: string) => { if (items.find((item) => item.id === id)?.read_at) return; const readAt = new Date().toISOString(); itemsRef.current = itemsRef.current.map((item) => item.id === id ? { ...item, read_at: readAt } : item); setItems(itemsRef.current); await markNotificationAsRead(id); };
   const markAll = async () => { if (!unread || busy) return; setBusy(true); const readAt = new Date().toISOString(); itemsRef.current = itemsRef.current.map((item) => ({ ...item, read_at: item.read_at || readAt })); setItems(itemsRef.current); await markAllNotificationsAsRead(); setBusy(false); };
-  return <div className="notification-center"><button className="icon-button notification-button" type="button" aria-label={unread ? `Notificações, ${unread} não lidas` : "Notificações"} aria-expanded={open} onClick={() => setOpen((value) => !value)}><Bell size={19} />{unread > 0 && <span className="notification-count">{unread > 9 ? "9+" : unread}</span>}</button>{open && <section className="notification-popover" aria-label="Notificações"><header><div><h2>Notificações</h2><span>{unread ? `${unread} não lida${unread === 1 ? "" : "s"}` : "Tudo em dia"}</span></div><button className="notification-close" type="button" aria-label="Fechar notificações" onClick={() => setOpen(false)}><X size={16} /></button></header>{unread > 0 && <button className="notification-mark-all" type="button" onClick={markAll} disabled={busy}><Check size={14} /> Marcar todas como lidas</button>}{items.length ? <div className="notification-list">{items.map((item) => <article className={`notification-item ${item.read_at ? "is-read" : "is-unread"}`} key={item.id} onClick={() => markOne(item.id)}><div><strong>{item.title}</strong><p>{item.message}</p><small>{formatDateTimeInTimezone(item.created_at, timeZone)}</small></div>{item.entity_type === "reservation" && <Link href="/app/reservations" className="notification-link" aria-label="Abrir reservas" onClick={() => markOne(item.id)}><ExternalLink size={14} /></Link>}</article>)}</div> : <p className="notification-empty">Você não possui notificações.</p>}</section>}</div>;
+  useEffect(() => {
+    if (!open) return;
+    closeButtonRef.current?.focus({ preventScroll: true });
+    const close = () => {
+      setOpen(false);
+      requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        return;
+      }
+      if (event.key === "Tab" && popoverRef.current) {
+        const focusable = Array.from(popoverRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'));
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    const handlePointerDown = (event: PointerEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node) && !triggerRef.current?.contains(event.target as Node)) close();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [open]);
+  return <div className="notification-center"><Button ref={triggerRef} variant="icon" className="icon-button notification-button" size="default" type="button" aria-label={unread ? `Notificações, ${unread} não lidas` : "Notificações"} aria-expanded={open} aria-controls={popoverId} onClick={() => setOpen((value) => !value)}><Bell size={19} />{unread > 0 && <span className="notification-count">{unread > 9 ? "9+" : unread}</span>}</Button>{open && <section ref={popoverRef} id={popoverId} className="notification-popover" role="dialog" aria-modal="false" aria-labelledby={`${popoverId}-title`}><header><div><h2 id={`${popoverId}-title`}>Notificações</h2><span>{unread ? `${unread} não lida${unread === 1 ? "" : "s"}` : "Tudo em dia"}</span></div><Button ref={closeButtonRef} variant="icon" size="compact" className="notification-close" type="button" aria-label="Fechar notificações" onClick={() => { setOpen(false); requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true })); }}><X size={16} /></Button></header>{unread > 0 && <Button variant="ghost" className="notification-mark-all" size="compact" type="button" onClick={markAll} disabled={busy}><Check size={14} /> Marcar todas como lidas</Button>}{items.length ? <div className="notification-list">{items.map((item) => <article className={`notification-item ${item.read_at ? "is-read" : "is-unread"}`} key={item.id} role="button" tabIndex={0} aria-label={`Marcar notificação como lida: ${item.title}`} onClick={() => markOne(item.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); void markOne(item.id); } }}><div><strong>{item.title}</strong><p>{item.message}</p><small>{formatDateTimeInTimezone(item.created_at, timeZone)}</small></div>{item.entity_type === "reservation" && <Link href="/app/reservations" className="notification-link" aria-label="Abrir reservas" onClick={() => markOne(item.id)}><ExternalLink size={14} /></Link>}</article>)}</div> : <p className="notification-empty">Você não possui notificações.</p>}</section>}</div>;
 }

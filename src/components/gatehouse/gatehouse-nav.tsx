@@ -12,6 +12,7 @@ import {
   History,
   DoorOpen,
 } from "lucide-react";
+import { isGatehouseNavItemActive } from "./gatehouse-nav-state";
 
 export function GatehouseNav() {
   const pathname = usePathname();
@@ -30,10 +31,7 @@ export function GatehouseNav() {
   return (
     <nav className="cv-gatehouse-nav" aria-label="Navegação da Portaria">
       {links.map(({ href, label, icon: Icon }) => {
-        const isActive =
-          href === "/app/gatehouse"
-            ? pathname === "/app/gatehouse"
-            : pathname?.startsWith(href);
+        const isActive = isGatehouseNavItemActive(pathname, href);
         return (
           <Link
             key={href}

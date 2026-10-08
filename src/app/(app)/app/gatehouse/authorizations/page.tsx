@@ -6,6 +6,7 @@ import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
 import { ProviderDisplay } from "@/components/gatehouse/provider-display";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDateTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import {
   getAccessAuthorizations,
@@ -35,7 +36,7 @@ export default async function AuthorizationsPage() {
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -44,7 +45,7 @@ export default async function AuthorizationsPage() {
         <strong>Autorizações e Solicitações</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">AUTORIZAÇÕES DE ACESSO</p>
           <h1>Autorizações e Solicitações</h1>
@@ -56,7 +57,7 @@ export default async function AuthorizationsPage() {
       <GatehouseNav />
 
       {/* Solicitações Pendentes */}
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><FileQuestion size={18} /> Solicitações Aguardando Decisão ({pendingRequests.length})</h2>
           <p>Solicitações geradas na portaria para autorização do morador.</p>
@@ -86,7 +87,7 @@ export default async function AuthorizationsPage() {
                   return (
                     <tr key={r.id}>
                       <td>{r.service_provider ? <ProviderDisplay name={name || "Sem nome"} company={r.service_provider.company_name} /> : <strong>{name}</strong>}</td>
-                      <td><span className="cv-status">{type}</span></td>
+                      <td><StatusBadge variant="info">{type}</StatusBadge></td>
                       <td>Unidade {r.unit?.code}</td>
                       <td>{formatDateTimeInTimezone(r.requested_at, timeZone)}</td>
                       <td>{r.notes || "—"}</td>
@@ -103,7 +104,7 @@ export default async function AuthorizationsPage() {
       </section>
 
       {/* Todas as Autorizações */}
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><KeyRound size={18} /> Autorizações Cadastradas ({authorizations.length})</h2>
           <p>Lista de liberações emitidas para visitantes e prestadores.</p>
@@ -136,14 +137,14 @@ export default async function AuthorizationsPage() {
                   return (
                     <tr key={a.id}>
                       <td>{a.service_provider ? <ProviderDisplay name={name || "Sem nome"} company={a.service_provider.company_name} /> : <strong>{name}</strong>}</td>
-                      <td><span className="cv-status">{type}</span></td>
+                      <td><StatusBadge variant="info">{type}</StatusBadge></td>
                       <td>Unidade {a.unit?.code}</td>
                       <td>{formatDateTimeInTimezone(a.valid_from, timeZone)}</td>
                       <td>{formatDateTimeInTimezone(a.valid_until, timeZone)}</td>
                       <td>
-                        <span className={`cv-status cv-status-${!isDbApproved ? "inactive" : opStatus.tone}`}>
+                        <StatusBadge variant={!isDbApproved ? "neutral" : opStatus.tone === "inactive" ? "neutral" : opStatus.tone === "info" ? "info" : "warning"}>
                           {!isDbApproved ? a.status : opStatus.label}
-                        </span>
+                        </StatusBadge>
                       </td>
                     </tr>
                   );

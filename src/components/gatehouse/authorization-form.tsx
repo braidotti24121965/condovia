@@ -74,14 +74,14 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
           <div className="cv-panel" style={{ width: "min(100%, 540px)", maxHeight: "90vh", overflowY: "auto" }}>
             <div className="cv-panel-heading" style={{ marginBottom: "16px" }}>
               <h2><KeyRound size={18} /> Conceder Autorização de Acesso</h2>
-              <button
+              <Button variant="icon"
                 type="button"
                 className="icon-button"
                 onClick={() => setOpen(false)}
                 aria-label="Fechar"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
 
             {error && <div style={{ marginBottom: "16px" }}><Alert tone="error">{error}</Alert></div>}
@@ -176,7 +176,7 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
               </label>
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={loading}>
                   {loading ? "Salvando..." : "Conceder Autorização"}
                 </Button>

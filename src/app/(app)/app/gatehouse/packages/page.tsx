@@ -26,7 +26,7 @@ export default async function GatehousePackagesPage() {
   const collectedPackages = packages.filter((p) => p.status === "collected");
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -35,7 +35,7 @@ export default async function GatehousePackagesPage() {
         <strong>Encomendas</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">GESTÃO DE ENCOMENDAS</p>
           <h1>Encomendas — {context.name}</h1>
@@ -47,7 +47,7 @@ export default async function GatehousePackagesPage() {
       <GatehouseNav />
 
       {/* Aguardando Retirada */}
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><Clock size={18} /> Aguardando Retirada ({waitingPackages.length})</h2>
           <p>Encomendas sob custódia na portaria prontas para entrega ao morador.</p>
@@ -95,7 +95,7 @@ export default async function GatehousePackagesPage() {
       </section>
 
       {/* Encomendas Retiradas */}
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><CheckCircle2 size={18} /> Encomendas Retiradas Recentemente ({collectedPackages.length})</h2>
           <p>Histórico comprovado de baixas efetuadas.</p>

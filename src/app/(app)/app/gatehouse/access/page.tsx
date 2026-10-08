@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickExitButton } from "@/components/gatehouse/quick-exit-button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { formatTimeInTimezone } from "@/lib/gatehouse/timezone";
 import {
   getGatehousePresence,
@@ -27,7 +28,7 @@ export default async function AccessPresencePage() {
   const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -36,7 +37,7 @@ export default async function AccessPresencePage() {
         <strong>Presença e Controle de Acesso</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">STATUS EM TEMPO REAL</p>
           <h1>Dentro Agora — {context.name}</h1>
@@ -50,7 +51,7 @@ export default async function AccessPresencePage() {
 
       <GatehouseNav />
 
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><Users size={18} /> Pessoas Dentro do Condomínio ({presenceList.length})</h2>
           <p>Derivado factualmente dos eventos de entrada sem saída correspondente.</p>
@@ -83,9 +84,9 @@ export default async function AccessPresencePage() {
                       {p.company_name && <small className="cv-muted">{p.company_name}</small>}
                     </td>
                     <td>
-                      <span className="cv-status">
+                      <StatusBadge variant="info">
                         {p.target_kind === "visitor" ? "Visitante" : "Prestador"}
-                      </span>
+                      </StatusBadge>
                     </td>
                     <td>{p.document_number ? `${p.document_type?.toUpperCase() || "DOC"}: ${p.document_number}` : "—"}</td>
                     <td>Unidade {p.unit_code}</td>

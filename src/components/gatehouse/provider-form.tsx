@@ -54,14 +54,14 @@ export function ProviderForm() {
           <div className="cv-panel" style={{ width: "min(100%, 520px)" }}>
             <div className="cv-panel-heading" style={{ marginBottom: "16px" }}>
               <h2><Briefcase size={18} /> Cadastrar Prestador de Serviço</h2>
-              <button
+              <Button variant="icon"
                 type="button"
                 className="icon-button"
                 onClick={() => setOpen(false)}
                 aria-label="Fechar"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
 
             {error && <div style={{ marginBottom: "16px" }}><Alert tone="error">{error}</Alert></div>}
@@ -111,7 +111,7 @@ export function ProviderForm() {
               </label>
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={loading}>
                   {loading ? "Cadastrando..." : "Salvar Prestador"}
                 </Button>

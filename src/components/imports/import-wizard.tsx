@@ -3,6 +3,8 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { confirmImport, exportImportCsv, previewImport, type ImportActionState } from "@/lib/imports/actions";
 import { importEntities, importTemplates, type ImportEntity } from "@/lib/imports/types";
+import { Button } from "@/components/ui/button";
+import { Toast } from "@/components/ui/feedback";
 const initial: ImportActionState = { ok:false };
 export function ImportWizard() {
   const [state, action, pending] = useActionState(previewImport, initial);
@@ -10,12 +12,16 @@ export function ImportWizard() {
   const [fileName, setFileName] = useState("");
   const [entityOpen, setEntityOpen] = useState(false);
   const [activeEntity, setActiveEntity] = useState(0);
+  const [dismissedMessage, setDismissedMessage] = useState<string | null>(null);
   const entitySelectRef = useRef<HTMLDivElement>(null);
   const selectedEntity = importEntities.find((item) => item.value === entity) ?? importEntities[0];
   const totalRows = state.rows?.length ?? 0;
   const newCount = state.rows?.filter((row)=>row.classification==="new").length ?? 0;
   const duplicateCount = state.rows?.filter((row)=>row.classification==="duplicate").length ?? 0;
   const invalidCount = state.rows?.filter((row)=>row.classification==="invalid").length ?? 0;
+  const importMessage = state.message === undefined ? null : state.message.includes("já possui um lote registrado") ? "Este arquivo já foi importado anteriormente." : state.message;
+  const importMessageTone = state.message?.includes("já possui um lote registrado") ? "warning" as const : "error" as const;
+  useEffect(() => setDismissedMessage(null), [state.message]);
 
   useEffect(() => {
     const handleDocumentPointerDown = (event: PointerEvent) => {
@@ -69,8 +75,9 @@ export function ImportWizard() {
     return { ok: result.ok, message: result.message, result: result.result };
   }, initial);
   return <div className="cv-page">
+    {importMessage && importMessage !== dismissedMessage && <Toast tone={importMessageTone} onClose={() => setDismissedMessage(importMessage)}>{importMessage}</Toast>}
     <section className="cv-panel"><div className="cv-panel-heading"><div><h2>Nova importação</h2><p>Um arquivo por entidade. O domínio só será gravado após a confirmação.</p></div></div>
-      <form action={action} className="cv-form-grid cv-import-form" encType="multipart/form-data">
+      <form action={action} className="cv-form-grid cv-import-form">
         <div className="cv-import-entity-field">
           <span className="cv-import-entity-label">Entidade</span>
           <div className="cv-import-entity-select" ref={entitySelectRef}>
@@ -88,16 +95,15 @@ export function ImportWizard() {
           <div className="cv-import-file-control">
             <input id="import-file" name="file" type="file" accept=".csv" required className="cv-import-file-input" onChange={(event)=>setFileName(event.target.files?.[0]?.name ?? "")} />
             <span className="cv-import-file-name" aria-live="polite">{fileName || "Nenhum arquivo selecionado"}</span>
-            <label htmlFor="import-file" className="button button-outline cv-import-file-trigger">Escolher arquivo</label>
+            <label htmlFor="import-file" className="button button-secondary cv-import-file-trigger">Escolher arquivo</label>
           </div>
         </div>
         <div className="cv-import-actions">
-          <button className="button button-primary" type="submit" disabled={pending}>{pending ? "Lendo..." : "Ler e gerar prévia"}</button>
-          <button type="button" className="button button-outline" onClick={()=>{const blob=new Blob([importTemplates[entity].join(",")+"\n"],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=entity+"-template.csv";a.click();URL.revokeObjectURL(url);}}>Baixar template oficial CSV</button>
+          <Button type="submit" disabled={pending}>{pending ? "Lendo..." : "Ler e gerar prévia"}</Button>
+          <Button variant="secondary" type="button" onClick={()=>{const blob=new Blob([importTemplates[entity].join(",")+"\n"],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=entity+"-template.csv";a.click();URL.revokeObjectURL(url);}}>Baixar template oficial CSV</Button>
         </div>
       </form>
-      {state.message && <p className="cv-field-error" role="alert">{state.message}</p>}
     </section>
-    {state.ok && state.batchId && <section className="cv-panel"><div className="cv-panel-heading"><div><h2>{confirmState.ok && confirmState.result ? "Importação concluída" : "Prévia do lote"}</h2><p>{confirmState.ok && confirmState.result ? "O lote foi confirmado e os registros novos foram importados." : `${totalRows} ${totalRows === 1 ? "linha lida" : "linhas lidas"}. Nenhum dado do domínio foi gravado.`}</p></div></div><div className="cv-import-summary"><div><strong>{totalRows}</strong><span>Linhas</span></div><div><strong>{confirmState.result?.created ?? newCount}</strong><span>Novos</span></div><div><strong>{duplicateCount}</strong><span>Duplicados</span></div><div><strong>{invalidCount}</strong><span>Inválidos</span></div></div><div className="cv-import-feedback" aria-live="polite">{duplicateCount > 0 && <div className="cv-import-feedback-item is-warning"><AlertTriangle size={17} aria-hidden="true" /><p><strong>{duplicateCount} {duplicateCount === 1 ? "registro duplicado" : "registros duplicados"}</strong><span>{duplicateCount === 1 ? "Esse registro já existe e será ignorado na importação." : "Esses registros já existem e serão ignorados na importação."}</span></p></div>}{invalidCount > 0 && <div className="cv-import-feedback-item is-error"><AlertTriangle size={17} aria-hidden="true" /><p><strong>{invalidCount} {invalidCount === 1 ? "registro inválido" : "registros inválidos"}</strong><span>Esses registros não serão importados. Consulte o relatório para os detalhes.</span></p></div>}{newCount > 0 && duplicateCount === 0 && invalidCount === 0 && <div className="cv-import-feedback-item is-info"><CheckCircle2 size={17} aria-hidden="true" /><p><strong>{newCount} {newCount === 1 ? "registro pronto" : "registros prontos"} para importação.</strong></p></div>}{newCount > 0 && (duplicateCount > 0 || invalidCount > 0) && <div className="cv-import-feedback-item is-info"><Info size={17} aria-hidden="true" /><p><strong>{newCount} {newCount === 1 ? "registro novo" : "registros novos"} pronto{newCount === 1 ? "" : "s"} para importação.</strong></p></div>}</div><div className="cv-table-wrap"><table className="cv-table"><thead><tr><th>Linha</th><th>Classificação</th><th>Mensagem</th></tr></thead><tbody>{state.rows?.slice(0,100).map((row)=><tr key={row.rowNumber}><td>{row.rowNumber}</td><td>{row.classification}</td><td>{row.message || "—"}</td></tr>)}</tbody></table></div>{!confirmState.ok && <><p>Linhas inválidas e duplicadas permanecem no relatório e serão ignoradas.</p><form action={confirmAction}><input type="hidden" name="batch_id" value={state.batchId}/><button className="button button-primary" type="submit">Confirmar importação</button></form></>}{confirmState.ok && confirmState.result && <div className="cv-import-completion"><p role="status">Importação confirmada.</p><button className="button button-primary" type="button" onClick={() => { if (confirmState.result?.batch_id) void downloadReport(confirmState.result.batch_id); }}>Baixar relatório CSV</button></div>}{confirmState.message && !confirmState.ok && <p role="alert">{confirmState.message}</p>}</section>}
+    {state.ok && state.batchId && <section className="cv-panel"><div className="cv-panel-heading"><div><h2>{confirmState.ok && confirmState.result ? "Importação concluída" : "Prévia do lote"}</h2><p>{confirmState.ok && confirmState.result ? "O lote foi confirmado e os registros novos foram importados." : `${totalRows} ${totalRows === 1 ? "linha lida" : "linhas lidas"}. Nenhum dado do domínio foi gravado.`}</p></div></div><div className="cv-import-summary"><div><strong>{totalRows}</strong><span>Linhas</span></div><div><strong>{confirmState.result?.created ?? newCount}</strong><span>Novos</span></div><div><strong>{duplicateCount}</strong><span>Duplicados</span></div><div><strong>{invalidCount}</strong><span>Inválidos</span></div></div><div className="cv-import-feedback" aria-live="polite">{duplicateCount > 0 && <div className="cv-import-feedback-item is-warning"><AlertTriangle size={17} aria-hidden="true" /><p><strong>{duplicateCount} {duplicateCount === 1 ? "registro duplicado" : "registros duplicados"}</strong><span>{duplicateCount === 1 ? "Esse registro já existe e será ignorado na importação." : "Esses registros já existem e serão ignorados na importação."}</span></p></div>}{invalidCount > 0 && <div className="cv-import-feedback-item is-error"><AlertTriangle size={17} aria-hidden="true" /><p><strong>{invalidCount} {invalidCount === 1 ? "registro inválido" : "registros inválidos"}</strong><span>Esses registros não serão importados. Consulte o relatório para os detalhes.</span></p></div>}{newCount > 0 && duplicateCount === 0 && invalidCount === 0 && <div className="cv-import-feedback-item is-info"><CheckCircle2 size={17} aria-hidden="true" /><p><strong>{newCount} {newCount === 1 ? "registro pronto" : "registros prontos"} para importação.</strong></p></div>}{newCount > 0 && (duplicateCount > 0 || invalidCount > 0) && <div className="cv-import-feedback-item is-info"><Info size={17} aria-hidden="true" /><p><strong>{newCount} {newCount === 1 ? "registro novo" : "registros novos"} pronto{newCount === 1 ? "" : "s"} para importação.</strong></p></div>}</div><div className="cv-table-wrap"><table className="cv-table"><thead><tr><th>Linha</th><th>Classificação</th><th>Mensagem</th></tr></thead><tbody>{state.rows?.slice(0,100).map((row)=><tr key={row.rowNumber}><td>{row.rowNumber}</td><td>{row.classification}</td><td>{row.message || "—"}</td></tr>)}</tbody></table></div>{!confirmState.ok && <><p>Linhas inválidas e duplicadas permanecem no relatório e serão ignoradas.</p><form action={confirmAction}><input type="hidden" name="batch_id" value={state.batchId}/><Button type="submit">Confirmar importação</Button></form></>}{confirmState.ok && confirmState.result && <div className="cv-import-completion"><p role="status">Importação confirmada.</p><Button type="button" onClick={() => { if (confirmState.result?.batch_id) void downloadReport(confirmState.result.batch_id); }}>Baixar relatório CSV</Button></div>}{confirmState.message && !confirmState.ok && <p role="alert">{confirmState.message}</p>}</section>}
   </div>;
 }

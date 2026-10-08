@@ -38,6 +38,6 @@ export function PersonPicker({
       <input type="hidden" name="person_id" value={selected} />
     </label>
     {selectedPerson && <p className="cv-form-hint" role="status">Selecionado: {selectedPerson.full_name}</p>}
-    <Link className="button button-outline" href={newPersonHref}>Cadastrar nova pessoa</Link>
+    <Link className="button button-secondary" href={newPersonHref}>Cadastrar nova pessoa</Link>
   </div>;
 }

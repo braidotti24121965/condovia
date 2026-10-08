@@ -11,6 +11,7 @@ export default defineConfig({
   retries: 0,
   timeout: 30_000,
   expect: { timeout: 8_000 },
+  snapshotPathTemplate: "{testDir}/visual-baselines/{arg}{ext}",
   use: {
     ...devices["Desktop Chrome"],
     browserName: "chromium",

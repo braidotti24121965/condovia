@@ -42,7 +42,7 @@ export function CollectPackageModal({ packageId, packageDescription, unitCode }:
       <Button
         type="button"
         variant="primary"
-        className="button-small"
+        size="compact"
         onClick={() => setOpen(true)}
       >
         <CheckCircle2 size={14} /> Entregar
@@ -65,14 +65,14 @@ export function CollectPackageModal({ packageId, packageDescription, unitCode }:
           <div className="cv-panel" style={{ width: "min(100%, 460px)" }}>
             <div className="cv-panel-heading" style={{ marginBottom: "16px" }}>
               <h2><CheckCircle2 size={18} /> Registrar Retirada</h2>
-              <button
+              <Button variant="icon"
                 type="button"
                 className="icon-button"
                 onClick={() => setOpen(false)}
                 aria-label="Fechar"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
 
             <p style={{ margin: "0 0 16px", fontSize: "14px", color: "var(--cv-text-muted)" }}>
@@ -99,7 +99,7 @@ export function CollectPackageModal({ packageId, packageDescription, unitCode }:
               </label>
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={loading}>
                   {loading ? "Liberando..." : "Confirmar Entrega"}
                 </Button>

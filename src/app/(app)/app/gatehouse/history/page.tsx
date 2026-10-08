@@ -19,7 +19,7 @@ export default async function GatehouseHistoryPage() {
   const timeZone = condo?.timezone || "America/Sao_Paulo";
 
   return (
-    <div className="cv-page">
+    <div className="cv-page gatehouse-v2 gatehouse-history">
       <div className="breadcrumbs">
         <Link href="/app/dashboard">Início</Link>
         <ChevronRight size={14} />
@@ -28,7 +28,7 @@ export default async function GatehouseHistoryPage() {
         <strong>Histórico de Acesso</strong>
       </div>
 
-      <section className="page-heading">
+      <section className="v2-page-header">
         <div>
           <p className="page-overline">REGISTRO HISTÓRICO FACTUAL</p>
           <h1>Histórico de Entradas e Saídas</h1>
@@ -38,7 +38,7 @@ export default async function GatehouseHistoryPage() {
 
       <GatehouseNav />
 
-      <section className="cv-panel">
+      <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><History size={18} /> Eventos de Portaria ({events.length})</h2>
           <p>Ordenados cronologicamente do mais recente ao mais antigo.</p>
@@ -68,20 +68,20 @@ export default async function GatehouseHistoryPage() {
                   const isEntry = e.event_type === "entry";
                   return (
                     <tr key={e.id}>
-                      <td>
+                      <td data-label="Data e hora">
                         <strong>{formatEventDateTimeInTimezone(e.occurred_at, timeZone)}</strong>
                       </td>
-                      <td>
+                      <td data-label="Evento">
                         <span className={`cv-status ${isEntry ? "cv-badge-entry" : "cv-badge-exit"}`}>
                           {isEntry ? <><LogIn size={13} style={{ marginRight: "4px" }} /> Entrada</> : <><LogOut size={13} style={{ marginRight: "4px" }} /> Saída</>}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Pessoa">
                         {e.service_provider ? <ProviderDisplay name={name} company={e.service_provider.company_name} /> : <strong>{name}</strong>}
                       </td>
-                      <td>Unidade {e.unit?.code}</td>
-                      <td>{e.access_point?.name || "Portaria"}</td>
-                      <td>{e.notes || "—"}</td>
+                      <td data-label="Destino">Unidade {e.unit?.code}</td>
+                      <td data-label="Ponto de acesso">{e.access_point?.name || "Portaria"}</td>
+                      <td data-label="Observações">{e.notes || "—"}</td>
                     </tr>
                   );
                 })}
