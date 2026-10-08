@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterReservations } from "./reservation-list";
+import { eligibleReservationIds, filterReservations, pruneReservationSelection } from "./reservation-list";
 
 const rows = [
   { id: "1", resourceName: "Salão", reservationMode: "time_slot" as const, unitCode: "G30", requesterName: "Morador", date: "2026-10-08", schedule: "14:00–18:00", status: "pending" as const },
@@ -25,5 +25,16 @@ describe("reservation list filters", () => {
     expect(filterReservations(allStatuses, "", "", "")).toHaveLength(4);
     expect(filterReservations(allStatuses, "pending", "", "")).toHaveLength(1);
     expect(filterReservations(allStatuses, "cancelled", "", "")).toHaveLength(1);
+  });
+});
+
+describe("reservation bulk selection", () => {
+  it("only selects cancellable pending and approved reservations", () => {
+    const candidates = allStatuses.map((row) => ({ ...row, canCancel: true }));
+    expect(eligibleReservationIds(candidates)).toEqual(["status-0", "status-1"]);
+  });
+
+  it("prunes selections when filters hide reservations", () => {
+    expect(pruneReservationSelection(["1", "2", "3"], ["2"])).toEqual(["2"]);
   });
 });
