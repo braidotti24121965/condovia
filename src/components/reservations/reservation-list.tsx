@@ -34,7 +34,7 @@ function reservationBadgeVariant(situation: string) {
 
 export function ReservationList({ rows, resourceOptions, filters, pagination }: { rows: ReservationListRow[]; resourceOptions: Array<{ id: string; name: string }>; filters: { status: string; resource: string; date: string }; pagination: { page: number; total: number; totalPages: number; previousHref: string | null; nextHref: string | null } }) {
   const [status, setStatus] = useState(filters.status); const [resource, setResource] = useState(filters.resource); const [date, setDate] = useState(filters.date);
-  const filtered = useMemo(() => filterReservations(rows, status, resourceOptions.find((item) => item.id === resource)?.name || resource, date), [rows, status, resource, date, resourceOptions]);
+  const filtered = rows;
   const [selected, setSelected] = useState<ReservationListRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
