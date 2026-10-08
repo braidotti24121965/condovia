@@ -1,6 +1,10 @@
-# CondoVia MVP-0
+# CondoVia
 
 Fundação do CondoVia: autenticação Supabase, resolução de contextos autorizados, permissões RBAC/RLS e shell responsivo conforme o Brand Book e o Design System v1.0.
+
+## Documentação consolidada
+
+O índice técnico, funcional, operacional e de roadmap está em [docs/condovia/README.md](docs/condovia/README.md). Os documentos históricos, Brand Book, Design System e cronogramas XLSX permanecem preservados na raiz.
 
 ## Requisitos
 
