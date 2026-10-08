@@ -1,4 +1,7 @@
 import { expect, test as base, type Page } from "@playwright/test";
+import { loadLocalE2EEnv } from "./load-env";
+
+loadLocalE2EEnv();
 
 export type E2EAccount = "resident" | "doorman";
 
