@@ -77,7 +77,7 @@ export function ImportWizard() {
   return <div className="cv-page">
     {importMessage && importMessage !== dismissedMessage && <Toast tone={importMessageTone} onClose={() => setDismissedMessage(importMessage)}>{importMessage}</Toast>}
     <section className="cv-panel"><div className="cv-panel-heading"><div><h2>Nova importação</h2><p>Um arquivo por entidade. O domínio só será gravado após a confirmação.</p></div></div>
-      <form action={action} className="cv-form-grid cv-import-form" encType="multipart/form-data">
+      <form action={action} className="cv-form-grid cv-import-form">
         <div className="cv-import-entity-field">
           <span className="cv-import-entity-label">Entidade</span>
           <div className="cv-import-entity-select" ref={entitySelectRef}>
