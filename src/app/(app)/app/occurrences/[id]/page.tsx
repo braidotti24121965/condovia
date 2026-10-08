@@ -9,7 +9,7 @@ export default async function OccurrenceDetailPage({ params }: { params: Promise
   const [{ id }, { supabase }, context] = await Promise.all([params, requireUser(), requireCurrentContext()]);
   if (!supabase || context.type !== "condominium") return notFound();
   const [{ data: occurrence, error: occurrenceError }, { data: comments }, { data: history }, { data: assigneeRows }] = await Promise.all([
-    supabase.from("occurrences").select("*, category:occurrence_categories(name)").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
+    supabase.from("occurrences").select("*, category:occurrence_categories!occurrences_category_id_condominium_id_fkey(name)").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
     supabase.from("occurrence_comments").select("id,body,visibility,created_at,author_user_account_id").eq("occurrence_id", id).eq("condominium_id", context.id),
     supabase.from("occurrence_history").select("id,event_type,previous_status,new_status,reason,created_at").eq("occurrence_id", id).eq("condominium_id", context.id),
     supabase.from("role_assignments").select("user_account_id,user_accounts(id,people(full_name,preferred_name)),roles!inner(code)").eq("condominium_id", context.id).eq("status", "active").in("roles.code", ["condominium.syndic", "condominium.manager"]),
