@@ -38,6 +38,6 @@ describe("salvamento do contrato", () => {
     mocks.rpc.mockResolvedValue({ error: null });
     await expect(saveContract({ attempt: 0 }, contract("2026-10-10"))).rejects.toThrow("redirect");
     expect(mocks.rpc).toHaveBeenCalledWith("save_maintenance_contract", expect.objectContaining({ p_start: "2026-10-10", p_end: "2026-10-10", p_amount: 0 }));
-    expect(mocks.redirect).toHaveBeenCalledWith("/app/condominium/maintenance/contracts?updated=1");
+    expect(mocks.redirect).toHaveBeenCalledWith(expect.stringMatching(/^\/app\/condominium\/maintenance\/contracts\?updated=[0-9a-f-]{36}$/));
   });
 });
