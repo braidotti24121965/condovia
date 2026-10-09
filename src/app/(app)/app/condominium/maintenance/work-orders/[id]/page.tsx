@@ -6,7 +6,7 @@ import { Alert, EmptyState } from "@/components/ui/feedback";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatEventDateTimeInTimezone } from "@/lib/gatehouse/timezone";
-import { getResponsibleDisplayName } from "@/lib/maintenance/work-order-presenters";
+import { getAssigneeDisplayName, getResponsibleDisplayName } from "@/lib/maintenance/work-order-presenters";
 
 const statuses = { open: "Aberta", assigned: "Atribuída", in_progress: "Em execução", awaiting_validation: "Aguardando validação", completed: "Concluída", cancelled: "Cancelada" } as const;
 const priorities = { low: "Baixa", medium: "Média", high: "Alta", emergency: "Emergência" } as const;
@@ -30,7 +30,7 @@ export default async function WorkOrderDetailPage({ params, searchParams }: { pa
     return <div className="cv-page"><Alert tone="error">Não foi possível carregar os dados da ordem de serviço. Tente novamente ou contate o suporte.</Alert></div>;
   }
   if (!order) return <div className="cv-page"><EmptyState title="Ordem de serviço não encontrada" description="A ordem pode ter sido removida ou não pertence a este condomínio."/></div>;
-  const responsibleName = getResponsibleDisplayName(order.responsible);
+  const responsibleName = getResponsibleDisplayName(order.responsible) ?? getAssigneeDisplayName(users, order.responsible_user_account_id);
   if (order.responsible_user_account_id && !responsibleName) {
     console.error("Responsável persistido sem nome relacionado ao carregar ordem de serviço", { workOrderId: id, responsibleUserAccountId: order.responsible_user_account_id, condominiumId: context.id });
   }
