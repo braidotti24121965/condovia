@@ -1,5 +1,6 @@
 "use server";
 
+import { orderTransitionError } from "./order-errors";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
@@ -116,7 +117,7 @@ export async function transitionMaintenanceWorkOrderAction(form: FormData) {
     p_reason: nullable(value(form, "reason")),
     p_responsible_user_account_id: nullable(value(form, "responsible_user_account_id")),
   });
-  if (error) redirect(`/app/condominium/maintenance/work-orders/${value(form, "work_order_id")}?error=${encodeURIComponent(error.message.includes("motivo") ? "Informe um motivo com pelo menos 3 caracteres." : "Não foi possível atualizar a ordem de serviço.")}`);
+  if (error) redirect(`/app/condominium/maintenance/work-orders/${value(form, "work_order_id")}?error=${encodeURIComponent(orderTransitionError(error.message, value(form, "action")))}`);
   revalidatePath("/app/condominium/maintenance/work-orders");
   revalidatePath(`/app/condominium/maintenance/work-orders/${value(form, "work_order_id")}`);
   redirect(`/app/condominium/maintenance/work-orders/${value(form, "work_order_id")}?updated=1`);
