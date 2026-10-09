@@ -245,6 +245,13 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 @media (max-width: 1100px) { .cv-semantic-row { flex-wrap: wrap; }.cv-width-document,.cv-width-medium,.cv-width-phone,.cv-width-compact,.cv-width-code { flex-grow: 1; }.cv-width-flexible { flex-basis: 320px; } }
 @media (max-width: 767px) { .cv-semantic-row { display: grid; grid-template-columns: minmax(0,1fr); }.cv-semantic-row > label { width: 100%; } }
 .cv-form-grid > .cv-person-picker { grid-column: span 6; }
+.cv-work-order-form { gap: 12px; align-items: end; }
+.cv-work-order-form > label select,
+.cv-work-order-form > label input { max-width: 100%; }
+.cv-work-order-form > label input[type=date] { max-width: 160px; }
+.cv-work-order-form > .button { white-space: nowrap; }
+.cv-import-actions form.cv-form { min-width: min(100%, 360px); display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+.cv-import-actions form.cv-form label { flex: 1 1 220px; min-width: 220px; }
 .cv-import-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .cv-import-actions .button { width: fit-content; min-height: var(--cv-button-height); white-space: nowrap; }
 .cv-import-summary { margin: 16px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }

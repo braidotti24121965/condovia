@@ -59,7 +59,7 @@ export async function createMaintenanceRequestAction(form: FormData) {
     p_structure_id: value(form, "structure_id"),
     p_equipment_id: nullable(value(form, "equipment_id")),
     p_title: value(form, "title"),
-    p_description: value(form, "description"),
+    p_description: nullable(value(form, "description")),
     p_priority: value(form, "priority") || "medium",
   });
   if (error) redirect(`/app/condominium/maintenance/requests?error=${encodeURIComponent(error.message.includes("disabled") ? "Solicitações de moradores estão desativadas neste condomínio." : "Não foi possível registrar a solicitação.")}`);
@@ -79,4 +79,55 @@ export async function decideMaintenanceRequestAction(form: FormData) {
   if (error) redirect(`/app/condominium/maintenance/requests?error=${encodeURIComponent(error.message.includes("obrigatório") ? "Informe o motivo da rejeição." : "Não foi possível analisar a solicitação.")}`);
   revalidatePath("/app/condominium/maintenance/requests");
   redirect("/app/condominium/maintenance/requests?updated=1");
+}
+
+export async function createMaintenanceWorkOrderAction(form: FormData) {
+  const { supabase } = await requireUser();
+  await requireCurrentContext();
+  if (!supabase) return;
+  const { error } = await supabase.rpc("create_maintenance_work_order", {
+    p_maintenance_request_id: nullable(value(form, "maintenance_request_id")),
+    p_structure_id: nullable(value(form, "structure_id")),
+    p_equipment_id: nullable(value(form, "equipment_id")),
+    p_description: value(form, "description"),
+    p_priority: nullable(value(form, "priority")),
+    p_responsible_user_account_id: nullable(value(form, "responsible_user_account_id")),
+    p_service_provider_id: nullable(value(form, "service_provider_id")),
+    p_due_at: nullable(value(form, "due_at")),
+  });
+  if (error) redirect(`/app/condominium/maintenance/work-orders?error=${encodeURIComponent(error.message.includes("já possui") ? "Esta solicitação já possui uma ordem de serviço." : "Não foi possível criar a ordem de serviço.")}`);
+  revalidatePath("/app/condominium/maintenance/work-orders");
+  redirect("/app/condominium/maintenance/work-orders?saved=1");
+}
+
+export async function transitionMaintenanceWorkOrderAction(form: FormData) {
+  const { supabase } = await requireUser();
+  await requireCurrentContext();
+  if (!supabase) return;
+  const { error } = await supabase.rpc("transition_maintenance_work_order", {
+    p_work_order_id: value(form, "work_order_id"),
+    p_action: value(form, "action"),
+    p_reason: nullable(value(form, "reason")),
+    p_responsible_user_account_id: nullable(value(form, "responsible_user_account_id")),
+  });
+  if (error) redirect(`/app/condominium/maintenance/work-orders/${value(form, "work_order_id")}?error=${encodeURIComponent(error.message.includes("motivo") ? "Informe um motivo com pelo menos 3 caracteres." : "Não foi possível atualizar a ordem de serviço.")}`);
+  revalidatePath("/app/condominium/maintenance/work-orders");
+  revalidatePath(`/app/condominium/maintenance/work-orders/${value(form, "work_order_id")}`);
+  redirect(`/app/condominium/maintenance/work-orders/${value(form, "work_order_id")}?updated=1`);
+}
+
+export async function updateMaintenanceWorkOrderActivityAction(form: FormData) {
+  const { supabase } = await requireUser();
+  await requireCurrentContext();
+  if (!supabase) return;
+  const id = value(form, "work_order_id");
+  const { error } = await supabase.rpc("update_maintenance_work_order_activity", {
+    p_work_order_id: id,
+    p_activity_notes: value(form, "activity_notes"),
+    p_observations: value(form, "observations"),
+    p_technical_conclusion: nullable(value(form, "technical_conclusion")),
+  });
+  if (error) redirect(`/app/condominium/maintenance/work-orders/${id}?error=Não foi possível salvar as atividades.`);
+  revalidatePath(`/app/condominium/maintenance/work-orders/${id}`);
+  redirect(`/app/condominium/maintenance/work-orders/${id}?updated=1`);
 }
