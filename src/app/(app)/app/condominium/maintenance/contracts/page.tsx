@@ -13,7 +13,7 @@ function ContractFields({ providers, item }: { providers: NamedOption[]; item?: 
     <label className="cv-field-date">Início<DateInput name="starts_on" required defaultValue={item?.starts_on} /></label><label className="cv-field-date">Término<DateInput name="ends_on" required defaultValue={item?.ends_on} /></label>
     <MoneyField label="Valor total (R$)" name="amount" value={item?.amount} />
     <label className="cv-field-sm">Situação<ContentSelect name="status" defaultValue={item?.status ?? "draft"}><option value="draft">Rascunho</option><option value="active">Ativo</option><option value="expired">Encerrado</option><option value="cancelled">Cancelado</option></ContentSelect></label>
-    <label className="cv-form-wide">Observações<textarea name="notes" rows={3} defaultValue={item?.notes ?? ""} /></label><Button type="submit">Salvar contrato</Button></>;
+    <label className="cv-form-wide">Observações<textarea name="notes" rows={3} defaultValue={item?.notes ?? ""} /></label><div className="cv-form-actions"><Button type="submit">Salvar contrato</Button></div></>;
 }
 export default async function ContractsPage({ searchParams }: { searchParams: Promise<{ error?: string; updated?: string }> }) {
   const { supabase, context } = await requireCondominiumPermission("maintenance.finance.read");

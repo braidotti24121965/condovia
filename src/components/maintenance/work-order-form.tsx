@@ -28,6 +28,6 @@ export function WorkOrderForm({ structures, equipment, users, providers, service
       <label className="cv-field-md">Tipo de serviço<ContentSelect name="service_type_id"><option value="">Não informado</option>{serviceTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</ContentSelect></label>
       <label className="cv-field-md">Contrato<ContentSelect name="contract_id"><option value="">Sem contrato</option>{contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</ContentSelect></label>
       <label className="cv-field-sm">Orçamento previsto (R$)<input name="estimated_amount" type="number" min="0" step="0.01" inputMode="decimal" defaultValue={0} /></label></>}
-    <Button type="submit">Criar ordem de serviço</Button>
+    <div className="cv-form-actions"><Button type="submit">Criar ordem de serviço</Button></div>
   </form>;
 }
