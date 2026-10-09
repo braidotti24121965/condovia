@@ -11,6 +11,8 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     supabase.rpc("has_permission", { permission_code: "condominium.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "structures.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "maintenance.read", target_condominium_id: context.id }),
+    supabase.rpc("has_permission", { permission_code: "maintenance.requests.read", target_condominium_id: context.id }),
+    supabase.rpc("has_permission", { permission_code: "maintenance.requests.create", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "units.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "people.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "residents.read", target_condominium_id: context.id }),
@@ -21,10 +23,11 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     supabase.rpc("has_permission", { permission_code: "occurrences.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "dashboard.read", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "imports.read", target_condominium_id: context.id }),
-  ]).then(([overview, structures, maintenance, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports]) => ({
+  ]).then(([overview, structures, maintenance, maintenanceRequestsRead, maintenanceRequestsCreate, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports]) => ({
     overview: overview.data === true,
     structures: structures.data === true,
-    maintenance: maintenance.data === true,
+    maintenanceFoundation: maintenance.data === true,
+    maintenance: maintenance.data === true || maintenanceRequestsRead.data === true || maintenanceRequestsCreate.data === true,
     units: units.data === true,
     people: people.data === true,
     residents: residents.data === true,
@@ -38,5 +41,6 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   const { data: account } = await supabase.from("user_accounts").select("id,people(full_name, preferred_name)").eq("auth_user_id", user.id).maybeSingle();
   const person = account?.people as unknown as { full_name: string; preferred_name: string | null } | null;
   const notificationData = context.type === "condominium" ? await getNotifications() : { notifications: [], timeZone: "America/Sao_Paulo" };
-  return <AppShell context={context} personName={person?.preferred_name || person?.full_name} userAccountId={account?.id} condominiumNavigation={condominiumNavigation} notifications={notificationData.notifications} notificationTimeZone={notificationData.timeZone}>{children}</AppShell>;
+  const maintenanceHref = context.type === "condominium" && condominiumNavigation && !condominiumNavigation.maintenanceFoundation ? "/app/condominium/maintenance/requests" : "/app/condominium/maintenance";
+  return <AppShell context={context} personName={person?.preferred_name || person?.full_name} userAccountId={account?.id} maintenanceHref={maintenanceHref} condominiumNavigation={condominiumNavigation} notifications={notificationData.notifications} notificationTimeZone={notificationData.timeZone}>{children}</AppShell>;
 }
