@@ -9,7 +9,7 @@ Data de referência: 08/10/2026. O XLSX original permanece preservado na raiz; e
 | P7 / MVP-1 | Concluído, publicado e homologado segundo handoff | 06/10/2026 | Nenhum gate do MVP-1 pendente |
 | PR #10 — detalhes de ocorrências | Integrado | Histórico Git | Preservar redesign publicado |
 | PR #11 — refinamento de ocorrências | Integrado à main | 08/10/2026 | Nenhuma ação de integração pendente |
-| P8 — Maintenance | A planejar | — | Aprovação de arquitetura |
+| P8 — Maintenance | Implementação integral preparada; publicação pendente | Ver entrega integral | Integração, migrations e homologação funcional |
 | P9 — Finance | A planejar | — | Definição funcional |
 | P10 — Communication & Governance | A planejar | — | Definição funcional |
 | P11 — Compliance Condominial | A planejar | — | Requisitos e LGPD |

@@ -768,3 +768,13 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .v2-panel h2,.v2-analytic h2 { font-size: 13px; line-height: 19px; font-weight: 600; }
 .v2-panel-heading p { font-weight: 400; }
 .gatehouse-v2 .cv-panel-heading h2 { font-size: 13px; line-height: 19px; font-weight: 600; }
+
+/* Maintenance procurement, governance and preventive management. */
+.cv-maintenance-nav { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 0; }
+.cv-maintenance-details { border-top: 1px solid var(--border, #e2e8f0); padding: 12px 0; margin-top: 12px; }
+.cv-maintenance-details > summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; padding: 6px 0; }
+.cv-maintenance-details > .cv-form { margin-top: 16px; }
+.cv-maintenance-checklist { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 8px 0; }
+.cv-maintenance-checklist label { overflow-wrap: anywhere; }
+.cv-maintenance-nav a:focus-visible, .cv-maintenance-details summary:focus-visible { outline: 2px solid #10b981; outline-offset: 3px; }
+@media (max-width: 600px) { .cv-maintenance-nav { gap: 6px; } .cv-maintenance-nav a { font-size: 12px; } .cv-maintenance-checklist { align-items: stretch; flex-direction: column; } }

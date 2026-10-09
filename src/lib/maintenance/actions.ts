@@ -31,6 +31,7 @@ export async function saveMaintenanceSettings(form: FormData) {
   const { supabase, context } = await requireCondominiumPermission("maintenance.manage");
   const { error } = await supabase.from("maintenance_settings").upsert({
     condominium_id: context.id, resident_requests_enabled: form.get("resident_requests_enabled") === "on",
+    financial_approval_enabled: form.get("financial_approval_enabled") === "on",
     financial_approval_limit: Number(value(form, "financial_approval_limit") || 0),
     alert_advance_days: Number(value(form, "alert_advance_days") || 7),
     priority_low_days: Number(value(form, "priority_low_days") || 15),
@@ -94,6 +95,11 @@ export async function createMaintenanceWorkOrderAction(form: FormData) {
     p_responsible_user_account_id: nullable(value(form, "responsible_user_account_id")),
     p_service_provider_id: nullable(value(form, "service_provider_id")),
     p_due_at: nullable(value(form, "due_at")),
+    p_maintenance_kind: value(form, "maintenance_kind") || "corrective",
+    p_service_type_id: nullable(value(form, "service_type_id")),
+    p_contract_id: nullable(value(form, "contract_id")),
+    p_estimated_amount: Number(value(form, "estimated_amount") || 0),
+    p_occurrence_id: nullable(value(form, "occurrence_id")),
   });
   if (error) redirect(`/app/condominium/maintenance/work-orders?error=${encodeURIComponent(error.message.includes("já possui") ? "Esta solicitação já possui uma ordem de serviço." : "Não foi possível criar a ordem de serviço.")}`);
   revalidatePath("/app/condominium/maintenance/work-orders");

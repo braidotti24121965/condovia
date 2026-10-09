@@ -7,6 +7,7 @@ Repositório: `braidotti24121965/condovia`
 ## Índice
 
 - [Documento mestre](./documento-mestre.md)
+- [Entrega integral da manutenção](./manutencao-entrega-integral.md)
 - [Estado funcional dos módulos](./estado-funcional.md)
 - [Arquitetura e segurança](./arquitetura-e-seguranca.md)
 - [Histórico de versões e entregas](./historico-de-entregas.md)

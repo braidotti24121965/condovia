@@ -10,6 +10,8 @@ export type Equipment = {
   warranty_until: string | null;
   status: EquipmentStatus;
   structure_id: string;
+  category_id: string | null;
+  notes: string | null;
   condominium_structures: { name: string } | null;
   maintenance_equipment_categories: { name: string } | null;
 };
