@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const statuses = { open: "Aberta", assigned: "Atribuída", in_progress: "Em execução", awaiting_validation: "Aguardando validação", completed: "Concluída", cancelled: "Cancelada" } as const;
 const priorities = { low: "Baixa", medium: "Média", high: "Alta", emergency: "Emergência" } as const;
+type MaintenanceAssignee = { user_account_id: string; display_name: string };
 
 export const metadata = { title: "Ordens de serviço" };
 
@@ -18,12 +19,12 @@ export default async function WorkOrdersPage({ searchParams }: { searchParams: P
     supabase.from("maintenance_work_orders").select("id,work_order_number,description,priority,status,origin,due_at,created_at,condominium_structures(name),user_accounts:responsible_user_account_id(id,people(full_name,preferred_name))").eq("condominium_id", context.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("condominium_structures").select("id,name").eq("condominium_id", context.id).eq("status", "active").order("name"),
     supabase.from("maintenance_equipment").select("id,identification,structure_id").eq("condominium_id", context.id).eq("status", "active").order("identification"),
-    supabase.from("user_accounts").select("id,people(full_name,preferred_name)").eq("status", "active").order("id"),
+    supabase.rpc("list_maintenance_work_order_assignees", { p_condominium_id: context.id }),
     supabase.from("service_providers").select("id,full_name,company_name").eq("condominium_id", context.id).eq("status", "active").order("full_name"),
     supabase.rpc("has_permission", { permission_code: "maintenance.orders.create", target_condominium_id: context.id }),
   ]);
   const visible = (orders ?? []).filter((item) => !params.status || item.status === params.status);
-  const userOptions = (users ?? []).map((item) => ({ id: item.id, name: (item.people as { preferred_name?: string; full_name?: string } | null)?.preferred_name ?? (item.people as { full_name?: string } | null)?.full_name ?? item.id }));
+  const userOptions = (users as MaintenanceAssignee[] ?? []).map((item) => ({ id: item.user_account_id, name: item.display_name }));
   const providerOptions = (providers ?? []).map((item) => ({ id: item.id, name: [item.full_name, item.company_name].filter(Boolean).join(" · ") }));
   return <div className="cv-page"><div className="breadcrumbs"><Link href="/app/condominium/maintenance">Manutenção</Link><ChevronRight size={14}/><strong>Ordens de serviço</strong></div>
     <section className="page-heading"><div><p className="page-overline">P8.3 · OPERAÇÃO</p><h1>Ordens de serviço</h1><p>Controle a execução e a validação técnica da manutenção das áreas comuns.</p></div></section>

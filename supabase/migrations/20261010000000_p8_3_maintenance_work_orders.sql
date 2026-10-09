@@ -174,7 +174,7 @@ begin
   if v_structure is null or not exists (select 1 from public.condominium_structures s where s.id = v_structure and s.condominium_id = v_condo and s.status = 'active') then raise exception 'Estrutura inválida' using errcode = '23514'; end if;
   if v_equipment is not null and not exists (select 1 from public.maintenance_equipment e where e.id = v_equipment and e.condominium_id = v_condo and e.structure_id = v_structure and e.status = 'active') then raise exception 'Equipamento inválido' using errcode = '23514'; end if;
   if v_priority not in ('low','medium','high','emergency') then raise exception 'Prioridade inválida' using errcode = '23514'; end if;
-  if p_responsible_user_account_id is not null and not exists (select 1 from public.user_accounts ua join public.role_assignments ra on ra.user_account_id = ua.id and ra.condominium_id = v_condo and ra.status = 'active' where ua.id = p_responsible_user_account_id and ua.status = 'active') then raise exception 'Responsável inválido para este condomínio' using errcode = '42501'; end if;
+  if p_responsible_user_account_id is not null and not exists (select 1 from public.user_accounts ua join public.people pe on pe.id = ua.person_id and pe.status = 'active' where ua.id = p_responsible_user_account_id and ua.status = 'active' and exists (select 1 from public.role_assignments ra join public.role_permissions rp on rp.role_id = ra.role_id join public.permissions perm on perm.id = rp.permission_id join public.roles rr on rr.id = ra.role_id and rr.status = 'active' where ra.user_account_id = ua.id and ra.condominium_id = v_condo and ra.status = 'active' and ra.starts_at <= now() and (ra.ends_at is null or ra.ends_at > now()) and perm.code in ('maintenance.orders.update','maintenance.orders.manage'))) then raise exception 'Responsável inválido para este condomínio' using errcode = '42501'; end if;
   if p_service_provider_id is not null and not exists (select 1 from public.service_providers sp where sp.id = p_service_provider_id and sp.condominium_id = v_condo and sp.status = 'active') then raise exception 'Prestador inválido' using errcode = '42501'; end if;
   perform pg_advisory_xact_lock(hashtextextended(v_condo::text, 62003));
   select coalesce(max(w.work_order_number), 0) + 1 into v_number from public.maintenance_work_orders w where w.condominium_id = v_condo;
@@ -197,7 +197,7 @@ begin
   if not public.has_permission(v_permission, v.condominium_id) then raise exception 'Permissão negada' using errcode = '42501'; end if;
   v_previous := v.status;
   if p_action = 'assign' and v.status = 'open' and p_responsible_user_account_id is not null then
-    if not exists (select 1 from public.user_accounts ua join public.role_assignments ra on ra.user_account_id=ua.id and ra.condominium_id=v.condominium_id and ra.status='active' where ua.id=p_responsible_user_account_id and ua.status='active') then raise exception 'Responsável inválido para este condomínio' using errcode='42501'; end if;
+    if not exists (select 1 from public.user_accounts ua join public.people pe on pe.id = ua.person_id and pe.status = 'active' where ua.id = p_responsible_user_account_id and ua.status = 'active' and exists (select 1 from public.role_assignments ra join public.role_permissions rp on rp.role_id = ra.role_id join public.permissions perm on perm.id = rp.permission_id join public.roles rr on rr.id = ra.role_id and rr.status = 'active' where ra.user_account_id = ua.id and ra.condominium_id = v.condominium_id and ra.status = 'active' and ra.starts_at <= now() and (ra.ends_at is null or ra.ends_at > now()) and perm.code in ('maintenance.orders.update','maintenance.orders.manage'))) then raise exception 'Responsável inválido para este condomínio' using errcode='42501'; end if;
     v_new := 'assigned'; v_event := 'assigned';
   elsif p_action = 'start' and v.status = 'assigned' then v_new := 'in_progress'; v_event := 'started';
   elsif p_action = 'submit_validation' and v.status = 'in_progress' and length(btrim(coalesce(v.activity_notes,''))) >= 3 and length(btrim(coalesce(v.technical_conclusion,''))) >= 3 then v_new := 'awaiting_validation'; v_event := 'submitted_for_validation';
@@ -239,6 +239,34 @@ revoke all on function public.update_maintenance_work_order_activity(uuid,text,t
 grant execute on function public.create_maintenance_work_order(uuid,uuid,uuid,text,text,uuid,uuid,date) to authenticated;
 grant execute on function public.transition_maintenance_work_order(uuid,text,text,uuid) to authenticated;
 grant execute on function public.update_maintenance_work_order_activity(uuid,text,text,text) to authenticated;
+
+create or replace function public.list_maintenance_work_order_assignees(p_condominium_id uuid)
+returns table(user_account_id uuid, display_name text)
+language sql stable security definer set search_path = public as $$
+  select ua.id,
+    coalesce(nullif(btrim(p.preferred_name), ''), nullif(btrim(p.full_name), ''), ua.id::text)
+  from public.user_accounts ua
+  join public.people p on p.id = ua.person_id
+  where ua.status = 'active'
+    and p.status = 'active'
+    and exists (
+      select 1
+      from public.role_assignments ra
+      join public.role_permissions rp on rp.role_id = ra.role_id
+      join public.permissions perm on perm.id = rp.permission_id
+      join public.roles role on role.id = ra.role_id and role.status = 'active'
+      where ra.user_account_id = ua.id
+        and ra.condominium_id = p_condominium_id
+        and ra.status = 'active'
+        and ra.starts_at <= now()
+        and (ra.ends_at is null or ra.ends_at > now())
+        and perm.code in ('maintenance.orders.update', 'maintenance.orders.manage')
+    )
+  order by 2;
+$$;
+
+revoke all on function public.list_maintenance_work_order_assignees(uuid) from public, anon;
+grant execute on function public.list_maintenance_work_order_assignees(uuid) to authenticated;
 
 insert into public.permissions(code, description, scope) values
  ('maintenance.orders.read','Consultar ordens de serviço','condominium'),
