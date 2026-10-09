@@ -1,3 +1,4 @@
+import { formatEventDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 import { ContentSelect, DateInput } from "@/components/ui/form-controls";
 import Link from "next/link";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
@@ -66,7 +67,7 @@ export async function OrderManagement({ order }: { order: Detail }) {
         const current = step.revision === finance.financial_revision;
         const rejected = decisions.some(d => d.decision === "rejected");
         return <details key={step.id} className="cv-maintenance-details" open={current}><summary>{step.rule_name} · {money(step.amount)} · revisão {step.revision} · {rejected ? "Rejeitada" : `${count}/${step.required_approvals} aprovações`}{!current ? " · Histórico" : ""}</summary>
-          <ul>{decisions.map(d => <li key={d.id}>{d.decision === "approved" ? "Aprovada" : "Rejeitada"} · {d.decided_by_name} · {d.reason} · {new Date(d.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</li>)}</ul>
+          <ul>{decisions.map(d => <li key={d.id}>{d.decision === "approved" ? "Aprovada" : "Rejeitada"} · {d.decided_by_name} · {d.reason} · {formatEventDateTimeInTimezone(d.created_at, "America/Sao_Paulo")}</li>)}</ul>
           {can("maintenance.finance.approve") && current && !closed && !rejected && !approved && <form action={decideApproval} className="cv-form"><input type="hidden" name="work_order_id" value={order.id} /><input type="hidden" name="step_id" value={step.id} /><label>Justificativa<input name="reason" required minLength={3} maxLength={2000} /></label><div className="cv-import-actions"><div className="cv-form-actions"><Button type="submit" name="decision" value="approved">Aprovar valor</Button></div><div className="cv-form-actions"><Button type="submit" variant="secondary" name="decision" value="rejected">Rejeitar valor</Button></div></div></form>}
         </details>;
       })}
