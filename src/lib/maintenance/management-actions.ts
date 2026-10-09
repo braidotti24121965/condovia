@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { fileRules, parseMoney, validUuid } from "@/lib/maintenance/validation";
+import { contractDateError } from "@/lib/maintenance/contract-dates";
 
 const root = "/app/condominium/maintenance";
 const text = (f: FormData, key: string) => String(f.get(key) ?? "").trim();
@@ -36,12 +37,27 @@ export async function saveProvider(f: FormData) {
   }, `${root}/providers`);
 }
 
-export async function saveContract(f: FormData) {
-  const { context } = await requireCondominiumPermission("maintenance.contracts.manage");
-  await call("maintenance.contracts.manage", "save_maintenance_contract", {
+export type ContractFormState = { error?: string; values?: Record<string, string>; attempt: number };
+
+export async function saveContract(previous: ContractFormState, f: FormData): Promise<ContractFormState> {
+  const { context, supabase } = await requireCondominiumPermission("maintenance.contracts.manage");
+  const values = Object.fromEntries(["id", "service_provider_id", "title", "starts_on", "ends_on", "amount", "status", "notes"].map(key => [key, text(f, key)]));
+  const failed = (error: string): ContractFormState => ({ error, values, attempt: previous.attempt + 1 });
+  const dateError = contractDateError(values.starts_on, values.ends_on);
+  if (dateError) return failed(dateError);
+  let amount: number;
+  try { amount = parseMoney(values.amount); } catch { return failed("Informe um valor total válido, igual ou maior que zero."); }
+  const { error } = await supabase.rpc("save_maintenance_contract", {
     p_condominium_id: context.id, p_id: optional(f, "id"), p_provider: text(f, "service_provider_id"), p_title: text(f, "title"),
-    p_start: text(f, "starts_on"), p_end: text(f, "ends_on"), p_amount: parseMoney(text(f, "amount")), p_status: text(f, "status"), p_notes: text(f, "notes"),
-  }, `${root}/contracts`);
+    p_start: values.starts_on, p_end: values.ends_on, p_amount: amount, p_status: text(f, "status"), p_notes: text(f, "notes"),
+  });
+  if (error) {
+    const safe = /^[A-ZÀ-Úa-zà-ú]/.test(error.message) && !/(column|relation|constraint|syntax|violates|duplicate|function)/i.test(error.message)
+      ? error.message : "Não foi possível salvar. Confira os dados e permissões.";
+    return failed(safe);
+  }
+  revalidatePath(root, "layout");
+  redirect(`${root}/contracts?updated=1`);
 }
 
 export async function saveServiceType(f: FormData) {
