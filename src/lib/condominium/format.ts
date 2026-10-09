@@ -8,12 +8,12 @@ export function formatBrazilianPostalCode(value: string) {
 }
 
 export function formatBrazilianCnpj(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 14);
-  return digits
-    .replace(/^(\d{2})(\d)/, "$1.$2")
-    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-    .replace(/\.(\d{3})(\d)/, ".$1/$2")
-    .replace(/(\d{4})(\d)/, "$1-$2");
+  const characters = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 14);
+  return characters
+    .replace(/^([A-Z0-9]{2})([A-Z0-9])/, "$1.$2")
+    .replace(/^([A-Z0-9]{2})\.([A-Z0-9]{3})([A-Z0-9])/, "$1.$2.$3")
+    .replace(/\.([A-Z0-9]{3})([A-Z0-9])/, ".$1/$2")
+    .replace(/\/([A-Z0-9]{4})([A-Z0-9])/, "/$1-$2");
 }
 
 export function formatBrazilianCpf(value: string) {

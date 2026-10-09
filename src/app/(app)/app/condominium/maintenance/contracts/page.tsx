@@ -1,3 +1,4 @@
+import { ContentSelect, DateInput } from "@/components/ui/form-controls";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { saveContract } from "@/lib/maintenance/management-actions";
 import { DocumentUpload, Feedback, MoneyField, SelectField, type NamedOption } from "@/components/maintenance/management-ui";
@@ -9,9 +10,9 @@ type Contract = { id: string; service_provider_id: string; title: string; starts
 function ContractFields({ providers, item }: { providers: NamedOption[]; item?: Contract }) {
   return <>{item && <input type="hidden" name="id" value={item.id} />}<SelectField label="Fornecedor" name="service_provider_id" options={providers} selected={item?.service_provider_id} required />
     <label className="cv-field-md">Título do contrato<input name="title" defaultValue={item?.title} required minLength={3} maxLength={180} /></label>
-    <label className="cv-field-date">Início<input name="starts_on" type="date" required defaultValue={item?.starts_on} /></label><label className="cv-field-date">Término<input name="ends_on" type="date" required defaultValue={item?.ends_on} /></label>
+    <label className="cv-field-date">Início<DateInput name="starts_on" required defaultValue={item?.starts_on} /></label><label className="cv-field-date">Término<DateInput name="ends_on" required defaultValue={item?.ends_on} /></label>
     <MoneyField label="Valor total (R$)" name="amount" value={item?.amount} />
-    <label className="cv-field-sm">Situação<select name="status" defaultValue={item?.status ?? "draft"}><option value="draft">Rascunho</option><option value="active">Ativo</option><option value="expired">Encerrado</option><option value="cancelled">Cancelado</option></select></label>
+    <label className="cv-field-sm">Situação<ContentSelect name="status" defaultValue={item?.status ?? "draft"}><option value="draft">Rascunho</option><option value="active">Ativo</option><option value="expired">Encerrado</option><option value="cancelled">Cancelado</option></ContentSelect></label>
     <label className="cv-form-wide">Observações<textarea name="notes" rows={3} defaultValue={item?.notes ?? ""} /></label><Button type="submit">Salvar contrato</Button></>;
 }
 export default async function ContractsPage({ searchParams }: { searchParams: Promise<{ error?: string; updated?: string }> }) {

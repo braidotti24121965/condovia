@@ -1,3 +1,4 @@
+import { ContentSelect, DateInput } from "@/components/ui/form-controls";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { generateDueOrders, savePlan } from "@/lib/maintenance/management-actions";
 import { Feedback, MoneyField, SelectField } from "@/components/maintenance/management-ui";
@@ -26,10 +27,10 @@ export default async function PlansPage({ searchParams }: { searchParams: Promis
     <SelectField name="contract_id" label="Contrato" options={(contracts.data ?? []).map(c => ({ id: c.id, name: c.title }))} selected={item?.contract_id} />
     <SelectField name="responsible_user_account_id" label="Responsável interno" options={userOptions} selected={item?.responsible_user_account_id} />
     <label className="cv-field-xs">Intervalo (dias)<input type="number" name="interval_days" min="1" max="3660" required defaultValue={item?.interval_days ?? 30} /></label>
-    <label className="cv-field-date">Próximo vencimento<input type="date" name="next_due_on" required defaultValue={item?.next_due_on} /></label>
+    <label className="cv-field-date">Próximo vencimento<DateInput name="next_due_on" required defaultValue={item?.next_due_on} /></label>
     <label className="cv-field-xs">Gerar com antecedência (dias)<input type="number" name="advance_days" min="0" max="365" required defaultValue={item?.advance_days ?? 7} /></label>
     <MoneyField label="Orçamento previsto (R$)" name="estimated_amount" value={item?.estimated_amount} />
-    <label>Situação<select name="status" defaultValue={item?.status ?? "active"}><option value="active">Ativo</option><option value="paused">Pausado</option><option value="ended">Encerrado</option></select></label>
+    <label>Situação<ContentSelect name="status" defaultValue={item?.status ?? "active"}><option value="active">Ativo</option><option value="paused">Pausado</option><option value="ended">Encerrado</option></ContentSelect></label>
     <label className="cv-form-wide">Checklist obrigatório (um item por linha)<textarea name="checklist_template" rows={4} defaultValue={item?.checklist_template?.join("\n")} /></label><Button type="submit">Salvar plano</Button></>;
   return <div className="cv-page"><section className="page-heading"><div><h1>Manutenção preventiva</h1><p>Planos recorrentes com geração de OS por vencimento, sem duplicar o mesmo ciclo.</p></div><form action={generateDueOrders}><Button type="submit">Gerar OS previstas agora</Button></form></section>
     <Feedback params={plans.error ? { error: "Não foi possível carregar os planos." } : await searchParams} />
