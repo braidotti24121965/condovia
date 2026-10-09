@@ -8,11 +8,31 @@ declare
   condo_id uuid;
   structure_id uuid;
   equipment_id uuid;
+  settings_audit_count integer;
   audit_type text;
 begin
   insert into public.clients(legal_name) values ('P8.1 Test Client') returning id into client_id;
   insert into public.condominiums(client_id, name) values (client_id, 'P8.1 Test Condominium') returning id into condo_id;
   insert into public.condominium_structures(condominium_id, structure_type, name) values (condo_id, 'building', 'P8.1 Test Structure') returning id into structure_id;
+
+  insert into public.maintenance_settings(condominium_id)
+  values (condo_id);
+  select count(*) into settings_audit_count
+    from public.audit_events
+   where entity_type = 'maintenance_settings'
+     and entity_id = condo_id
+     and event_type = 'maintenance.insert';
+  if settings_audit_count <> 1 then raise exception 'maintenance_settings insert audit missing'; end if;
+
+  update public.maintenance_settings as ms
+     set resident_requests_enabled = true
+   where ms.condominium_id = condo_id;
+  select count(*) into settings_audit_count
+    from public.audit_events
+   where entity_type = 'maintenance_settings'
+     and entity_id = condo_id
+     and event_type = 'maintenance.update';
+  if settings_audit_count <> 1 then raise exception 'maintenance_settings update audit missing'; end if;
 
   insert into public.maintenance_equipment(condominium_id, structure_id, identification, status)
   values (condo_id, structure_id, 'P8.1 TEST INACTIVE', 'inactive') returning id into equipment_id;

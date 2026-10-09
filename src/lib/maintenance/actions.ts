@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 
 const value = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 const nullable = (item: string) => item || null;
@@ -48,4 +49,34 @@ export async function saveEquipmentCategory(form: FormData) {
   if (error) redirect(`/app/condominium/maintenance?error=${encodeURIComponent("Não foi possível salvar a categoria.")}`);
   revalidatePath("/app/condominium/maintenance");
   redirect("/app/condominium/maintenance?saved=1");
+}
+
+export async function createMaintenanceRequestAction(form: FormData) {
+  const { supabase } = await requireUser();
+  await requireCurrentContext();
+  if (!supabase) return;
+  const { error } = await supabase.rpc("create_maintenance_request", {
+    p_structure_id: value(form, "structure_id"),
+    p_equipment_id: nullable(value(form, "equipment_id")),
+    p_title: value(form, "title"),
+    p_description: value(form, "description"),
+    p_priority: value(form, "priority") || "medium",
+  });
+  if (error) redirect(`/app/condominium/maintenance/requests?error=${encodeURIComponent(error.message.includes("disabled") ? "Solicitações de moradores estão desativadas neste condomínio." : "Não foi possível registrar a solicitação.")}`);
+  revalidatePath("/app/condominium/maintenance/requests");
+  redirect("/app/condominium/maintenance/requests?saved=1");
+}
+
+export async function decideMaintenanceRequestAction(form: FormData) {
+  const { supabase } = await requireUser();
+  await requireCurrentContext();
+  if (!supabase) return;
+  const { error } = await supabase.rpc("decide_maintenance_request", {
+    p_request_id: value(form, "request_id"),
+    p_decision: value(form, "decision"),
+    p_rejection_reason: nullable(value(form, "rejection_reason")),
+  });
+  if (error) redirect(`/app/condominium/maintenance/requests?error=${encodeURIComponent(error.message.includes("obrigatório") ? "Informe o motivo da rejeição." : "Não foi possível analisar a solicitação.")}`);
+  revalidatePath("/app/condominium/maintenance/requests");
+  redirect("/app/condominium/maintenance/requests?updated=1");
 }
