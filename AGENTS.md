@@ -4,6 +4,7 @@ Estas regras fazem parte do design system e se aplicam a toda tela nova ou alter
 
 - Botões usam o componente `Button` e os tokens existentes. Texto em uma linha, largura determinada pelo conteúdo, sem comprimir botões em uma coluna estreita. Quando falta espaço, mover a ação para outra linha. Nunca quebrar o texto para caber no grid.
 - Formulários com grid devem reservar espaço para a ação: `.cv-form-grid > .button` ocupa a linha inteira e mantém largura intrínseca. Grupos de ações precisam de gap e wrap; formulários consecutivos precisam de espaçamento.
+- Formulários de manutenção usam fluxo compacto a partir da esquerda, gap de 12–16 px e larguras por tipo de dado. Não reservar meia tela para um combo curto. Ações usam `.cv-form-actions`; documentos, dinheiro e contagens têm larguras proporcionais ao conteúdo máximo esperado.
 - Combos usam `ContentSelect` de `src/components/ui/form-controls.tsx`: medir a maior opção da lista completa, incluindo placeholder, fonte, padding e seta. Recalcular quando a lista muda. Limitar à largura disponível sem esticar o campo para preencher a tela.
 - Datas usam `DateInput`: exibição e digitação `dd/mm/aaaa`, calendário acessível, validação de data real e envio ISO `aaaa-mm-dd`, sem conversão de fuso.
 - CPF, CNPJ, telefone e e-mail usam `FormattedInput`. CPF/CNPJ com pontuação; CNPJ preserva letras. Telefone com DDD e máscara de 10/11 dígitos. E-mail usa tipo email, exemplo de formato, validação nativa e normalização ao sair do campo.

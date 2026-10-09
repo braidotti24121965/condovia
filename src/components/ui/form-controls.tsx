@@ -16,7 +16,7 @@ export function ContentSelect({ children, className = "", style, ...props }: Sel
       const canvas = document.createElement("canvas").getContext("2d");
       if (!canvas) return;
       canvas.font = `${css.fontWeight} ${css.fontSize} ${css.fontFamily}`;
-      const width = Math.max(0, ...Array.from(element.options, option => canvas.measureText(option.text).width));
+      const width = Math.max(canvas.measureText(element.name === "equipment_id" ? "Selecione o equipamento" : "").width, ...Array.from(element.options, option => canvas.measureText(option.text).width), 0);
       element.style.width = `${Math.ceil(width + parseFloat(css.paddingLeft) + parseFloat(css.paddingRight) + 28)}px`;
     };
     measure();

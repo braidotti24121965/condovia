@@ -50,6 +50,6 @@ export function DocumentUploadForm({ target, id, documentId, documentTitle, docu
     <label className="cv-field-md">Tipo<ContentSelect name="document_kind" defaultValue={documentKind} disabled={busy || Boolean(documentId)}>{Object.entries(documentKinds).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</ContentSelect></label>
     <label className="cv-form-wide">{documentId ? "Nova versão" : "Arquivo"}<input name="file" type="file" required accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" disabled={busy} /><span className="cv-muted">PDF, JPG, PNG, DOCX ou XLSX · até 10 MB</span></label>
     {result.error && <div className="cv-form-wide"><Alert tone="error">{result.error}</Alert></div>}{result.success && <div className="cv-form-wide"><Alert tone="success">Documento salvo.</Alert></div>}
-    <Button type="submit" disabled={busy}>{busy ? "Enviando…" : documentId ? "Enviar nova versão" : "Anexar documento"}</Button>
+    <div className="cv-form-actions"><Button type="submit" disabled={busy}>{busy ? "Enviando…" : documentId ? "Enviar nova versão" : "Anexar documento"}</Button></div>
   </form>;
 }
