@@ -57,7 +57,7 @@ export async function saveContract(previous: ContractFormState, f: FormData): Pr
     return failed(safe);
   }
   revalidatePath(root, "layout");
-  redirect(`${root}/contracts?updated=1`);
+  redirect(`${root}/contracts?updated=${crypto.randomUUID()}`);
 }
 
 export async function saveServiceType(f: FormData) {
