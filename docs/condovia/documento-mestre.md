@@ -22,4 +22,4 @@ P1–P7 e MVP-1 estão registrados como concluídos no handoff de 06/10/2026. A 
 
 ## Próximo marco
 
-P8 — Maintenance, ainda sem implementação autorizada. O controle de acesso inteligente é uma fase futura de planejamento, não uma integração iniciada.
+P8 — Maintenance: implementação integral autorizada e preparada em uma única entrega. A integração, aplicação das migrations e homologação funcional permanecem pendentes; consulte [a entrega integral](./manutencao-entrega-integral.md). O controle de acesso inteligente é uma fase futura de planejamento, não uma integração iniciada.
