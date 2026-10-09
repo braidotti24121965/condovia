@@ -1,5 +1,8 @@
 "use client";
 
+import { ContentSelect } from "@/components/ui/form-controls";
+
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -44,7 +47,7 @@ export function DocumentUploadForm({ target, id, documentId, documentTitle, docu
   return <form onSubmit={submit} className="cv-form cv-form-grid" aria-busy={busy}>
     <input type="hidden" name="target" value={target} /><input type="hidden" name="target_id" value={id} />{documentId && <><input type="hidden" name="document_id" value={documentId} /><input type="hidden" name="document_kind" value={documentKind} /></>}
     <label className="cv-field-md">Título<input name="title" required minLength={2} maxLength={180} defaultValue={documentTitle} readOnly={Boolean(documentId)} disabled={busy} /></label>
-    <label className="cv-field-md">Tipo<select name="document_kind" defaultValue={documentKind} disabled={busy || Boolean(documentId)}>{Object.entries(documentKinds).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+    <label className="cv-field-md">Tipo<ContentSelect name="document_kind" defaultValue={documentKind} disabled={busy || Boolean(documentId)}>{Object.entries(documentKinds).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</ContentSelect></label>
     <label className="cv-form-wide">{documentId ? "Nova versão" : "Arquivo"}<input name="file" type="file" required accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" disabled={busy} /><span className="cv-muted">PDF, JPG, PNG, DOCX ou XLSX · até 10 MB</span></label>
     {result.error && <div className="cv-form-wide"><Alert tone="error">{result.error}</Alert></div>}{result.success && <div className="cv-form-wide"><Alert tone="success">Documento salvo.</Alert></div>}
     <Button type="submit" disabled={busy}>{busy ? "Enviando…" : documentId ? "Enviar nova versão" : "Anexar documento"}</Button>
