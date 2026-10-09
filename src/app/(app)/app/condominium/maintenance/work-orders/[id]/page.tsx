@@ -14,14 +14,18 @@ export default async function WorkOrderDetailPage({ params, searchParams }: { pa
   const { supabase, context } = await requireCondominiumPermission("maintenance.orders.read");
   const { id } = await params;
   const query = await searchParams;
-  const [{ data: order }, { data: history }, { data: canManage }, { data: canUpdate }, { data: rawUsers }] = await Promise.all([
-    supabase.from("maintenance_work_orders").select("*,condominium_structures(name),maintenance_equipment(identification),service_providers(full_name,company_name),user_accounts:responsible_user_account_id(id,people(full_name,preferred_name))").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
+  const [{ data: order, error: orderError }, { data: history }, { data: canManage }, { data: canUpdate }, { data: rawUsers }] = await Promise.all([
+    supabase.from("maintenance_work_orders").select("*,condominium_structures(name),maintenance_equipment(identification),service_providers!maintenance_work_orders_service_provider_id_fkey(full_name,company_name),user_accounts:responsible_user_account_id(id,people(full_name,preferred_name))").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
     supabase.from("maintenance_work_order_history").select("id,event_type,previous_status,new_status,reason,created_at").eq("work_order_id", id).eq("condominium_id", context.id).order("created_at"),
     supabase.rpc("has_permission", { permission_code: "maintenance.orders.manage", target_condominium_id: context.id }),
     supabase.rpc("has_permission", { permission_code: "maintenance.orders.update", target_condominium_id: context.id }),
     supabase.rpc("list_maintenance_work_order_assignees", { p_condominium_id: context.id }),
   ]);
   const users = rawUsers as MaintenanceAssignee[] | null;
+  if (orderError) {
+    console.error("Erro ao carregar ordem de serviço", { workOrderId: id, condominiumId: context.id, code: orderError.code, message: orderError.message, details: orderError.details, hint: orderError.hint });
+    return <div className="cv-page"><Alert tone="error">Não foi possível carregar os dados da ordem de serviço. Tente novamente ou contate o suporte.</Alert></div>;
+  }
   if (!order) return <div className="cv-page"><EmptyState title="Ordem de serviço não encontrada" description="A ordem pode ter sido removida ou não pertence a este condomínio."/></div>;
   const responsible = (order.user_accounts as { people?: { preferred_name?: string; full_name?: string } | null } | null)?.people;
   const provider = order.service_providers as { full_name?: string; company_name?: string } | null;
