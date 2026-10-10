@@ -7,6 +7,7 @@ import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { friendlyDatabaseError } from "@/lib/condominium/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safePersonRelationshipReturnPath } from "@/lib/condominium/person-return";
+import { validatePersonFields } from "@/lib/condominium/person-validation";
 
 function value(form: FormData, key: string) { return String(form.get(key) ?? "").trim(); }
 function nullable(value: string) { return value || null; }
@@ -67,18 +68,20 @@ export async function saveUnit(form: FormData) {
   redirect("/app/condominium/units?saved=1");
 }
 
-export async function savePerson(form: FormData) {
+export async function savePerson(_previous: { error: string }, form: FormData) {
   const { supabase, context } = await requireCondominiumPermission("people.manage");
+  const fields = { fullName: value(form, "full_name"), preferredName: value(form, "preferred_name"), birthDate: value(form, "birth_date"), cpf: value(form, "cpf"), email: value(form, "email"), phone: value(form, "phone") };
+  const validation = validatePersonFields(fields);
+  if (Object.keys(validation).length) return { error: Object.values(validation)[0] };
   const returnKind=value(form,"return_kind");
   const returnPath=safePersonRelationshipReturnPath(value(form,"return_path"),returnKind);
-  const resumeQuery=returnPath?`&returnTo=${encodeURIComponent(returnPath)}&relationship=${returnKind}`:"";
   const { data, error } = await supabase.rpc("resolve_or_create_person_for_condominium", {
     target_condominium_id: context.id,
     p_full_name: value(form, "full_name"), p_preferred_name: nullable(value(form, "preferred_name")),
     p_birth_date: nullable(value(form, "birth_date")), p_cpf: nullable(value(form, "cpf")),
     p_email: nullable(value(form, "email")), p_phone: nullable(value(form, "phone")),
   });
-  if (error || !data) redirect(`/app/condominium/people/new?error=${encodeURIComponent(error?.message.includes("Possível pessoa existente") ? "Possível pessoa existente. Revise a lista antes de cadastrar." : "Não foi possível salvar a pessoa com os dados informados.")}${resumeQuery}`);
+  if (error || !data) return { error: error?.message.includes("Possível pessoa existente") ? "Possível pessoa existente. Revise a lista antes de cadastrar." : friendlyDatabaseError(error?.message) };
   revalidatePath("/app/condominium/people");
   if(returnPath){
     revalidatePath(new URL(returnPath,"https://condovia.invalid").pathname);
