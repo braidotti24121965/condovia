@@ -12,27 +12,46 @@ import { validatePersonFields } from "@/lib/condominium/person-validation";
 export function PersonForm({ returnPath = "", returnKind = "" }: { returnPath?: string; returnKind?: string }) {
   const [state, formAction, pending] = useActionState(savePerson, { error: "" });
   const [clientError, setClientError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const readFields = (form: HTMLFormElement) => ({
+    fullName: String(new FormData(form).get("full_name") || ""),
+    preferredName: String(new FormData(form).get("preferred_name") || ""),
+    birthDate: String(new FormData(form).get("birth_date") || ""),
+    cpf: String(new FormData(form).get("cpf") || ""),
+    email: String(new FormData(form).get("email") || ""),
+    phone: String(new FormData(form).get("phone") || ""),
+  });
+  const validateField = (form: HTMLFormElement, field: string) => {
+    const fields = readFields(form);
+    const errors = validatePersonFields(fields);
+    setFieldErrors((current) => ({ ...current, [field]: errors[field] || "" }));
+    return errors[field] || "";
+  };
   const error = clientError || state.error;
   return <form action={formAction} className="cv-form" onSubmit={(event) => {
-    const form = new FormData(event.currentTarget);
-    const validation = validatePersonFields({ fullName: String(form.get("full_name") || ""), preferredName: String(form.get("preferred_name") || ""), birthDate: String(form.get("birth_date") || ""), cpf: String(form.get("cpf") || ""), email: String(form.get("email") || ""), phone: String(form.get("phone") || "") });
+    const validation = validatePersonFields(readFields(event.currentTarget));
+    setFieldErrors(validation);
     setClientError(Object.values(validation)[0] || "");
     if (Object.keys(validation).length) event.preventDefault();
   }}>
     {returnPath && returnKind && <><input type="hidden" name="return_path" value={returnPath}/><input type="hidden" name="return_kind" value={returnKind}/></>}
     <div className="cv-form-section"><h2>Identificação</h2><div className="cv-form-grid">
-      <label className="cv-field-lg">Nome completo<input name="full_name" required minLength={2} maxLength={180} autoComplete="name"/></label>
-      <label className="cv-field-lg">Nome preferencial<input name="preferred_name" maxLength={120} autoComplete="nickname"/></label>
-      <label className="cv-field-md">Data de nascimento<input type="date" name="birth_date"/></label>
-      <label className="cv-field-md">CPF (opcional)<input name="cpf" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" maxLength={14}/></label>
+      <label className="cv-field-lg">Nome completo<input name="full_name" required minLength={2} maxLength={180} autoComplete="name" onBlur={(event) => validateField(event.currentTarget.form!, "full_name")} onChange={() => setFieldErrors((current) => ({ ...current, full_name: "" }))}/>{fieldErrors.full_name && <FieldError message={fieldErrors.full_name}/>}</label>
+      <label className="cv-field-lg">Nome preferencial<input name="preferred_name" maxLength={120} autoComplete="nickname" onBlur={(event) => validateField(event.currentTarget.form!, "preferred_name")} onChange={() => setFieldErrors((current) => ({ ...current, preferred_name: "" }))}/>{fieldErrors.preferred_name && <FieldError message={fieldErrors.preferred_name}/>}</label>
+      <label className="cv-field-md">Data de nascimento<input type="date" name="birth_date" onBlur={(event) => validateField(event.currentTarget.form!, "birth_date")} onChange={(event) => validateField(event.currentTarget.form!, "birth_date")}/>{fieldErrors.birth_date && <FieldError message={fieldErrors.birth_date}/>}</label>
+      <label className="cv-field-md">CPF (opcional)<input name="cpf" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" maxLength={14} onBlur={(event) => validateField(event.currentTarget.form!, "cpf")} onChange={(event) => validateField(event.currentTarget.form!, "cpf")}/>{fieldErrors.cpf && <FieldError message={fieldErrors.cpf}/>}</label>
     </div></div>
     <div className="cv-form-section"><h2>Contato</h2><div className="cv-form-grid">
-      <label className="cv-field-lg">E-mail<input type="email" name="email" autoComplete="email" maxLength={254}/></label>
-      <label className="cv-field-md">Telefone<input type="tel" name="phone" autoComplete="tel" maxLength={20} placeholder="+55 11 99999-9999"/></label>
+      <label className="cv-field-lg">E-mail<input type="email" name="email" autoComplete="email" maxLength={254} onBlur={(event) => validateField(event.currentTarget.form!, "email")} onChange={(event) => validateField(event.currentTarget.form!, "email")}/>{fieldErrors.email && <FieldError message={fieldErrors.email}/>}</label>
+      <label className="cv-field-md">Telefone<input type="tel" name="phone" autoComplete="tel" maxLength={20} placeholder="+55 11 99999-9999" onBlur={(event) => validateField(event.currentTarget.form!, "phone")} onChange={(event) => validateField(event.currentTarget.form!, "phone")}/>{fieldErrors.phone && <FieldError message={fieldErrors.phone}/>}</label>
     </div><p className="cv-form-hint">O CPF é opcional. Pessoas com o mesmo nome podem ser cadastradas; e-mail ou telefone já usados no condomínio pedem revisão antes de um novo cadastro.</p></div>
     {error && <p className="cv-alert cv-alert-error" role="alert">{error}</p>}
     <Button type="submit" disabled={pending}>{pending ? "Salvando…" : "Cadastrar pessoa"}</Button>
   </form>;
+}
+
+function FieldError({ message }: { message: string }) {
+  return <span className="cv-field-error" role="alert">{message}</span>;
 }
 
 export function PersonRelationshipForm({ people, units, kind, returnTo, selectedPersonId, defaultUnitId }: { people: { id: string; full_name: string }[]; units: { id: string; code: string; display_name: string | null; operational_status: string }[]; kind: PersonRelationshipKind; returnTo: string; selectedPersonId?: string; defaultUnitId?: string }) {
