@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
@@ -48,12 +48,7 @@ export async function requestPasswordReset(_previous: ActionState, formData: For
   if (!email.success) return { error: "Informe um e-mail válido." };
   const supabase = await createClient();
   if (!supabase) return { error: "A recuperação de senha não está configurada." };
-  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const isHomologDeployment = process.env.VERCEL_ENV === "preview"
-    || process.env.VERCEL_GIT_COMMIT_REF === "codex/documentation-consolidation";
-  const requestOrigin = isHomologDeployment
-    ? "https://homolog-condovia.kynovia.com.br"
-    : configuredOrigin ?? (await headers()).get("origin") ?? "http://localhost:3000";
+  const requestOrigin = "https://homolog-condovia.kynovia.com.br";
   await supabase.auth.resetPasswordForEmail(email.data, {
     redirectTo: `${requestOrigin}/auth/callback?next=%2Freset-password`,
   });
