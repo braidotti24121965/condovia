@@ -49,6 +49,7 @@ export async function requestPasswordReset(_previous: ActionState, formData: For
   const supabase = await createClient();
   if (!supabase) return { error: "A recuperação de senha não está configurada." };
   const requestOrigin = "https://homolog-condovia.kynovia.com.br";
+  console.info("[auth] password recovery redirect", requestOrigin);
   await supabase.auth.resetPasswordForEmail(email.data, {
     redirectTo: `${requestOrigin}/auth/callback?next=%2Freset-password`,
   });
