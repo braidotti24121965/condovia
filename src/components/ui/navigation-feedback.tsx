@@ -23,6 +23,11 @@ export function NavigationFeedback() {
       if (!(form instanceof HTMLFormElement) || form.target === "_blank" || form.dataset.navigationFeedback === "off") return;
       sessionStorage.setItem(scrollKey, String(window.scrollY));
       setPending(true);
+
+      // Server Actions can complete through a partial navigation without
+      // changing the pathname or query string. Never leave the global
+      // indicator visible indefinitely in that case.
+      window.setTimeout(() => setPending(false), 10000);
     };
     document.addEventListener("submit", handleSubmit, true);
     return () => document.removeEventListener("submit", handleSubmit, true);
