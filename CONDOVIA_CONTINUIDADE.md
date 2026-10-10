@@ -1,13 +1,13 @@
 # CondoVia — Documento de continuidade
 
 > Documento de retomada para novas conversas, testes e perda de contexto.
-> Atualizado em 09/10/2026, horário de São Paulo.
+> Atualizado em 10/10/2026, horário de São Paulo.
 
 ## Como retomar
 
 Repositório: https://github.com/braidotti24121965/condovia  
 Sistema de produção: https://condovia.kynovia.com.br  
-Preview atual da PR #40: https://condovia-a48zv9q7e-braidotti.vercel.app/login  
+Preview atual da PR #40: https://condovia-ad7x3140j-braidotti.vercel.app/login  
 PR em andamento: https://github.com/braidotti24121965/condovia/pull/40
 
 Ao retomar, usar o Preview mais recente da PR #40, pedir ao usuário apenas o login se a sessão não estiver disponível e seguir os testes funcionais do módulo Manutenção. Não corrigir divergências sem informar o problema e obter decisão, salvo quando a conversa já autorizar explicitamente a correção.
@@ -43,7 +43,7 @@ O CondoVia é um sistema de gestão de condomínios. O trabalho atual está conc
 | PR #37 | Feedback global de navegação e preservação de rolagem. |
 | PR #38 | Limpeza do feedback após mudança de rota. Integrada. |
 | PR #39 | Exclusão do feedback global no login. Integrada no commit `704b914`. |
-| PR #40 | Em andamento: exclusão no logout, limpeza do feedback na mesma rota, Suspense para build, melhoria visual dos status da OS. |
+| PR #40 | Em andamento: feedback, status da OS, aprovação financeira e alerta de documentos vazios. |
 
 ## Testes já realizados
 
@@ -86,16 +86,20 @@ O CondoVia é um sistema de gestão de condomínios. O trabalho atual está conc
 
 ### Preventivas, custos, aprovações e governança
 
-- Telas abertas e formulários identificados.
-- Preventivas já tiveram teste de preenchimento e geração de OS em etapa anterior.
-- Tipos de serviço, documentos obrigatórios, custos, alçadas e aprovações foram acessados.
-- Ainda falta executar a sequência operacional completa nessas telas no Preview mais recente.
+- Plano preventivo criado com intervalo, vencimento, orçamento e checklist.
+- Geração manual validada: 1 OS criada, sem duplicação do ciclo; a OS #5 apareceu no controle de custos.
+- Solicitação criada, aprovada e filtrada por status.
+- OS #4 percorreu Atribuída → Em execução → Aguardando validação → Concluída.
+- Registro técnico, orçamento, custo efetivo e histórico foram validados.
+- Aprovação financeira solicitada; usuário sem perfil de alçada recebeu o bloqueio esperado.
+- Tela de custos e exportação CSV consultadas.
+- Tipos de serviço, documentos obrigatórios, alçadas e perfis aprovadores ainda precisam de teste operacional completo.
 
-## Divergência atual em aberto
+## Correções recentes e pendências
 
-Durante o upload, o arquivo é salvo corretamente no banco e aparece após recarregar a página, mas o aviso global “Salvando…” fica visível durante o processamento. O formulário já possui o estado próprio “Enviando…”.
+Correções enviadas à PR #40: `101164b` (proteção contra “Salvando…” preso), `a9dce2a` (retorno da aprovação financeira) e `104080e` (popup para destino sem documentos).
 
-Próxima decisão necessária: marcar o formulário de upload com `data-navigation-feedback="off"` ou ajustar o componente global para reconhecer o término de ações sem navegação. Informar o usuário antes de corrigir, se não houver autorização explícita.
+O upload ainda precisa ser retestado no Preview final, pois pode exibir o aviso global durante o processamento embora possua o estado próprio “Enviando…”. A exclusão definitiva de dados de homologação também permanece pendente de confirmação imediata.
 
 ## Fase atual e cronograma
 
@@ -105,29 +109,29 @@ Os percentuais abaixo são estimativas de acompanhamento baseadas no checklist f
 |---|---:|---:|---|
 | 1. Base do MVP e arquitetura | Concluída | 100% | Nenhum. |
 | 2. Integração GitHub/Vercel/Supabase | Concluída | 100% | Manter verificação após merges. |
-| 3. Implementação do módulo Manutenção | Praticamente concluída | 95% | Corrigir os últimos detalhes de feedback visual. |
-| 4. Homologação funcional da Manutenção | Em andamento | 65% | Executar preenchimento, criação, edição, anexos, custos, aprovações, preventivas e governança. |
-| 5. Estabilização visual e mensagens | Em andamento | 80% | Resolver “Salvando…” no upload e confirmar ausência de flash. |
+| 3. Implementação do módulo Manutenção | Praticamente concluída | 98% | Retestar popup e upload no Preview final. |
+| 4. Homologação funcional da Manutenção | Em andamento | 78% | Completar governança, contratos, permissões e exclusões. |
+| 5. Estabilização visual e mensagens | Em andamento | 90% | Confirmar upload sem aviso preso e ausência de flash. |
 | 6. Regressão dos demais módulos | Pendente | 20% | Retestar autenticação, permissões, dashboard e fluxos principais. |
 | 7. Homologação final e aceite | Pendente | 0% | Consolidar evidências e decisão de publicação. |
 
 ### Fase atual
 
-**Fase 4 — Homologação funcional da Manutenção, aproximadamente 65% concluída.**
+**Fase 4 — Homologação funcional da Manutenção, aproximadamente 78% concluída.**
 
 O sistema já possui a base e os principais fluxos implementados. O trabalho restante é testar operações completas, e não apenas a abertura das telas, preservando os dados de teste e registrando cada divergência.
 
 ## Próxima sequência de testes
 
-1. Corrigir ou decidir o comportamento do feedback no upload.
+1. Retestar no Preview os commits `101164b`, `a9dce2a` e `104080e`.
 2. Fornecedores: editar, inativar e reutilizar em OS/contrato.
 3. Contratos: editar, ativar, encerrar, validar datas e vincular documento.
 4. OS: criar, atribuir, iniciar execução, registrar atividades, enviar para validação e concluir.
 5. OS com custo: orçamento, cotação, aprovação, rejeição, custo efetivo e despesa.
-6. Preventivas: criar plano completo, checklist, periodicidade e gerar OS elegíveis/não elegíveis.
-7. Governança: tipo de serviço, contrato obrigatório, documento obrigatório, alçada, perfil aprovador e quórum.
-8. Documentos: anexar, consultar, versão, destino por contrato/OS/equipamento/cotação e ausência de documentos.
-9. Permissões: usuário autorizado e usuário sem permissão.
+6. Governança: tipo de serviço, contrato obrigatório, documento obrigatório, alçada, perfil aprovador e quórum.
+7. Documentos: popup vazio, anexos, versões e upload sem aviso preso.
+8. Permissões: usuário autorizado e usuário sem permissão.
+9. Exclusão de dados de teste, com confirmação imediata antes de cada remoção.
 10. Regressão final no Preview e, após aceite, produção.
 
 ## Dados de teste conhecidos
@@ -143,4 +147,3 @@ O sistema já possui a base e os principais fluxos implementados. O trabalho res
 ## Regra de comunicação
 
 Durante a homologação, relatar cada divergência com: tela, ação executada, resultado esperado, resultado observado e impacto. Aguardar decisão antes de corrigir, exceto quando o usuário tiver autorizado explicitamente a correção naquele fluxo.
-
