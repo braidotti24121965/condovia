@@ -89,6 +89,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-toast { width: min(420px, calc(100vw - 32px)); position: fixed; top: 16px; right: 16px; z-index: 100; padding: 12px 12px 12px 14px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid; border-radius: var(--cv-radius-md); box-shadow: var(--cv-shadow-lg); font-size: var(--cv-font-body); line-height: 20px; font-weight: 500; }
 .cv-toast-info { color: #1E40AF; border-color: #BFDBFE; background: #EFF6FF; }.cv-toast-warning { color: #92400E; border-color: #F6D58A; background: #FFFBEB; }.cv-toast-error { color: #991B1B; border-color: #FECACA; background: #FEF2F2; }.cv-toast-success { color: #166534; border-color: #BBF7D0; background: #F0FDF4; }
 .cv-toast-content { min-width: 0; flex: 1; }.cv-toast-close { width: 30px; min-width: 30px; min-height: 30px; color: inherit; }.cv-toast-close:hover { background: rgb(255 255 255 / 55%); }
+.cv-navigation-feedback { position: fixed; top: 16px; left: 50%; z-index: 200; transform: translateX(-50%); padding: 10px 16px; border: 1px solid #BFDBFE; border-radius: 999px; color: #1E40AF; background: #EFF6FF; box-shadow: var(--cv-shadow-md); font-size: var(--cv-font-secondary); font-weight: 600; pointer-events: none; }
 
 /* Authentication */
 .auth-page { min-height: 100svh; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #fff; }
