@@ -1,18 +1,16 @@
-export function civilDateToIso(value: string) {
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return "";
-  const [, day, month, year] = match;
-  const date = new Date(Number(year), Number(month) - 1, Number(day));
-  return date.getFullYear() === Number(year) && date.getMonth() === Number(month) - 1 && date.getDate() === Number(day)
-    ? `${year}-${month}-${day}` : "";
-}
-
-export function isoToCivilDate(value: string) {
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return match ? `${match[3]}/${match[2]}/${match[1]}` : "";
-}
-
+/** Civil dates are displayed in Brazilian format and submitted as ISO, without timezone conversion. */
 export function formatCivilDateInput(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 8);
-  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)].filter(Boolean).join("/");
+  return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3");
+}
+export function civilDateToIso(value: string) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return "";
+  const [, day, month, year] = match;
+  const date = new Date(`${year}-${month}-${day}T00:00:00Z`);
+  if (!Number(year) || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== `${year}-${month}-${day}`) return "";
+  return `${year}-${month}-${day}`;
+}
+export function isoToCivilDate(value: string) {
+  return /^(\d{4})-(\d{2})-(\d{2})$/.test(value) ? value.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$3/$2/$1") : "";
 }

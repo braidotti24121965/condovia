@@ -21,7 +21,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return <section className="auth-card" aria-labelledby="auth-title">
     <div className="auth-heading"><p className="eyebrow">CONDOVIA · GESTÃO INTELIGENTE</p><h1 id="auth-title">{title}</h1><p>{description}</p></div>
-    <form action={formAction} className="auth-form">
+    <form action={formAction} className="auth-form" data-navigation-feedback="off">
       {mode !== "reset" && <div className="field"><label htmlFor="email">E-mail</label><input id="email" name="email" type="email" autoComplete="email" placeholder="voce@exemplo.com.br" required /></div>}
       {mode !== "forgot" && <div className="field"><label htmlFor={mode === "reset" ? "password" : "password"}>Senha</label><div className="password-wrap"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} minLength={mode === "reset" ? 8 : undefined} required /><Button variant="icon" className="password-toggle" type="button" aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</Button></div>{mode === "reset" && <span className="field-hint">Use pelo menos 8 caracteres.</span>}</div>}
       {mode === "reset" && <div className="field"><label htmlFor="confirmation">Confirme a senha</label><input id="confirmation" name="confirmation" type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={8} required /></div>}

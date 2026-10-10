@@ -17,6 +17,8 @@ Classificação: **Publicado** significa presente no código e referido no hando
 | Dashboard e relatórios | Publicado e validado historicamente | Indicadores por condomínio e filtros temporais. |
 | Perfil, autenticação e permissões | Publicado e validado historicamente | Supabase Auth, seleção de contexto, RBAC e RLS. |
 
+| Manutenção | Implementação integral preparada; publicação e homologação pendentes | Fornecedores, contratos, cotações, alçadas, documentos, planos preventivos, checklists e despesas; ver entrega integral. |
+
 ## Regra de evidência
 
 Não declarar uma tela como visualmente conforme sem captura ou inspeção correspondente. Testes unitários e build comprovam integridade técnica, não substituem homologação visual.

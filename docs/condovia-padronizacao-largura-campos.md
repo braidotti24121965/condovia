@@ -474,3 +474,27 @@ Ao finalizar, apresentar um resumo contendo:
 O resultado esperado é uma interface do **CondoVia mais compacta, proporcional e organizada**, eliminando campos excessivamente grandes sem prejudicar legibilidade, usabilidade, responsividade ou o design system existente.
 
 Essa versão também deixa explícito para o agente **analisar primeiro os componentes compartilhados**, em vez de sair alterando campo por campo. Isso é importante no CondoVia para evitar que a mesma correção tenha que ser repetida em Pessoas, Moradores e Unidades.
+
+## Regras permanentes de implementação — 09/10/2026
+
+As regras são obrigatórias para telas novas e alteradas e estão registradas também em `AGENTS.md`.
+
+| Elemento | Implementação obrigatória |
+|---|---|
+| Botões | `Button`, texto em uma linha, largura intrínseca e espaço reservado no grid; ações mudam de linha quando necessário. |
+| Combos | `ContentSelect`, maior opção medida com a fonte real, incluindo placeholder, padding e seta; máximo limitado ao espaço disponível. |
+| Datas | `DateInput`, máscara dd/mm/aaaa, data real válida, calendário e submissão ISO sem fuso. |
+| CPF/CNPJ | `FormattedInput`, pontuação durante digitação; CNPJ mantém caracteres alfanuméricos. |
+| Telefone | `FormattedInput`, DDD e máscara de fixo/celular, limite correspondente ao formato. |
+| E-mail | `FormattedInput`, tipo email, exemplo nome@dominio.com.br, validação e normalização ao perder foco. |
+| Navegação | Destaque persistente em azul institucional e `aria-current="page"`; rotas de detalhes mantêm a seção ativa. |
+
+Os controles compartilhados ficam em `src/components/ui/form-controls.tsx`. O CSS dos botões protege a linha do texto; o grid reserva a linha da ação. Nunca reduzir o botão a uma coluna de formulário para fazê-lo caber. A navegação da manutenção usa fundo azul suave e seleção em azul institucional com acento da marca.
+
+Verificação desta correção: as nove telas do menu foram renderizadas com os componentes reais e dados sintéticos em 1440, 768 e 390 pixels (27 combinações). A checagem de geometria confirmou texto dos botões em uma linha, ausência de controles fora da tela e uma única seção ativa. As capturas de desktop foram inspecionadas; Documentos também foi inspecionada no celular. Digitação de telefone/CNPJ e conversão/validação de datas foram verificadas no navegador. Isso comprova o layout e os controles na prévia isolada; não substitui os testes funcionais autenticados de produção.
+
+### Distribuição compacta dos campos
+
+Formulários de manutenção distribuem campos em fluxo flexível a partir da esquerda, com gap de 12 px na vertical e 16 px na horizontal, sem trilhas de meia tela. Campos de texto comuns usam 320 px; dinheiro, 160 px; contagens curtas, 100 px; datas, 172 px. Número de documento acompanha a capacidade: CPF 18ch, CNPJ 26ch e outros documentos de até 30 caracteres 34ch, incluindo espaço interno. Telefone usa 19ch. Descrições e endereços longos mantêm linha completa. Os limites visuais não reduzem a capacidade de armazenamento dos valores.
+
+Combos são dimensionados pela maior opção real. Equipamento tem largura mínima suficiente para “Selecione o equipamento” enquanto não há opções; cresce quando a lista contém nomes maiores. Destino cresce conforme os registros e desloca o botão Consultar documentos pelo fluxo flexível; com espaço insuficiente, a ação passa à linha seguinte.
