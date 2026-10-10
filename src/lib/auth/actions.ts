@@ -48,7 +48,7 @@ export async function requestPasswordReset(_previous: ActionState, formData: For
   if (!email.success) return { error: "Informe um e-mail válido." };
   const supabase = await createClient();
   if (!supabase) return { error: "A recuperação de senha não está configurada." };
-  const requestOrigin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const requestOrigin = process.env.NEXT_PUBLIC_APP_URL ?? (await headers()).get("origin") ?? "http://localhost:3000";
   await supabase.auth.resetPasswordForEmail(email.data, {
     redirectTo: `${requestOrigin}/auth/callback?next=%2Freset-password`,
   });
