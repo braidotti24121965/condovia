@@ -38,9 +38,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     dashboard: dashboard.data === true,
     imports: imports.data === true,
   })) : undefined;
-  const { data: account } = await supabase.from("user_accounts").select("id,people(full_name, preferred_name)").eq("auth_user_id", user.id).maybeSingle();
-  const person = account?.people as unknown as { full_name: string; preferred_name: string | null } | null;
+  const { data: account } = await supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).maybeSingle();
+  const { data: displayName } = await supabase.rpc("get_my_display_name");
   const notificationData = context.type === "condominium" ? await getNotifications() : { notifications: [], timeZone: "America/Sao_Paulo" };
   const maintenanceHref = context.type === "condominium" && condominiumNavigation && !condominiumNavigation.maintenanceFoundation ? "/app/condominium/maintenance/requests" : "/app/condominium/maintenance";
-  return <AppShell context={context} personName={person?.preferred_name || person?.full_name} userAccountId={account?.id} maintenanceHref={maintenanceHref} condominiumNavigation={condominiumNavigation} notifications={notificationData.notifications} notificationTimeZone={notificationData.timeZone}>{children}</AppShell>;
+  return <AppShell context={context} personName={displayName} userEmail={user.email} userAccountId={account?.id} maintenanceHref={maintenanceHref} condominiumNavigation={condominiumNavigation} notifications={notificationData.notifications} notificationTimeZone={notificationData.timeZone}>{children}</AppShell>;
 }

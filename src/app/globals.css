@@ -53,6 +53,10 @@
   --sidebar-collapsed-width: 64px;
 }
 
+.user-name { max-width: 230px; }
+.user-name strong, .user-name small { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-name .user-role { color: #94A3B8; }
+
 * { box-sizing: border-box; }
 html { min-width: 320px; background: var(--cv-background); }
 body { margin: 0; color: var(--cv-text-strong); background: var(--cv-background); font: 400 var(--cv-font-body)/20px var(--font-inter), Inter, sans-serif; -webkit-font-smoothing: antialiased; }
