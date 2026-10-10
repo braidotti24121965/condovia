@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "@fontsource-variable/inter";
 import "./globals.css";
 import { NavigationFeedback } from "@/components/ui/navigation-feedback";
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR"><body>{children}<NavigationFeedback /></body></html>;
+  return <html lang="pt-BR"><body>{children}<Suspense fallback={null}><NavigationFeedback /></Suspense></body></html>;
 }
