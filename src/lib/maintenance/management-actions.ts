@@ -131,8 +131,16 @@ export async function savePlan(f: FormData) {
 }
 
 export async function generateDueOrders() {
-  const { context } = await requireCondominiumPermission("maintenance.plans.manage");
-  await call("maintenance.plans.manage", "generate_due_maintenance_orders", { p_condominium_id: context.id }, `${root}/plans`);
+  const { context, supabase } = await requireCondominiumPermission("maintenance.plans.manage");
+  const { data, error } = await supabase.rpc("generate_due_maintenance_orders", { p_condominium_id: context.id });
+  if (error) {
+    const safe = /^[A-ZÀ-Úa-zà-ú]/.test(error.message) && !/(column|relation|constraint|syntax|violates|duplicate|function)/i.test(error.message)
+      ? error.message : "Não foi possível gerar as ordens previstas.";
+    redirect(`${root}/plans?error=${encodeURIComponent(safe)}`);
+  }
+  revalidatePath(root, "layout");
+  const generated = Number(data ?? 0);
+  redirect(`${root}/plans?generated=${generated}`);
 }
 
 export async function prepareDocumentUpload(f: FormData) {
