@@ -49,7 +49,9 @@ export async function requestPasswordReset(_previous: ActionState, formData: For
   const supabase = await createClient();
   if (!supabase) return { error: "A recuperação de senha não está configurada." };
   const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const requestOrigin = process.env.VERCEL_ENV === "preview"
+  const isHomologDeployment = process.env.VERCEL_ENV === "preview"
+    || process.env.VERCEL_GIT_COMMIT_REF === "codex/documentation-consolidation";
+  const requestOrigin = isHomologDeployment
     ? "https://homolog-condovia.kynovia.com.br"
     : configuredOrigin ?? (await headers()).get("origin") ?? "http://localhost:3000";
   await supabase.auth.resetPasswordForEmail(email.data, {
