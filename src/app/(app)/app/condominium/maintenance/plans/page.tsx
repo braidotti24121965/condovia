@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { civilDate } from "@/lib/maintenance/validation";
 
 type Plan = { id: string; structure_id: string; equipment_id: string | null; service_type_id: string | null; service_provider_id: string | null; contract_id: string | null; responsible_user_account_id: string | null; description: string; interval_days: number; next_due_on: string; advance_days: number; estimated_amount: number; checklist_template: string[]; status: string };
-export default async function PlansPage({ searchParams }: { searchParams: Promise<{ error?: string; updated?: string }> }) {
+export default async function PlansPage({ searchParams }: { searchParams: Promise<{ error?: string; updated?: string; generated?: string }> }) {
   const { supabase, context } = await requireCondominiumPermission("maintenance.plans.manage");
   const [plans, structures, equipment, types, providers, contracts, users] = await Promise.all([
     supabase.from("maintenance_plans").select("*").eq("condominium_id", context.id).order("next_due_on"),
