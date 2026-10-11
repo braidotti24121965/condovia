@@ -80,6 +80,8 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     const form = new FormData(event.currentTarget);
     const startsAt = String(form.get("starts_at") || ""); const endsAt = String(form.get("ends_at") || "");
     const errors: Record<string, string> = {};
+    if (!form.get("person_id")) errors.person = "Selecione uma pessoa.";
+    if (!form.get("unit_id")) errors.unit = "Selecione uma unidade.";
     if (!validatePersonFields({ fullName: "Pessoa", birthDate: startsAt }).birth_date) { /* valid */ } else errors.starts_at = "Informe uma data de início válida.";
     if (endsAt && validatePersonFields({ fullName: "Pessoa", birthDate: endsAt }).birth_date) errors.ends_at = "Informe uma data de término válida.";
     setDateErrors(errors); if (Object.keys(errors).length) event.preventDefault();
@@ -89,8 +91,8 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     <input type="hidden" name="return_to" value={returnTo}/>
     {selectedPersonId&&<p className="cv-form-hint" role="status">Pessoa cadastrada e selecionada. Complete os dados do vínculo.</p>}
     <div className="cv-form-grid">
-      <PersonPicker people={people} kind={kind} returnTo={returnTo} selectedPersonId={selectedPersonId}/>
-      <label className="cv-field-auto">Unidade<select name="unit_id" required defaultValue={defaultUnitId||""}><option value="" disabled>Selecione</option>{units.map((u)=><option key={u.id} value={u.id} disabled={u.operational_status==="inactive" || kind==="occupancy" && u.operational_status==="under_construction"}>{u.display_name || u.code}{u.operational_status==="blocked"?" · Bloqueada":""}</option>)}</select></label>
+      <div><PersonPicker people={people} kind={kind} returnTo={returnTo} selectedPersonId={selectedPersonId}/>{dateErrors.person && <FieldError message={dateErrors.person}/>}</div>
+      <label className="cv-field-auto">Unidade<select name="unit_id" required defaultValue={defaultUnitId||""}><option value="" disabled>Selecione</option>{units.map((u)=><option key={u.id} value={u.id} disabled={u.operational_status==="inactive" || kind==="occupancy" && u.operational_status==="under_construction"}>{u.display_name || u.code}{u.operational_status==="blocked"?" · Bloqueada":""}</option>)}</select>{dateErrors.unit && <FieldError message={dateErrors.unit}/>}</label>
       {kind === "ownership" && <label className="cv-field-md">Participação (%)<input name="ownership_percentage" type="number" min="0.0001" max="100" step="0.0001" placeholder="Não informada"/></label>}
       {kind === "occupancy" && <label className="cv-field-auto">Tipo de moradia<select name="occupancy_type" defaultValue="tenant"><option value="owner">Proprietário</option><option value="tenant">Inquilino</option><option value="family_member">Familiar</option><option value="dependent">Dependente</option><option value="other">Outro</option></select></label>}
       {kind === "occupancy" && <label className="cv-checkbox-label"><input type="checkbox" name="is_primary" value="true"/> Morador principal</label>}

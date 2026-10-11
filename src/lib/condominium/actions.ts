@@ -186,6 +186,8 @@ export async function addPersonRelationship(_previous: { error: string }, form: 
   const permission = kind === "ownership" ? "ownerships.manage" : kind === "occupancy" ? "residents.manage" : "financial_responsibilities.manage";
   const { supabase, context } = await requireCondominiumPermission(permission);
   const unitId = value(form, "unit_id"); const personId = value(form, "person_id");
+  if (!personId) return { error: "Selecione uma pessoa para criar o vínculo." };
+  if (!unitId) return { error: "Selecione uma unidade para criar o vínculo." };
   const startsAt = normalizeDateInput(value(form, "starts_at")); const endsAt = nullable(normalizeDateInput(value(form, "ends_at")));
   if (!startsAt) return { error: "Informe uma data de início válida no formato DD/MM/AAAA." };
   if (value(form, "ends_at") && !endsAt) return { error: "Informe uma data de término válida no formato DD/MM/AAAA." };
