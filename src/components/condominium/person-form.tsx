@@ -91,7 +91,7 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     <input type="hidden" name="return_to" value={returnTo}/>
     {selectedPersonId&&<p className="cv-form-hint" role="status">Pessoa cadastrada e selecionada. Complete os dados do vínculo.</p>}
     <div className="cv-form-grid">
-      <div><PersonPicker people={people} kind={kind} returnTo={returnTo} selectedPersonId={selectedPersonId}/>{dateErrors.person && <FieldError message={dateErrors.person}/>}</div>
+      <PersonPicker people={people} kind={kind} returnTo={returnTo} selectedPersonId={selectedPersonId}/>
       <label className="cv-field-auto">Unidade<select name="unit_id" required defaultValue={defaultUnitId||""}><option value="" disabled>Selecione</option>{units.map((u)=><option key={u.id} value={u.id} disabled={u.operational_status==="inactive" || kind==="occupancy" && u.operational_status==="under_construction"}>{u.display_name || u.code}{u.operational_status==="blocked"?" · Bloqueada":""}</option>)}</select>{dateErrors.unit && <FieldError message={dateErrors.unit}/>}</label>
       {kind === "ownership" && <label className="cv-field-md">Participação (%)<input name="ownership_percentage" type="number" min="0.0001" max="100" step="0.0001" placeholder="Não informada"/></label>}
       {kind === "occupancy" && <label className="cv-field-auto">Tipo de moradia<select name="occupancy_type" defaultValue="tenant"><option value="owner">Proprietário</option><option value="tenant">Inquilino</option><option value="family_member">Familiar</option><option value="dependent">Dependente</option><option value="other">Outro</option></select></label>}
