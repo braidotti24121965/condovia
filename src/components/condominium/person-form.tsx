@@ -38,12 +38,12 @@ export function PersonForm({ returnPath = "", returnKind = "" }: { returnPath?: 
     <div className="cv-form-section"><h2>Identificação</h2><div className="cv-form-grid">
       <label className="cv-field-lg">Nome completo<input name="full_name" required minLength={2} maxLength={180} autoComplete="name" onBlur={(event) => validateField(event.currentTarget.form!, "full_name")} onChange={() => setFieldErrors((current) => ({ ...current, full_name: "" }))}/>{fieldErrors.full_name && <FieldError message={fieldErrors.full_name}/>}</label>
       <label className="cv-field-lg">Nome preferencial<input name="preferred_name" maxLength={120} autoComplete="nickname" onBlur={(event) => validateField(event.currentTarget.form!, "preferred_name")} onChange={() => setFieldErrors((current) => ({ ...current, preferred_name: "" }))}/>{fieldErrors.preferred_name && <FieldError message={fieldErrors.preferred_name}/>}</label>
-      <label className="cv-field-md">Data de nascimento<input type="date" name="birth_date" onBlur={(event) => validateField(event.currentTarget.form!, "birth_date")} onChange={(event) => validateField(event.currentTarget.form!, "birth_date")}/>{fieldErrors.birth_date && <FieldError message={fieldErrors.birth_date}/>}</label>
-      <label className="cv-field-md">CPF (opcional)<input name="cpf" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" maxLength={14} onBlur={(event) => validateField(event.currentTarget.form!, "cpf")} onChange={(event) => validateField(event.currentTarget.form!, "cpf")}/>{fieldErrors.cpf && <FieldError message={fieldErrors.cpf}/>}</label>
+      <label className="cv-field-md">Data de nascimento<input type="text" name="birth_date" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10} onChange={(event) => { event.currentTarget.value = formatBirthDate(event.currentTarget.value); validateField(event.currentTarget.form!, "birth_date"); }} onBlur={(event) => validateField(event.currentTarget.form!, "birth_date")}/>{fieldErrors.birth_date && <FieldError message={fieldErrors.birth_date}/>}</label>
+      <label className="cv-field-md">CPF (opcional)<input name="cpf" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" maxLength={14} onChange={(event) => { event.currentTarget.value = formatCpf(event.currentTarget.value); validateField(event.currentTarget.form!, "cpf"); }} onBlur={(event) => validateField(event.currentTarget.form!, "cpf")}/>{fieldErrors.cpf && <FieldError message={fieldErrors.cpf}/>}</label>
     </div></div>
     <div className="cv-form-section"><h2>Contato</h2><div className="cv-form-grid">
       <label className="cv-field-lg">E-mail<input type="email" name="email" autoComplete="email" maxLength={254} onBlur={(event) => validateField(event.currentTarget.form!, "email")} onChange={(event) => validateField(event.currentTarget.form!, "email")}/>{fieldErrors.email && <FieldError message={fieldErrors.email}/>}</label>
-      <label className="cv-field-md">Telefone<input type="tel" name="phone" autoComplete="tel" maxLength={20} placeholder="+55 11 99999-9999" onBlur={(event) => validateField(event.currentTarget.form!, "phone")} onChange={(event) => validateField(event.currentTarget.form!, "phone")}/>{fieldErrors.phone && <FieldError message={fieldErrors.phone}/>}</label>
+      <label className="cv-field-md">Telefone<input type="tel" name="phone" autoComplete="tel" maxLength={19} placeholder="+55 (11) 99999-9999" onChange={(event) => { event.currentTarget.value = formatPhone(event.currentTarget.value); validateField(event.currentTarget.form!, "phone"); }} onBlur={(event) => validateField(event.currentTarget.form!, "phone")}/>{fieldErrors.phone && <FieldError message={fieldErrors.phone}/>}</label>
     </div><p className="cv-form-hint">O CPF é opcional. Pessoas com o mesmo nome podem ser cadastradas; e-mail ou telefone já usados no condomínio pedem revisão antes de um novo cadastro.</p></div>
     {error && <p className="cv-alert cv-alert-error" role="alert">{error}</p>}
     <Button type="submit" disabled={pending}>{pending ? "Salvando…" : "Cadastrar pessoa"}</Button>
@@ -52,6 +52,24 @@ export function PersonForm({ returnPath = "", returnKind = "" }: { returnPath?: 
 
 function FieldError({ message }: { message: string }) {
   return <span className="cv-field-error" role="alert">{message}</span>;
+}
+
+function formatBirthDate(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3");
+}
+
+function formatCpf(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  return digits.replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
+}
+
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, "").replace(/^55/, "").slice(0, 11);
+  if (!digits) return "";
+  const area = digits.slice(0, 2);
+  const number = digits.slice(2);
+  return `+55${area ? ` (${area}${area.length === 2 ? ")" : ""}` : ""}${number ? ` ${number.slice(0, 5)}${number.length > 5 ? `-${number.slice(5)}` : ""}` : ""}`;
 }
 
 export function PersonRelationshipForm({ people, units, kind, returnTo, selectedPersonId, defaultUnitId }: { people: { id: string; full_name: string }[]; units: { id: string; code: string; display_name: string | null; operational_status: string }[]; kind: PersonRelationshipKind; returnTo: string; selectedPersonId?: string; defaultUnitId?: string }) {
