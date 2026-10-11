@@ -69,7 +69,7 @@ export function friendlyDatabaseError(message?: string) {
   if (value.includes("inactive") || value.includes("active children")) return "Não é possível ativar ou inativar enquanto houver vínculos ativos incompatíveis.";
   if (value.includes("not authorized") || value.includes("permission denied")) return "Você não possui permissão para realizar esta operação.";
   if (value.includes("cnpj") || value.includes("timezone") || value.includes("check constraint")) return "Confira os dados informados e tente novamente.";
-  return "Não foi possível salvar. Confira os dados e tente novamente.";
+  return "Não foi possível salvar o vínculo. Verifique pessoa, unidade e período; também confirme se não existe um vínculo conflitante.";
 }
 
 export function formatBrazilianPhone(value: string) {
