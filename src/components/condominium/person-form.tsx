@@ -74,6 +74,7 @@ function formatPhone(value: string) {
 
 export function PersonRelationshipForm({ people, units, kind, returnTo, selectedPersonId, defaultUnitId }: { people: { id: string; full_name: string }[]; units: { id: string; code: string; display_name: string | null; operational_status: string }[]; kind: PersonRelationshipKind; returnTo: string; selectedPersonId?: string; defaultUnitId?: string }) {
   const [dateErrors, setDateErrors] = useState<Record<string, string>>({});
+  const [state, formAction, pending] = useActionState(addPersonRelationship, { error: "" });
   const formatRelationshipDate = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 8); return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3"); };
   const validateRelationshipDates = (event: FormEvent<HTMLFormElement>) => {
     const form = new FormData(event.currentTarget);
@@ -83,7 +84,7 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     if (endsAt && validatePersonFields({ fullName: "Pessoa", birthDate: endsAt }).birth_date) errors.ends_at = "Informe uma data de término válida.";
     setDateErrors(errors); if (Object.keys(errors).length) event.preventDefault();
   };
-  return <ConfirmedRelationshipForm action={addPersonRelationship} className="cv-form cv-inline-form" confirmPrimary={kind === "occupancy"} onSubmit={validateRelationshipDates}>
+  return <ConfirmedRelationshipForm action={formAction} className="cv-form cv-inline-form" confirmPrimary={kind === "occupancy"} onSubmit={validateRelationshipDates}>
     <input type="hidden" name="kind" value={kind}/>
     <input type="hidden" name="return_to" value={returnTo}/>
     {selectedPersonId&&<p className="cv-form-hint" role="status">Pessoa cadastrada e selecionada. Complete os dados do vínculo.</p>}
@@ -99,6 +100,7 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     </div>
     {kind === "occupancy" && <p className="cv-form-hint">A data final é exclusiva: com término em 01/11, o vínculo vale até 31/10. Um único morador principal pode estar vigente em cada data.</p>}
     {kind === "ownership" && <p className="cv-form-hint">A soma das participações conhecidas não pode ultrapassar 100% nos períodos sobrepostos. Deixe em branco quando a participação não estiver informada.</p>}
+    {state.error && <p className="cv-alert cv-alert-error" role="alert">{state.error}</p>}
     <RelationshipSubmitButton />
   </ConfirmedRelationshipForm>;
 }
