@@ -64,12 +64,16 @@ export function friendlyDatabaseError(message?: string) {
   if (value.includes("responsável financeiro")) return "Já existe um responsável financeiro neste período.";
   if (value.includes("unidade inativa não aceita novos vínculos")) return "Unidade inativa não aceita novos vínculos.";
   if (value.includes("unidade em construção não aceita moradores")) return "Unidade em construção não aceita moradores.";
+  if (value.includes("violates row-level security") || value.includes("permission denied")) return "Você não possui permissão para criar este vínculo neste condomínio.";
+  if (value.includes("foreign key") || value.includes("violates the foreign key constraint")) return "A pessoa ou unidade selecionada não está vinculada a este condomínio.";
+  if (value.includes("check constraint") && value.includes("ends_at")) return "A data de término deve ser posterior à data de início.";
+  if (value.includes("check constraint")) return "Os dados do vínculo não atendem às regras do condomínio.";
   if (value.includes("duplicate key") || value.includes("unique constraint")) return "Já existe uma unidade ou estrutura com este nome ou código neste contexto.";
   if (value.includes("cycle") || value.includes("parent") || value.includes("hierarchy")) return "Esta alteração criaria uma hierarquia inválida.";
   if (value.includes("inactive") || value.includes("active children")) return "Não é possível ativar ou inativar enquanto houver vínculos ativos incompatíveis.";
   if (value.includes("not authorized") || value.includes("permission denied")) return "Você não possui permissão para realizar esta operação.";
   if (value.includes("cnpj") || value.includes("timezone") || value.includes("check constraint")) return "Confira os dados informados e tente novamente.";
-  return "Não foi possível salvar o vínculo. Verifique pessoa, unidade e período; também confirme se não existe um vínculo conflitante.";
+  return "Não foi possível salvar o vínculo. Verifique se a pessoa e a unidade pertencem a este condomínio, se as datas são válidas e se não existe um vínculo conflitante.";
 }
 
 export function formatBrazilianPhone(value: string) {
