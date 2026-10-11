@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { addPersonRelationship, inviteResident, savePerson, savePersonContact, setPersonCpf, updatePerson } from "@/lib/condominium/actions";
 import { ConfirmedRelationshipForm } from "@/components/condominium/confirmed-relationship-form";
@@ -73,7 +73,17 @@ function formatPhone(value: string) {
 }
 
 export function PersonRelationshipForm({ people, units, kind, returnTo, selectedPersonId, defaultUnitId }: { people: { id: string; full_name: string }[]; units: { id: string; code: string; display_name: string | null; operational_status: string }[]; kind: PersonRelationshipKind; returnTo: string; selectedPersonId?: string; defaultUnitId?: string }) {
-  return <ConfirmedRelationshipForm action={addPersonRelationship} className="cv-form cv-inline-form" confirmPrimary={kind === "occupancy"}>
+  const [dateErrors, setDateErrors] = useState<Record<string, string>>({});
+  const formatRelationshipDate = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 8); return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3"); };
+  const validateRelationshipDates = (event: FormEvent<HTMLFormElement>) => {
+    const form = new FormData(event.currentTarget);
+    const startsAt = String(form.get("starts_at") || ""); const endsAt = String(form.get("ends_at") || "");
+    const errors: Record<string, string> = {};
+    if (!validatePersonFields({ fullName: "Pessoa", birthDate: startsAt }).birth_date) { /* valid */ } else errors.starts_at = "Informe uma data de início válida.";
+    if (endsAt && validatePersonFields({ fullName: "Pessoa", birthDate: endsAt }).birth_date) errors.ends_at = "Informe uma data de término válida.";
+    setDateErrors(errors); if (Object.keys(errors).length) event.preventDefault();
+  };
+  return <ConfirmedRelationshipForm action={addPersonRelationship} className="cv-form cv-inline-form" confirmPrimary={kind === "occupancy"} onSubmit={validateRelationshipDates}>
     <input type="hidden" name="kind" value={kind}/>
     <input type="hidden" name="return_to" value={returnTo}/>
     {selectedPersonId&&<p className="cv-form-hint" role="status">Pessoa cadastrada e selecionada. Complete os dados do vínculo.</p>}
@@ -83,8 +93,8 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
       {kind === "ownership" && <label className="cv-field-md">Participação (%)<input name="ownership_percentage" type="number" min="0.0001" max="100" step="0.0001" placeholder="Não informada"/></label>}
       {kind === "occupancy" && <label className="cv-field-auto">Tipo de moradia<select name="occupancy_type" defaultValue="tenant"><option value="owner">Proprietário</option><option value="tenant">Inquilino</option><option value="family_member">Familiar</option><option value="dependent">Dependente</option><option value="other">Outro</option></select></label>}
       {kind === "occupancy" && <label className="cv-checkbox-label"><input type="checkbox" name="is_primary" value="true"/> Morador principal</label>}
-      <label className="cv-field-md">Início da vigência<input type="date" name="starts_at" required/></label>
-      {kind !== "financial" && <label className="cv-field-md">Término (opcional)<input type="date" name="ends_at"/></label>}
+      <label className="cv-field-md">Início da vigência<input type="text" name="starts_at" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10} required onChange={(event) => { event.currentTarget.value = formatRelationshipDate(event.currentTarget.value); }} />{dateErrors.starts_at && <FieldError message={dateErrors.starts_at}/>}</label>
+      {kind !== "financial" && <label className="cv-field-md">Término (opcional)<input type="text" name="ends_at" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10} onChange={(event) => { event.currentTarget.value = formatRelationshipDate(event.currentTarget.value); }} />{dateErrors.ends_at && <FieldError message={dateErrors.ends_at}/>}</label>}
       <label className="cv-form-wide">Observações<input name="notes" maxLength={1000}/></label>
     </div>
     {kind === "occupancy" && <p className="cv-form-hint">A data final é exclusiva: com término em 01/11, o vínculo vale até 31/10. Um único morador principal pode estar vigente em cada data.</p>}

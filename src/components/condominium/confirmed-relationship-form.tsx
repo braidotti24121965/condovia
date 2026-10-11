@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import type { FormEvent, FormHTMLAttributes } from "react";
+import type { FormHTMLAttributes, SubmitEvent } from "react";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
-export function ConfirmedRelationshipForm({ confirmPrimary, ...props }: FormHTMLAttributes<HTMLFormElement> & { confirmPrimary: boolean }) {
+export function ConfirmedRelationshipForm({ confirmPrimary, onSubmit, ...props }: FormHTMLAttributes<HTMLFormElement> & { confirmPrimary: boolean }) {
   const [open, setOpen] = useState(false);
   const [pendingForm, setPendingForm] = useState<HTMLFormElement | null>(null);
   const [confirmed, setConfirmed] = useState(false);
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
+    onSubmit?.(event);
+    if (event.defaultPrevented) return;
     if (confirmed) {
       setConfirmed(false);
       return;

@@ -186,7 +186,9 @@ export async function addPersonRelationship(form: FormData) {
   const permission = kind === "ownership" ? "ownerships.manage" : kind === "occupancy" ? "residents.manage" : "financial_responsibilities.manage";
   const { supabase, context } = await requireCondominiumPermission(permission);
   const unitId = value(form, "unit_id"); const personId = value(form, "person_id");
-  const startsAt = value(form, "starts_at"); const endsAt = nullable(value(form, "ends_at"));
+  const startsAt = normalizeDateInput(value(form, "starts_at")); const endsAt = nullable(normalizeDateInput(value(form, "ends_at")));
+  if (!startsAt) redirect(`${safePersonRelationshipReturnPath(value(form, "return_to"), kind) || `/app/condominium/${kind === "ownership" ? "owners" : "residents"}`}?error=${encodeURIComponent("Informe uma data de início válida no formato DD/MM/AAAA.")}`);
+  if (value(form, "ends_at") && !endsAt) redirect(`${safePersonRelationshipReturnPath(value(form, "return_to"), kind) || `/app/condominium/${kind === "ownership" ? "owners" : "residents"}`}?error=${encodeURIComponent("Informe uma data de término válida no formato DD/MM/AAAA.")}`);
   const defaultBasePath = `/app/condominium/${kind === "ownership" ? "owners" : "residents"}`;
   const returnPath = safePersonRelationshipReturnPath(value(form, "return_to"), kind) || defaultBasePath;
   let error: { message: string } | null = null;
