@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { addPersonRelationship, inviteResident, savePerson, savePersonContact, setPersonCpf, updatePerson } from "@/lib/condominium/actions";
 import { ConfirmedRelationshipForm } from "@/components/condominium/confirmed-relationship-form";
@@ -74,6 +75,7 @@ function formatPhone(value: string) {
 
 export function PersonRelationshipForm({ people, units, kind, returnTo, selectedPersonId, defaultUnitId }: { people: { id: string; full_name: string }[]; units: { id: string; code: string; display_name: string | null; operational_status: string }[]; kind: PersonRelationshipKind; returnTo: string; selectedPersonId?: string; defaultUnitId?: string }) {
   const [dateErrors, setDateErrors] = useState<Record<string, string>>({});
+  const [occupancyType, setOccupancyType] = useState("tenant");
   const [state, formAction, pending] = useActionState(addPersonRelationship, { error: "" });
   const formatRelationshipDate = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 8); return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3"); };
   const validateRelationshipDates = (event: FormEvent<HTMLFormElement>) => {
@@ -96,13 +98,14 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
       <PersonPicker people={people} kind={kind} returnTo={returnTo} selectedPersonId={selectedPersonId}/>
       <label className="cv-field-auto">Unidade<select name="unit_id" required defaultValue={defaultUnitId||""}><option value="" disabled>Selecione</option>{units.map((u)=><option key={u.id} value={u.id} disabled={u.operational_status==="inactive" || kind==="occupancy" && u.operational_status==="under_construction"}>{u.display_name || u.code}{u.operational_status==="blocked"?" · Bloqueada":""}</option>)}</select>{dateErrors.unit && <FieldError message={dateErrors.unit}/>}</label>
       {kind === "ownership" && <label className="cv-field-md">Participação (%)<input name="ownership_percentage" type="number" min="0.0001" max="100" step="0.0001" placeholder="Não informada"/></label>}
-      {kind === "occupancy" && <label className="cv-field-auto">Tipo de moradia<select name="occupancy_type" defaultValue="tenant"><option value="owner">Proprietário</option><option value="tenant">Inquilino</option><option value="family_member">Familiar</option><option value="dependent">Dependente</option><option value="other">Outro</option></select></label>}
+      {kind === "occupancy" && <label className="cv-field-auto">Tipo de moradia<select name="occupancy_type" value={occupancyType} onChange={(event) => setOccupancyType(event.currentTarget.value)}><option value="owner">Proprietário</option><option value="tenant">Inquilino</option><option value="family_member">Familiar</option><option value="dependent">Dependente</option><option value="other">Outro</option></select></label>}
       {kind === "occupancy" && <label className="cv-checkbox-label"><input type="checkbox" name="is_primary" value="true"/> Morador principal</label>}
       <label className="cv-field-md">Início da vigência<input type="text" name="starts_at" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10} required onChange={(event) => { event.currentTarget.value = formatRelationshipDate(event.currentTarget.value); }} />{dateErrors.starts_at && <FieldError message={dateErrors.starts_at}/>}</label>
       {kind !== "financial" && <label className="cv-field-md">Término (opcional)<input type="text" name="ends_at" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10} onChange={(event) => { event.currentTarget.value = formatRelationshipDate(event.currentTarget.value); }} />{dateErrors.ends_at && <FieldError message={dateErrors.ends_at}/>}</label>}
       <label className="cv-form-wide">Observações<input name="notes" maxLength={1000}/></label>
     </div>
     {kind === "occupancy" && <p className="cv-form-hint">A data final é exclusiva: com término em 01/11, o vínculo vale até 31/10. Um único morador principal pode estar vigente em cada data.</p>}
+    {kind === "occupancy" && occupancyType === "owner" && <p className="cv-form-hint" role="status">Para cadastrar como Proprietário, primeiro crie o vínculo de propriedade em <Link href="/app/condominium/owners">Proprietários</Link> para a mesma pessoa, unidade e período. Depois retorne a esta tela para registrar a moradia.</p>}
     {kind === "ownership" && <p className="cv-form-hint">A soma das participações conhecidas não pode ultrapassar 100% nos períodos sobrepostos. Deixe em branco quando a participação não estiver informada.</p>}
     {state.error && <p className="cv-alert cv-alert-error" role="alert">{state.error}</p>}
     <RelationshipSubmitButton />

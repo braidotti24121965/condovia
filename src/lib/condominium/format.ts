@@ -57,6 +57,7 @@ export function validateBrazilianCnpj(value: string) {
 
 export function friendlyDatabaseError(message?: string) {
   const value = message?.toLowerCase() ?? "";
+  if (value.includes("moradia do tipo proprietário") || value.includes("propriedade cobrindo todo o período")) return "Para cadastrar esta pessoa como Proprietário, crie primeiro o vínculo de propriedade em Proprietários para a mesma unidade e período.";
   if (value.includes("sobrepor") || value.includes("mesma pessoa")) return "Já existe um período registrado para esta pessoa nesta unidade.";
   if (value.includes("excede 100")) return "A soma das participações ultrapassa 100% no período informado.";
   if (value.includes("não vinculada") || value.includes("não vinculado")) return "A pessoa deve estar vinculada e ativa neste condomínio.";
