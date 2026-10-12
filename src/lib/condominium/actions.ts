@@ -193,7 +193,7 @@ export async function addPersonRelationship(_previous: { error: string }, form: 
   if (value(form, "ends_at") && !endsAt) return { error: "Informe uma data de término válida no formato DD/MM/AAAA." };
   const defaultBasePath = `/app/condominium/${kind === "ownership" ? "owners" : "residents"}`;
   const returnPath = safePersonRelationshipReturnPath(value(form, "return_to"), kind) || defaultBasePath;
-  let error: { message: string } | null = null;
+  let error: { message: string; code?: string } | null = null;
   if (kind === "ownership") {
     ({ error } = await supabase.from("unit_ownerships").insert({ condominium_id: context.id, unit_id: unitId, person_id: personId, ownership_percentage: numberOrNull(value(form, "ownership_percentage")), starts_at: startsAt, ends_at: endsAt, notes: nullable(value(form, "notes")) }));
   } else if (kind === "occupancy" && value(form, "is_primary") === "true") {
@@ -204,7 +204,11 @@ export async function addPersonRelationship(_previous: { error: string }, form: 
     ({ error } = await supabase.rpc("set_unit_financial_responsibility", { p_unit_id: unitId, p_condominium_id: context.id, p_person_id: personId, p_starts_at: startsAt, p_notes: nullable(value(form, "notes")) }));
   }
   const separator = returnPath.includes("?") ? "&" : "?";
-  if (error) return { error: friendlyDatabaseError(error.message) };
+  if (error) {
+    console.error("[relationship] failed to save", { code: error.code, message: error.message });
+    const code = error.code ? ` Código técnico: ${error.code}.` : "";
+    return { error: `${friendlyDatabaseError(error.message)}${code}` };
+  }
   revalidatePath("/app/condominium/owners"); revalidatePath("/app/condominium/residents"); revalidatePath("/app/condominium/units");
   revalidatePath(`/app/condominium/people/${personId}`);
   revalidatePath(`/app/condominium/units/${unitId}`);
