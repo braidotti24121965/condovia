@@ -67,6 +67,7 @@ export function friendlyDatabaseError(message?: string) {
   if (value.includes("violates row-level security") || value.includes("permission denied")) return "Você não possui permissão para criar este vínculo neste condomínio.";
   if (value.includes("foreign key") || value.includes("violates the foreign key constraint")) return "A pessoa ou unidade selecionada não está vinculada a este condomínio.";
   if (value.includes("check constraint") && value.includes("ends_at")) return "A data de término deve ser posterior à data de início.";
+  if (value.includes("23514")) return "Os dados do vínculo violam uma regra de validação. Verifique as datas e o tipo de moradia.";
   if (value.includes("check constraint")) return "Os dados do vínculo não atendem às regras do condomínio.";
   if (value.includes("duplicate key") || value.includes("unique constraint")) return "Já existe uma unidade ou estrutura com este nome ou código neste contexto.";
   if (value.includes("cycle") || value.includes("parent") || value.includes("hierarchy")) return "Esta alteração criaria uma hierarquia inválida.";

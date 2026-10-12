@@ -191,6 +191,8 @@ export async function addPersonRelationship(_previous: { error: string }, form: 
   const startsAt = normalizeDateInput(value(form, "starts_at")); const endsAt = nullable(normalizeDateInput(value(form, "ends_at")));
   if (!startsAt) return { error: "Informe uma data de início válida no formato DD/MM/AAAA." };
   if (value(form, "ends_at") && !endsAt) return { error: "Informe uma data de término válida no formato DD/MM/AAAA." };
+  if (endsAt && endsAt <= startsAt) return { error: "A data de término deve ser posterior à data de início." };
+  if (kind === "occupancy" && !["owner", "tenant", "family_member", "dependent", "other"].includes(value(form, "occupancy_type"))) return { error: "Selecione um tipo de moradia válido." };
   const defaultBasePath = `/app/condominium/${kind === "ownership" ? "owners" : "residents"}`;
   const returnPath = safePersonRelationshipReturnPath(value(form, "return_to"), kind) || defaultBasePath;
   let error: { message: string; code?: string } | null = null;

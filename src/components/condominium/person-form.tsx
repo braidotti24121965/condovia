@@ -84,6 +84,8 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     if (!form.get("unit_id")) errors.unit = "Selecione uma unidade.";
     if (!validatePersonFields({ fullName: "Pessoa", birthDate: startsAt }).birth_date) { /* valid */ } else errors.starts_at = "Informe uma data de início válida.";
     if (endsAt && validatePersonFields({ fullName: "Pessoa", birthDate: endsAt }).birth_date) errors.ends_at = "Informe uma data de término válida.";
+    const startsIso = startsAt.split("/").reverse().join("-"); const endsIso = endsAt.split("/").reverse().join("-");
+    if (endsAt && startsAt && endsIso <= startsIso) errors.ends_at = "A data de término deve ser posterior à data de início.";
     setDateErrors(errors); if (Object.keys(errors).length) event.preventDefault();
   };
   return <ConfirmedRelationshipForm action={formAction} className="cv-form cv-inline-form" confirmPrimary={kind === "occupancy"} onSubmit={validateRelationshipDates}>
