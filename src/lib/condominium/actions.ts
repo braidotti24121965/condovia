@@ -209,7 +209,7 @@ export async function addPersonRelationship(_previous: { error: string }, form: 
   if (error) {
     console.error("[relationship] failed to save", { code: error.code, message: error.message });
     const code = error.code ? ` Código técnico: ${error.code}.` : "";
-    return { error: `${friendlyDatabaseError(error.message)}${code}` };
+    return { error: `${friendlyDatabaseError(error.message)}${code} Detalhe: ${error.message}` };
   }
   revalidatePath("/app/condominium/owners"); revalidatePath("/app/condominium/residents"); revalidatePath("/app/condominium/units");
   revalidatePath(`/app/condominium/people/${personId}`);
