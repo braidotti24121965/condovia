@@ -65,7 +65,7 @@ O ensaio deve partir da branch `feat/imports-hardening` atualizada com `a518b35`
 supabase db push --linked --dry-run
 ```
 
-Conferir que a saída contém exatamente estas 22 migrations, em ordem cronológica por versão:
+Conferir que a saída contém exatamente estas 23 migrations, em ordem cronológica por versão:
 
 ```text
 20261013204354_import_preview_cleanup.sql
@@ -92,6 +92,8 @@ Conferir que a saída contém exatamente estas 22 migrations, em ordem cronológ
 20261019110000_resolve_relationship_import_keys.sql
 20261019120000_import_people_duplicate_updates.sql
 ```
+
+São 23: `20261013204354` (#47), as 19 recuperadas (#49), `20261019100000` (#49) e `20261019110000`/`20261019120000` (#47). Se aparecer `20261011000000_maintenance_complete.sql`, a produção ainda não tem a entrega integral de Manutenção: abortar e tratar separadamente.
 
 Qualquer migration adicional aborta a janela. Em especial, não podem aparecer migrations P9/financeiro. Se a lista não for exatamente essa, não executar o `db push`; corrigir a branch ou o vínculo e repetir o dry-run.
 
