@@ -1,6 +1,6 @@
 # Cronograma e roadmap consolidados
 
-Data de referência: 19/10/2026. Datas de conclusão vêm do histórico Git de `main`. O XLSX original permanece como baseline histórica.
+Data de referência: 19/10/2026 (atualizado após a janela de produção das 17h). Datas de conclusão vêm do histórico Git de `main`. O XLSX original permanece como baseline histórica.
 
 ## Critério de percentual
 
@@ -26,7 +26,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 
 ## Fase em andamento
 
-### P8 — Manutenção: 60%
+### P8 — Manutenção: 75%
 
 | Item | Peso | Situação |
 |---|---:|---|
@@ -35,7 +35,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 | Publicação e migrations em homologação | 10% | Concluído (indícios: publicação na branch de homologação em 10–12/10) |
 | Correções de homologação integradas à `main` (PR #43) | 10% | Pendente, PR em conflito com `main` |
 | Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Pendente, testes ainda não definidos |
-| Migrations conciliadas e fluxo validado em produção | 15% | Pendente, sem evidência |
+| Migrations conciliadas e aplicadas em produção | 15% | Concluído (19/10: histórico P8 reconciliado, schema conferido por fingerprint, 24 migrations aplicadas) |
 
 ## Fases futuras
 
@@ -51,7 +51,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 ## Consolidado
 
 - MVP (MVP-0 a P7): **100%**.
-- Roadmap pós-MVP (P8 a P13, pesos iguais): **10%**.
+- Roadmap pós-MVP (P8 a P13, pesos iguais): **12,5%**.
 
 ## Pendências transversais
 
