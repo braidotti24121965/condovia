@@ -57,13 +57,23 @@ Essas migrations existem somente na homologação e não foram recriadas nem apl
 
 Foi preparada `20261019120000_import_people_duplicate_updates.sql`, com `CREATE OR REPLACE FUNCTION public.confirm_import_batch(uuid)`. Ela preserva o comportamento publicado da migration histórica e adiciona atualização de duplicados de pessoas, CPF e e-mail. É idempotente quanto à definição da função e não altera a migration original.
 
+## Ordem planejada de merge e produção
+
+1. PR de recuperação `chore/db-recover-homolog-migrations`.
+2. PR #47 — imports hardening.
+3. PR #43 — branch de homologação.
+4. PR #46 — filtros e relacionamentos.
+5. PR #48 — fundação financeira P9, atualmente draft.
+
+Antes do merge dos itens 2, 3 ou 4 na `main`, as migrations correspondentes devem ser aplicadas em produção em janela planejada, com backup e aprovação explícita. O PR #48 permanece separado para validação financeira.
+
 ## Repairs propostos — não executados
 
 Somente após aprovação, revisar o estado do histórico com comandos equivalentes a:
 
 ```sh
-supabase migration repair --linked --status applied 20261009023645
-supabase migration repair --linked --status reverted 20261006230000
+supabase migration repair --linked --status applied 20261006230000
+supabase migration repair --linked --status reverted 20261009023645
 ```
 
 Os comandos acima são apenas proposta. Não foram executados, e nenhum `db push`, `migration up` ou alteração remota foi realizado.
