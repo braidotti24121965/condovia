@@ -1,6 +1,6 @@
 # Cronograma e roadmap consolidados
 
-Data de referência: 19/10/2026 (atualizado após a janela de produção das 17h). Datas de conclusão vêm do histórico Git de `main`. O XLSX original permanece como baseline histórica.
+Data de referência: 19/10/2026, 18h (após o merge do PR #43 e testes em produção). Datas de conclusão vêm do histórico Git de `main`. O XLSX original permanece como baseline histórica.
 
 ## Critério de percentual
 
@@ -23,17 +23,18 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 | P5 | Reservas, bloqueios, histórico e notificações | 05–06/10/2026 | 100% |
 | P6 | Ocorrências e comentários | 06/10/2026 | 100% |
 | P7 / MVP-1 | Dashboard, importação CSV, Professional Compact V2 e 84 baselines visuais | 06–08/10/2026 | 100% |
+| Consolidação 10–19/10 | Validações de pessoas e vínculos, filtros e listagens, importação endurecida, recuperação de senha por ambiente, correção de permissão por vínculo ativo | 10–19/10/2026 | 100% |
 
 ## Fase em andamento
 
-### P8 — Manutenção: 75%
+### P8 — Manutenção: 85%
 
 | Item | Peso | Situação |
 |---|---:|---|
 | Código integrado à `main` (P8.1–P8.3 e entrega integral, PRs #13–#36) | 40% | Concluído (08–09/10) |
 | Testes técnicos (lint, typecheck, build, unitários, pgTAP via PGlite) | 10% | Concluído |
-| Publicação e migrations em homologação | 10% | Concluído (indícios: publicação na branch de homologação em 10–12/10) |
-| Correções de homologação integradas à `main` (PR #43) | 10% | Pendente, PR em conflito com `main` |
+| Publicação e migrations em homologação | 10% | Concluído (19/10: migrations conferidas na homologação) |
+| Correções de homologação integradas à `main` (PR #43) | 10% | Concluído (19/10, `5b89a78`; testado em produção) |
 | Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Pendente, testes ainda não definidos |
 | Migrations conciliadas e aplicadas em produção | 15% | Concluído (19/10: histórico P8 reconciliado, schema conferido por fingerprint, 24 migrations aplicadas) |
 
@@ -41,7 +42,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 
 | Fase | Situação | Próximo critério | % |
 |---|---|---|---|
-| P9 — Finance | A planejar | Definição funcional | 0% |
+| P9 — Finance | Rascunho técnico (PR #48; migrations P9.1, P9.2 e P9.4 aplicadas só na homologação) | Definição funcional e revisão do PR #48 | 0% (não contabilizado até entrar na `main`) |
 | P10 — Communication & Governance | A planejar | Definição funcional | 0% |
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
@@ -51,11 +52,15 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 ## Consolidado
 
 - MVP (MVP-0 a P7): **100%**.
-- Roadmap pós-MVP (P8 a P13, pesos iguais): **12,5%**.
+- Roadmap pós-MVP (P8 a P13, pesos iguais): **14%** (P8 em 85%).
 
 ## Pendências transversais
 
-- Integrar ou encerrar os PRs abertos #40 e #43 e manter a branch de homologação sincronizada com `main`.
+- P8: homologação funcional formal (upload real ao Storage, tarefa diária `pg_cron`, fluxos completos de OS).
+- PR #40 (feedback de navegação e ajustes de manutenção): revisar e integrar ou encerrar.
+- PR #48 (Financeiro P9, rascunho): revisão funcional antes de qualquer merge.
+- Homologação: reconciliar o histórico de migrations (aliases); até lá, não usar `supabase db push` nela.
+- Arquivar fora do Git as evidências de homologação (planilhas, CSVs, capturas) que estão só na pasta local.
 - Observabilidade centralizada, rate limit/concurrency, retenção e índices (backlog do P7).
 - Backup e restauração cobrindo Auth, Storage e configurações, não só o schema `public`.
 - Revisão das funções legadas `SECURITY DEFINER`.
