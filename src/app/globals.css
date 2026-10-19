@@ -848,3 +848,10 @@ button:disabled { cursor: not-allowed; opacity: .62; }
   .cv-maintenance-module .cv-form-grid > .cv-field-phone { flex-basis: 19ch; }
   .cv-maintenance-module .cv-form-grid > .cv-form-wide { flex-basis: 100%; }
 }
+
+/* Keep the expanded sidebar usable on shorter screens while retaining the support footer. */
+.sidebar nav { gap: 2px; }
+.sidebar .nav-item { min-height: 38px; }
+.sidebar .nav-group { margin-top: 12px; }
+/* Route-level loading placeholders for relationship and people lists. */
+.skeleton-table { width: 100%; height: 520px; border-radius: 12px; }
