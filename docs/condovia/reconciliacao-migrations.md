@@ -161,3 +161,52 @@ Em caso de falha, interromper a janela e preservar logs, saída do `db push`, li
 4. Registrar commit, branch, deployment, horário, resultado e qualquer divergência.
 
 Nenhum comando de produção foi executado durante a revisão deste documento.
+
+## Diagnóstico somente leitura da produção — migrations P8
+
+Consulta realizada contra a produção em 2026-10-19. Não foram executados `migration repair`, `db push` ou SQL de escrita.
+
+### Versões remotas sem arquivo local equivalente
+
+| Versão remota | Nome remoto | Statements | Arquivo Git candidato | Resultado normalizado |
+|---|---|---:|---|---|
+| `20261008232457` | `p8_1_maintenance_foundation` | 1 | `20261008000000_p8_1_maintenance_foundation.sql` | divergente |
+| `20261009011713` | `p8_1_fix_maintenance_settings_audit` | 1 | `20261008010000_p8_1_fix_maintenance_settings_audit.sql` | divergente |
+| `20261009011720` | `p8_2_maintenance_requests` | 1 | `20261009000000_p8_2_maintenance_requests.sql` | divergente |
+| `20261009205711` | `p8_3_maintenance_work_orders` | 1 | `20261010000000_p8_3_maintenance_work_orders.sql` | divergente |
+| `20261009205716` | `maintenance_complete` | 1 | `20261011000000_maintenance_complete.sql` | divergente |
+
+Comparação feita normalizando sequências de espaços/quebras de linha e removendo a quebra final. Os hashes MD5 normalizados foram:
+
+| Par | SQL remoto | Arquivo Git | Tamanho remoto | Tamanho Git |
+|---|---|---|---:|---:|
+| foundation | `1a36e8c97e8d047ef4148714acb7b470` | `865e9d12bb7399c103318b14c100d4c2` | 9797 | 9804 |
+| settings audit | `419e5970a0e58b00fc77363a55d9eb4f` | `c497236906ecd90ffd9aa1de59087604` | 1418 | 1418 |
+| requests | `e65edc641ff4af9da143a8f50eaa9b4c` | `5d5ba07208a0ce2abc013f18cb84a6ff` | 17195 | 17244 |
+| work orders | `ba45a358a64b1a96b56bc0822adf9650` | `3a5d122438441a24f183b84164eed77c` | 25660 | 25696 |
+| maintenance complete | `ff52c53941d8101bdface72475ac24c4` | `497417337fc81c54125d0bdf5bdf608e` | 70396 | 70515 |
+
+As cinco versões Git candidatas (`20261008000000`, `20261008010000`, `20261009000000`, `20261010000000`, `20261011000000`) não aparecem no histórico de produção. O restante do histórico de produção bate com as versões/nomes da `main` no diagnóstico de presença; não foi identificada outra divergência de versão além dos cinco pares P8 acima e dos descompassos de migrations já documentados anteriormente. A equivalência de SQL desses cinco pares não pode ser presumida pelos nomes: todos foram classificados como divergentes.
+
+### Repairs propostos
+
+Não há repair seguro para os cinco pares, pois os SQLs divergem. Portanto, nenhum dos comandos abaixo deve ser executado:
+
+```bash
+# NÃO EXECUTAR: pares divergentes
+```
+
+Para cada par divergente, a proposta é criar uma migration nova, posterior à última migration de produção, que contenha apenas a diferença necessária após revisão funcional e teste local. Não substituir nem renomear migrations já aplicadas.
+
+Para referência, o formato de repair que seria usado somente para um par comprovadamente equivalente é:
+
+```bash
+supabase migration repair --db-url "$PROD_DB_URL" --status reverted <versão_remota>
+supabase migration repair --db-url "$PROD_DB_URL" --status applied <versão_git>
+```
+
+Nenhum comando de repair foi executado.
+
+### Dry-run esperado após reconciliação
+
+Depois de uma reconciliação aprovada — com migrations novas para as divergências, sem P9/financeiro — o dry-run deverá listar exatamente as 23 migrations do roteiro de produção. Nesta execução, o dry-run não atingiu esse estado: ele parou informando que as cinco versões remotas não possuem arquivos locais correspondentes.
