@@ -249,9 +249,24 @@ bbb9aae89e9ed50b5004023be144c614
 
 Classificação: os cinco pares não têm diferença cosmética nem semântica; a comparação sem `-w` ficou vazia em todos. Não foi necessário consultar objetos específicos do catálogo, pois não há alteração de tabela, coluna, constraint, índice, função, policy ou grant entre os SQLs comparados.
 
-### Fingerprint P8 — NÃO VERIFICADO
+### Fingerprint P8 — divergência real; não executar repair
 
-Os arquivos `fingerprint_p8.sql` e `fingerprint_p8_esperado.txt` não estão presentes no worktree `c44508d`. Portanto a consulta de fingerprint e o `diff fingerprint_p8_esperado.txt fingerprint_p8_producao.txt` não foram executados, e nenhuma conclusão adicional sobre o estado do schema nem qualquer repair deve se basear nesse fingerprint até que os arquivos sejam fornecidos.
+Após a atualização para `7246153`, os arquivos `supabase/checks/fingerprint_p8.sql` e `supabase/checks/fingerprint_p8_esperado.txt` foram encontrados. A consulta foi executada somente em leitura contra a produção e comparada com o esperado.
+
+O diff não é vazio. A saída tem 153 linhas esperadas e 153 linhas produzidas. O resultado por categoria foi:
+
+```text
+columns:     divergente (20/20 objetos)
+constraints: divergente (20/20 objetos)
+function:    divergente (49/49 objetos)
+grants:      igual (20/20 objetos)
+indexes:     divergente (20/20 objetos)
+policy:      divergente (39/39 objetos)
+```
+
+As linhas de `grants` coincidem com o arquivo de referência. As divergências nas demais categorias são diferenças de fingerprint de schema e não podem ser tratadas como variação de permissões do ambiente. O diff completo produzido foi preservado no resultado da consulta desta execução; não foi criado nem commitado qualquer arquivo com dados de produção.
+
+Conclusão: a produção não está idêntica ao fingerprint esperado do Git. A janela de produção fica bloqueada para investigação dos objetos divergentes. Não executar os repairs, `db push` ou qualquer escrita até identificar se as diferenças são alterações diretas legítimas, estado de referência desatualizado ou problema de aplicação.
 
 ### Proposta de repair — não executar
 
