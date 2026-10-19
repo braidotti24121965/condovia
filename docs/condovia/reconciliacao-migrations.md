@@ -213,7 +213,7 @@ Depois de uma reconciliação aprovada — com migrations novas para as divergê
 
 ## Revisão detalhada dos cinco pares P8 — somente leitura
 
-Revisão posterior realizada em 2026-10-19. O SQL de cada `statements` remoto foi comparado integralmente com o arquivo Git candidato. Os cinco pares são byte a byte equivalentes, inclusive após normalização; portanto os diffs completos produzidos pelo `git diff --no-index --word-diff=plain -w` são vazios:
+Revisão posterior realizada em 2026-10-19. O SQL de cada `statements` remoto foi comparado integralmente com o arquivo Git candidato. A conferência bruta confirmou igualdade byte a byte nos cinco pares; portanto os diffs completos sem `-w` também são vazios:
 
 ```text
 20261008232457 vs 20261008000000_p8_1_maintenance_foundation.sql: (sem diff)
@@ -223,11 +223,39 @@ Revisão posterior realizada em 2026-10-19. O SQL de cada `statements` remoto fo
 20261009205716 vs 20261011000000_maintenance_complete.sql: (sem diff)
 ```
 
-Classificação: todos os cinco pares são equivalentes, sem diferença cosmética ou semântica material. Não foi necessário consultar objetos específicos do catálogo, pois não há alteração de tabela, coluna, constraint, índice, função, policy ou grant entre os SQLs comparados. A produção está no mesmo estado definido pelos arquivos Git candidatos.
+Hashes pedidos (MD5 após remoção de todo whitespace; linha remota e linha Git, respectivamente):
+
+```text
+20261008232457 / 20261008000000_p8_1_maintenance_foundation.sql
+2c4bb3fe5c97e77114256bb11fd799af
+2c4bb3fe5c97e77114256bb11fd799af
+
+20261009011713 / 20261008010000_p8_1_fix_maintenance_settings_audit.sql
+9ab97818aba17201deda4c31445c0660
+9ab97818aba17201deda4c31445c0660
+
+20261009011720 / 20261009000000_p8_2_maintenance_requests.sql
+c8b837b7606c02dc22859125d82b45aa
+c8b837b7606c02dc22859125d82b45aa
+
+20261009205711 / 20261010000000_p8_3_maintenance_work_orders.sql
+1e178919ea5b3dfebe35afb36ed73e6d
+1e178919ea5b3dfebe35afb36ed73e6d
+
+20261009205716 / 20261011000000_maintenance_complete.sql
+bbb9aae89e9ed50b5004023be144c614
+bbb9aae89e9ed50b5004023be144c614
+```
+
+Classificação: os cinco pares não têm diferença cosmética nem semântica; a comparação sem `-w` ficou vazia em todos. Não foi necessário consultar objetos específicos do catálogo, pois não há alteração de tabela, coluna, constraint, índice, função, policy ou grant entre os SQLs comparados.
+
+### Fingerprint P8 — NÃO VERIFICADO
+
+Os arquivos `fingerprint_p8.sql` e `fingerprint_p8_esperado.txt` não estão presentes no worktree `c44508d`. Portanto a consulta de fingerprint e o `diff fingerprint_p8_esperado.txt fingerprint_p8_producao.txt` não foram executados, e nenhuma conclusão adicional sobre o estado do schema nem qualquer repair deve se basear nesse fingerprint até que os arquivos sejam fornecidos.
 
 ### Proposta de repair — não executar
 
-Como os cinco pares são equivalentes, a proposta é reparar o histórico remoto para os timestamps dos arquivos Git e depois repetir o dry-run. Estes comandos são apenas documentação e não foram executados:
+Como os cinco pares são byte a byte equivalentes, a proposta de repair permanece válida quanto ao conteúdo SQL, mas não foi executada. A execução continua condicionada à disponibilização e conferência do fingerprint P8. Estes comandos são apenas documentação e não foram executados:
 
 ```bash
 supabase migration repair --db-url "$PROD_DB_URL" --status reverted 20261008232457
@@ -248,4 +276,4 @@ supabase migration repair --db-url "$PROD_DB_URL" --status applied 2026101100000
 
 Após esses repairs, sem aplicar qualquer SQL, a saída esperada do `supabase db push --db-url "$PROD_DB_URL" --dry-run` é exatamente a lista de 23 migrations do roteiro, sem P9/financeiro e sem as cinco versões remotas antigas.
 
-Observação: a primeira comparação por hashes foi conservadora e classificou os pares como divergentes; a comparação integral posterior confirmou igualdade byte a byte. Esta seção posterior é a decisão válida.
+Correção do registro anterior: a afirmação de hashes divergentes estava incorreta. A rechecagem solicitada, com whitespace removido e também com comparação bruta sem `-w`, confirmou igualdade nos cinco pares.
