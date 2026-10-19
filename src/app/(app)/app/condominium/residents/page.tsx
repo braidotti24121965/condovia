@@ -4,11 +4,11 @@ import { RelationshipIndex } from "@/components/condominium/relationship-index";
 import { Alert } from "@/components/ui/feedback";
 
 export const metadata={title:"Moradores"};
-export default async function ResidentsPage({searchParams}:{searchParams:Promise<{saved?:string;error?:string;mode?:string;q?:string;structure?:string;unit?:string;type?:string;new?:string;newPersonId?:string;relationship?:string}>}) {
+export default async function ResidentsPage({searchParams}:{searchParams:Promise<{saved?:string;error?:string;mode?:string;q?:string;cpf?:string;structure?:string;unit?:string;type?:string;page?:string;new?:string;newPersonId?:string;relationship?:string}>}) {
   const {supabase,context}=await requireCondominiumPermission("residents.read"); const params=await searchParams;
   const [{data:condo},{rows,error},people,units,{data:canManage}]=await Promise.all([
     supabase.from("condominiums").select("timezone").eq("id",context.id).maybeSingle(),
-    getRelationshipRows(supabase,context.id,"occupancy"),getCondominiumPeopleOptions(supabase,context.id),getCondominiumUnits(supabase,context.id),supabase.rpc("has_permission",{permission_code:"residents.manage",target_condominium_id:context.id}),
+    (params.q||params.cpf||params.structure||params.unit||params.type||params.mode||params.page)?getRelationshipRows(supabase,context.id,"occupancy",{query:params.q,cpf:params.cpf}):Promise.resolve({rows:[],error:null}),params.new==="1"||Boolean(params.newPersonId)?getCondominiumPeopleOptions(supabase,context.id):Promise.resolve([]),getCondominiumUnits(supabase,context.id),supabase.rpc("has_permission",{permission_code:"residents.manage",target_condominium_id:context.id}),
   ]);
   if(error)return <div className="cv-page"><Alert tone="error">Não foi possível carregar os moradores.</Alert></div>;
   const mode=["current","future","ended","all"].includes(params.mode||"")?params.mode!:"current";
@@ -16,5 +16,5 @@ export default async function ResidentsPage({searchParams}:{searchParams:Promise
   const returnQuery=new URLSearchParams();for(const key of ["mode","q","structure","unit","type"] as const)if(params[key])returnQuery.set(key,params[key]!);
   const returnTo=`/app/condominium/residents${returnQuery.size?`?${returnQuery.toString()}`:""}`;
   const selectedPersonId=params.relationship==="occupancy"?params.newPersonId:undefined;
-  return <>{params.error&&<Alert tone="error">{params.error}</Alert>}{params.saved&&<Alert tone="success">Vínculo salvo.</Alert>}<div className="breadcrumbs"><strong>Condomínio</strong><span aria-hidden="true">›</span><strong>Moradores</strong></div><RelationshipIndex kind="occupancy" rows={rows} people={people} units={units} mode={mode} today={todayInTimezone(condo?.timezone||"America/Sao_Paulo")} canManage={canManage===true} returnTo={returnTo} selectedPersonId={selectedPersonId} showForm={params.new==="1"||Boolean(selectedPersonId)} q={params.q||""} structureId={params.structure||""} unitId={params.unit||""} occupancyType={type}/></>;
+  return <>{params.error&&<Alert tone="error">{params.error}</Alert>}{params.saved&&<Alert tone="success">Vínculo salvo.</Alert>}<div className="breadcrumbs"><strong>Condomínio</strong><span aria-hidden="true">›</span><strong>Moradores</strong></div><RelationshipIndex kind="occupancy" rows={rows} people={people} units={units} mode={mode} today={todayInTimezone(condo?.timezone||"America/Sao_Paulo")} canManage={canManage===true} returnTo={returnTo} selectedPersonId={selectedPersonId} showForm={params.new==="1"||Boolean(selectedPersonId)} q={params.q||""} structureId={params.structure||""} unitId={params.unit||""} occupancyType={type} page={Math.max(1,Number(params.page)||1)}/></>;
 }
