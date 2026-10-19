@@ -9,6 +9,6 @@ export const importTemplates: Record<ImportEntity, string[]> = {
   structures: ["name", "structure_type", "code", "parent_id"],
   units: ["code", "structure_id", "display_name", "unit_type", "floor"],
   people: ["full_name", "preferred_name", "birth_date"],
-  owners: ["unit_id", "person_id", "ownership_percentage", "starts_at", "ends_at"],
-  residents: ["unit_id", "person_id", "occupancy_type", "starts_at", "ends_at"],
+  owners: ["unit_code", "person_cpf", "ownership_percentage", "starts_at", "ends_at"],
+  residents: ["unit_code", "person_cpf", "occupancy_type", "starts_at", "ends_at"],
 };

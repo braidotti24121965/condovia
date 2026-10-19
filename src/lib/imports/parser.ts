@@ -24,12 +24,22 @@ export function escapeCsvCell(value: unknown) {
   const safe = /^[=+\-@]/.test(raw) ? "'" + raw : raw;
   return '"' + safe.replace(/"/g, '""') + '"';
 }
-function required(entity: ImportEntity) { return entity==="structures" ? ["name","structure_type"] : entity==="units" ? ["code","structure_id"] : entity==="people" ? ["full_name"] : ["unit_id","person_id"]; }
+function required(entity: ImportEntity) {
+  if (entity === "structures") return ["name", "structure_type"];
+  if (entity === "units") return ["code", "structure_id"];
+  if (entity === "people") return ["full_name"];
+  // Relationship imports may use public business keys; the server resolves them to UUIDs.
+  return ["unit_id", "person_id"];
+}
+function hasRelationshipKeys(entity: ImportEntity, headers: string[]) {
+  return (entity === "owners" || entity === "residents") && headers.includes("unit_code") && headers.includes("person_cpf");
+}
 export function normalizeRows(rows: string[][], entity: ImportEntity, today: string): { headers: string[]; rows: ImportRow[]; structuralError?: string } {
   if(!rows.length) return { headers: [], rows: [], structuralError: "Arquivo vazio." };
   const headers = rows[0].map((header) => clean(header).toLowerCase());
   if(!headers.length || headers.some((header) => !header)) return { headers, rows: [], structuralError: "O cabeçalho contém colunas vazias." };
-  const missing = required(entity).filter((field) => !headers.includes(field));
+  const missing = hasRelationshipKeys(entity, headers) ? [] : required(entity).filter((field) => !headers.includes(field));
   if(missing.length) return { headers, rows: [], structuralError: "Colunas obrigatórias ausentes: " + missing.join(", ") + "." };
-  return { headers, rows: rows.slice(1, MAX_ROWS+1).map((raw,index) => { const data = Object.fromEntries(headers.map((header,col) => [header, clean(raw[col])])); if(entity==="owners"||entity==="residents") data.starts_at = data.starts_at || today; const invalid = required(entity).some((field) => !data[field]) || (entity==="structures" && !["block","tower","sector","building","wing","street","phase","other"].includes(data.structure_type)); return { rowNumber:index+2, classification: invalid ? "invalid" : "new", data, message: invalid ? "Campos obrigatórios ausentes ou tipo inválido." : undefined }; }), structuralError: rows.length-1>MAX_ROWS ? "O arquivo excede o limite de 2.000 linhas." : undefined };
+  const relationshipKeys = hasRelationshipKeys(entity, headers);
+  return { headers, rows: rows.slice(1, MAX_ROWS+1).map((raw,index) => { const data = Object.fromEntries(headers.map((header,col) => [header, clean(raw[col])])); if(entity==="owners"||entity==="residents") data.starts_at = data.starts_at || today; const invalid = (relationshipKeys ? ["unit_code","person_cpf"] : required(entity)).some((field) => !data[field]) || (entity==="structures" && !["block","tower","sector","building","wing","street","phase","other"].includes(data.structure_type)); return { rowNumber:index+2, classification: invalid ? "invalid" : "new", data, message: invalid ? "Campos obrigatórios ausentes ou tipo inválido." : undefined }; }), structuralError: rows.length-1>MAX_ROWS ? "O arquivo excede o limite de 2.000 linhas." : undefined };
 }
