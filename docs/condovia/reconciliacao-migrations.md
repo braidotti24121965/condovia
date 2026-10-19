@@ -302,3 +302,66 @@ Revisão em 2026-10-19 com a saída bruta publicada em `supabase/checks/fingerpr
 - Comparação item a item pelo nome do objeto: 153/153 iguais (45 funções, 28 policies, 20 tabelas em colunas, 20 em constraints, 20 em índices, 20 em grants). Nenhum objeto exclusivo de um dos lados.
 
 A conclusão anterior de "divergência real" decorreu de erro na comparação executada naquele momento, não de diferença no banco. Com os cinco pares P8 equivalentes no SQL e o schema de produção idêntico ao gerado pela `main`, os dez repairs propostos acima são seguros quanto ao estado físico do banco. A execução continua dependendo de autorização explícita da janela.
+
+### Homologação — aliases históricos
+
+Após os quatro repairs autorizados e a aplicação de `20261019110000` e
+`20261019120000`, a homologação ainda possui versões próprias geradas pelo
+conector para migrations base. Esses aliases são esperados e não devem ser
+reparados nesta etapa.
+
+| Versão remota | Nome |
+|---|---|
+| `20261009023147` | `001_saas_core` |
+| `20261009023159` | `002_identity` |
+| `20261009023207` | `003_authorization` |
+| `20261009023212` | `004_rls_helpers` |
+| `20261009023216` | `005_rls_policies` |
+| `20261009023221` | `006_seed_authorization` |
+| `20261009023227` | `007_identity_compatibility` |
+| `20261009023233` | `008_membership_history` |
+| `20261009023239` | `009_rbac_scope_and_seeds` |
+| `20261009023249` | `010_authorization_rls_audit` |
+| `20261009023312` | `011_condominium_addresses` |
+| `20261009023319` | `012_structures_units` |
+| `20261009023324` | `013_people_tenant_visibility` |
+| `20261009023330` | `014_unit_people_relationships` |
+| `20261009023336` | `015_resident_access_and_contacts` |
+| `20261009023340` | `016_p3_relationship_privilege_hardening` |
+| `20261009023346` | `017_p3_table_privilege_hardening` |
+| `20261009023352` | `018_gatehouse_people` |
+| `20261009023400` | `019_access_authorizations` |
+| `20261009023427` | `020_access_events` |
+| `20261009023436` | `021_packages` |
+| `20261009023446` | `022_gatehouse_authorization_rls` |
+| `20261009023455` | `023_gatehouse_audit_and_helpers` |
+| `20261009023502` | `025_visitor_document_uniqueness` |
+| `20261009023507` | `026_reservable_resources` |
+| `20261009023512` | `027_reservations` |
+| `20261009023517` | `028_reservation_management` |
+| `20261009023522` | `029_reservation_buffer_availability` |
+| `20261009023532` | `030_reservation_mode` |
+| `20261009023538` | `031_day_reservation_conflict` |
+| `20261009023542` | `032_reservation_resource_blocks` |
+| `20261009023547` | `033_reservation_lifecycle_history` |
+| `20261009023552` | `034_notifications` |
+| `20261009023559` | `035_enable_reservations_notifications_realtime` |
+| `20261009023605` | `20261005002045_visitors_authorization_visibility` |
+| `20261009023611` | `20261005004209_access_request_visitor_visibility` |
+| `20261009023617` | `20261005122830_platform_admin_tenant_onboarding` |
+| `20261009023628` | `20261005132924_fix_condo_master_bootstrap` |
+| `20261009023635` | `20261005141000_fix_tenant_onboarding_coalesce` |
+| `20261009023640` | `20261006210653_occurrences` |
+| `20261009023651` | `20261006234516_fix_import_parent_id_uuid` |
+| `20261009023656` | `20261007000000_platform_acting_context` |
+| `20261009023701` | `20261007120000_profile_display_name` |
+| `20261009023706` | `20261008000000_p8_1_maintenance_foundation` |
+| `20261009023712` | `20261008010000_p8_1_fix_maintenance_settings_audit` |
+| `20261009023721` | `20261009000000_p8_2_maintenance_requests` |
+| `20261009023727` | `20261010000000_p8_3_maintenance_work_orders` |
+| `20261010004720` | `maintenance_complete_preview_alignment` |
+| `20261013172602` | `p9_1_finance_payables` |
+| `20261013175951` | `p9_2_finance_receivables` |
+| `20261013195622` | `p9_4_finance_bills` |
+
+Homologação não deve usar `supabase db push` até a reconciliação completa do histórico; mudanças de banco em homologação são aplicadas com `psql -1 -f` + `repair applied` da versão do Git.
