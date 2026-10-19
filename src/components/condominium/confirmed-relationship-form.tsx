@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import type { FormEvent, FormHTMLAttributes } from "react";
+import { useRef, useState } from "react";
+import type { FormHTMLAttributes, SubmitEvent } from "react";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
-export function ConfirmedRelationshipForm({ confirmPrimary, ...props }: FormHTMLAttributes<HTMLFormElement> & { confirmPrimary: boolean }) {
+export function ConfirmedRelationshipForm({ confirmPrimary, onSubmit, ...props }: FormHTMLAttributes<HTMLFormElement> & { confirmPrimary: boolean }) {
   const [open, setOpen] = useState(false);
   const [pendingForm, setPendingForm] = useState<HTMLFormElement | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    if (confirmed) {
-      setConfirmed(false);
+  const confirmed = useRef(false);
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
+    onSubmit?.(event);
+    if (event.defaultPrevented) return;
+    if (confirmed.current) {
+      confirmed.current = false;
       return;
     }
     if (confirmPrimary && new FormData(event.currentTarget).get("is_primary") === "true") {
@@ -21,6 +23,6 @@ export function ConfirmedRelationshipForm({ confirmPrimary, ...props }: FormHTML
   };
   return <>
     <form {...props} onSubmit={submit} />
-    <ConfirmationDialog open={open} title="Confirmar morador principal" description="Um período principal anterior será encerrado no início informado, preservando o histórico." confirmLabel="Confirmar morador principal" onCancel={() => { setOpen(false); setPendingForm(null); }} onConfirm={() => { setOpen(false); setConfirmed(true); pendingForm?.requestSubmit(); setPendingForm(null); }} />
+    <ConfirmationDialog open={open} title="Confirmar morador principal" description="Um período principal anterior será encerrado no início informado, preservando o histórico." confirmLabel="Confirmar morador principal" onCancel={() => { setOpen(false); setPendingForm(null); }} onConfirm={() => { setOpen(false); confirmed.current = true; pendingForm?.requestSubmit(); setPendingForm(null); }} />
   </>;
 }

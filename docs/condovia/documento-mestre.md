@@ -23,3 +23,14 @@ P1–P7 e MVP-1 estão registrados como concluídos no handoff de 06/10/2026. A 
 ## Próximo marco
 
 P8 — Maintenance: implementação integral autorizada e preparada em uma única entrega. A integração, aplicação das migrations e homologação funcional permanecem pendentes; consulte [a entrega integral](./manutencao-entrega-integral.md). O controle de acesso inteligente é uma fase futura de planejamento, não uma integração iniciada.
+
+## Cadastro de proprietário e morador
+
+O cadastro de uma pessoa como **Proprietário** em `Moradores` representa o vínculo de moradia, mas não substitui o vínculo de propriedade. O fluxo correto é:
+
+1. Acesse `Condomínio > Proprietários > Novo proprietário`.
+2. Selecione a pessoa e a unidade, informe o início da vigência e deixe o término em branco quando a propriedade não tiver data final.
+3. Salve o vínculo de propriedade.
+4. Acesse `Condomínio > Moradores > Novo morador`, selecione a mesma pessoa e unidade e escolha `Proprietário` como tipo de moradia.
+
+O período do vínculo de propriedade deve cobrir todo o período da moradia. Se a propriedade ainda não estiver cadastrada, o sistema mantém os dados preenchidos e orienta o usuário a criar o vínculo primeiro em `Proprietários`. Os demais tipos de moradia, como `Inquilino`, `Familiar` e `Dependente`, não exigem vínculo de propriedade.

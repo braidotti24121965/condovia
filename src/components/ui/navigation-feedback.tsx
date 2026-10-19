@@ -21,13 +21,15 @@ export function NavigationFeedback() {
     const handleSubmit = (event: Event) => {
       const form = event.target;
       if (!(form instanceof HTMLFormElement) || form.target === "_blank" || form.dataset.navigationFeedback === "off") return;
-      sessionStorage.setItem(scrollKey, String(window.scrollY));
-      setPending(true);
-
-      // Server Actions can complete through a partial navigation without
-      // changing the pathname or query string. Never leave the global
-      // indicator visible indefinitely in that case.
-      window.setTimeout(() => setPending(false), 10000);
+      window.setTimeout(() => {
+        if (event.defaultPrevented) return;
+        sessionStorage.setItem(scrollKey, String(window.scrollY));
+        setPending(true);
+        // Server Actions can complete through a partial navigation without
+        // changing the pathname or query string. Never leave the global
+        // indicator visible indefinitely in that case.
+        window.setTimeout(() => setPending(false), 10000);
+      }, 0);
     };
     document.addEventListener("submit", handleSubmit, true);
     return () => document.removeEventListener("submit", handleSubmit, true);
