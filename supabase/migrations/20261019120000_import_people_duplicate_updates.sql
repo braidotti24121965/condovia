@@ -2,7 +2,7 @@ begin;
 
 create or replace function public.confirm_import_batch(p_batch_id uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
-declare b public.import_batches%rowtype; r record; new_id uuid; created_count integer := 0;
+declare b public.import_batches%rowtype; r record; new_id uuid; created_count integer := 0; occupancy_kind text;
 begin
   select * into b from public.import_batches where id=p_batch_id for update;
   if b.id is null or not public.has_permission('imports.manage',b.condominium_id) then raise exception 'Lote não encontrado ou sem permissão.' using errcode='42501'; end if;
@@ -10,7 +10,7 @@ begin
   for r in select * from public.import_batch_rows where batch_id=b.id and (classification='new' or (classification='duplicate' and b.entity_type='people' and nullif(normalized_data->>'update_existing','')='true')) order by row_number loop
     if b.entity_type='structures' then
       insert into public.condominium_structures(condominium_id,parent_id,structure_type,name,code,sort_order,status)
-      values (b.condominium_id,(r.normalized_data->>'parent_id')::uuid,r.normalized_data->>'structure_type',r.normalized_data->>'name',nullif(r.normalized_data->>'code',''),coalesce((r.normalized_data->>'sort_order')::integer,0),'active') returning id into new_id;
+      values (b.condominium_id,nullif(r.normalized_data->>'parent_id','')::uuid,r.normalized_data->>'structure_type',r.normalized_data->>'name',nullif(r.normalized_data->>'code',''),coalesce((r.normalized_data->>'sort_order')::integer,0),'active') returning id into new_id;
     elsif b.entity_type='units' then
       insert into public.units(condominium_id,structure_id,code,display_name,unit_type,floor,operational_status)
       values (b.condominium_id,(r.normalized_data->>'structure_id')::uuid,r.normalized_data->>'code',nullif(r.normalized_data->>'display_name',''),coalesce(r.normalized_data->>'unit_type','apartment'),nullif(r.normalized_data->>'floor',''),'active') returning id into new_id;
@@ -32,7 +32,15 @@ begin
       if b.entity_type='owners' then
         insert into public.unit_ownerships(condominium_id,unit_id,person_id,ownership_percentage,starts_at,ends_at) values (b.condominium_id,(r.normalized_data->>'unit_id')::uuid,(r.normalized_data->>'person_id')::uuid,nullif(r.normalized_data->>'ownership_percentage','')::numeric,coalesce(nullif(r.normalized_data->>'starts_at','')::date,current_date),nullif(r.normalized_data->>'ends_at','')::date) returning id into new_id;
       else
-        insert into public.unit_occupancies(condominium_id,unit_id,person_id,occupancy_type,is_primary,starts_at,ends_at) values (b.condominium_id,(r.normalized_data->>'unit_id')::uuid,(r.normalized_data->>'person_id')::uuid,coalesce(nullif(r.normalized_data->>'occupancy_type',''),'other'),false,coalesce(nullif(r.normalized_data->>'starts_at','')::date,current_date),nullif(r.normalized_data->>'ends_at','')::date) returning id into new_id;
+        occupancy_kind := coalesce(nullif(r.normalized_data->>'occupancy_type',''),'other');
+        if occupancy_kind='owner' and not exists (
+          select 1 from public.unit_ownerships uo
+          where uo.condominium_id=b.condominium_id and uo.unit_id=(r.normalized_data->>'unit_id')::uuid
+            and uo.person_id=(r.normalized_data->>'person_id')::uuid
+            and uo.starts_at <= coalesce(nullif(r.normalized_data->>'starts_at','')::date,current_date)
+            and (uo.ends_at is null or uo.ends_at >= coalesce(nullif(r.normalized_data->>'starts_at','')::date,current_date))
+        ) then occupancy_kind := 'tenant'; end if;
+        insert into public.unit_occupancies(condominium_id,unit_id,person_id,occupancy_type,is_primary,starts_at,ends_at) values (b.condominium_id,(r.normalized_data->>'unit_id')::uuid,(r.normalized_data->>'person_id')::uuid,occupancy_kind,false,coalesce(nullif(r.normalized_data->>'starts_at','')::date,current_date),nullif(r.normalized_data->>'ends_at','')::date) returning id into new_id;
       end if;
     end if;
     update public.import_batch_rows set entity_id=new_id where id=r.id;

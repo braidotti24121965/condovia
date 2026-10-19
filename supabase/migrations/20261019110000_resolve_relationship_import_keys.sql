@@ -9,7 +9,7 @@ create or replace function public.resolve_relationship_import_keys(
   p_unit_codes text[],
   p_cpfs text[]
 ) returns table(unit_id uuid, unit_code text, person_id uuid, person_cpf text)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = '' as $$
 begin
   if not public.has_permission('imports.manage', p_condominium_id) then
     raise exception 'Sem permissão para resolver vínculos.' using errcode = '42501';

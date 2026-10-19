@@ -47,6 +47,10 @@ Produção foi consultada pelo projeto `bmaglizdavsrwbenzenp`; homologação pel
 
 As migrations equivalentes foram renomeadas apenas nos worktrees dos PRs para os números registrados na homologação. O descompasso de `import_batches` fica pendente de `supabase migration repair`, mediante aprovação explícita.
 
+## Falha de segurança encontrada na homologação
+
+A migration `20261014012806_optimize_direct_condominium_permission_path`, já aplicada na homologação, permitia que o caminho `direct_allow` de `has_permission` concedesse permissão sem exigir membership ativa e condomínio ativo. A correção foi preparada em `20261019100000_fix_direct_permission_requires_active_membership.sql`, preservando `security definer` e `search_path` vazio. Ela deve ser aplicada na homologação somente após aprovação.
+
 ## Migrations de pessoas e dependências
 
 As migrations `people_list_by_condominium`, contatos/deduplicação, digest/pgcrypto, CPF normalizado e busca por nome/CPF são dependências de `feat/imports-hardening` e da evolução da listagem em `feat/people-relationships-filters`. As migrations de políticas, lookups, ordenação e índices de relacionamentos são dependências de `feat/people-relationships-filters`. `fix_confirm_resident_occupancy_type` é dependência de `feat/imports-hardening`.
