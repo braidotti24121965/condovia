@@ -7,7 +7,7 @@ import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { friendlyDatabaseError } from "@/lib/condominium/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safePersonRelationshipReturnPath } from "@/lib/condominium/person-return";
-import { validatePersonFields } from "@/lib/condominium/person-validation";
+import { normalizeDateInput, validatePersonFields } from "@/lib/condominium/person-validation";
 
 function value(form: FormData, key: string) { return String(form.get(key) ?? "").trim(); }
 function nullable(value: string) { return value || null; }
@@ -78,7 +78,7 @@ export async function savePerson(_previous: { error: string }, form: FormData) {
   const { data, error } = await supabase.rpc("resolve_or_create_person_for_condominium", {
     target_condominium_id: context.id,
     p_full_name: value(form, "full_name"), p_preferred_name: nullable(value(form, "preferred_name")),
-    p_birth_date: nullable(value(form, "birth_date")), p_cpf: nullable(value(form, "cpf")),
+    p_birth_date: nullable(normalizeDateInput(value(form, "birth_date"))), p_cpf: nullable(value(form, "cpf")),
     p_email: nullable(value(form, "email")), p_phone: nullable(value(form, "phone")),
   });
   if (error || !data) return { error: error?.message.includes("Possível pessoa existente") ? "Possível pessoa existente. Revise a lista antes de cadastrar." : friendlyDatabaseError(error?.message) };
@@ -181,15 +181,21 @@ export async function inviteResident(form: FormData) {
   redirect(`/app/condominium/people/${personId}?saved=invitation`);
 }
 
-export async function addPersonRelationship(form: FormData) {
+export async function addPersonRelationship(_previous: { error: string }, form: FormData) {
   const kind = value(form, "kind");
   const permission = kind === "ownership" ? "ownerships.manage" : kind === "occupancy" ? "residents.manage" : "financial_responsibilities.manage";
   const { supabase, context } = await requireCondominiumPermission(permission);
   const unitId = value(form, "unit_id"); const personId = value(form, "person_id");
-  const startsAt = value(form, "starts_at"); const endsAt = nullable(value(form, "ends_at"));
+  if (!personId) return { error: "Selecione uma pessoa para criar o vínculo." };
+  if (!unitId) return { error: "Selecione uma unidade para criar o vínculo." };
+  const startsAt = normalizeDateInput(value(form, "starts_at")); const endsAt = nullable(normalizeDateInput(value(form, "ends_at")));
+  if (!startsAt) return { error: "Informe uma data de início válida no formato DD/MM/AAAA." };
+  if (value(form, "ends_at") && !endsAt) return { error: "Informe uma data de término válida no formato DD/MM/AAAA." };
+  if (endsAt && endsAt <= startsAt) return { error: "A data de término deve ser posterior à data de início." };
+  if (kind === "occupancy" && !["owner", "tenant", "family_member", "dependent", "other"].includes(value(form, "occupancy_type"))) return { error: "Selecione um tipo de moradia válido." };
   const defaultBasePath = `/app/condominium/${kind === "ownership" ? "owners" : "residents"}`;
   const returnPath = safePersonRelationshipReturnPath(value(form, "return_to"), kind) || defaultBasePath;
-  let error: { message: string } | null = null;
+  let error: { message: string; code?: string } | null = null;
   if (kind === "ownership") {
     ({ error } = await supabase.from("unit_ownerships").insert({ condominium_id: context.id, unit_id: unitId, person_id: personId, ownership_percentage: numberOrNull(value(form, "ownership_percentage")), starts_at: startsAt, ends_at: endsAt, notes: nullable(value(form, "notes")) }));
   } else if (kind === "occupancy" && value(form, "is_primary") === "true") {
@@ -200,7 +206,10 @@ export async function addPersonRelationship(form: FormData) {
     ({ error } = await supabase.rpc("set_unit_financial_responsibility", { p_unit_id: unitId, p_condominium_id: context.id, p_person_id: personId, p_starts_at: startsAt, p_notes: nullable(value(form, "notes")) }));
   }
   const separator = returnPath.includes("?") ? "&" : "?";
-  if (error) redirect(`${returnPath}${separator}error=${encodeURIComponent(friendlyDatabaseError(error.message))}`);
+  if (error) {
+    console.error("[relationship] failed to save", { code: error.code, message: error.message });
+    return { error: friendlyDatabaseError(error.message) };
+  }
   revalidatePath("/app/condominium/owners"); revalidatePath("/app/condominium/residents"); revalidatePath("/app/condominium/units");
   revalidatePath(`/app/condominium/people/${personId}`);
   revalidatePath(`/app/condominium/units/${unitId}`);
