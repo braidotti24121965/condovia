@@ -1,83 +1,161 @@
-# Reconciliação de migrations
+# Reconciliação de migrations e roteiro de produção
 
-Consulta realizada em 19/10/2026, somente leitura. Nenhuma migration foi aplicada, reparada ou alterada em Supabase remoto.
+Status: documento revisado em 2026-10-19. Nenhum comando deste roteiro foi executado em produção.
 
-## Presença por ambiente
+## Estado conhecido
 
-`Git main`, `Git homolog` e `Local` indicam a existência do arquivo na referência ou no diretório de trabalho original. Quando a versão diverge, a versão efetivamente registrada pelo Supabase aparece entre parênteses.
+O PR #49 foi incorporado à `main` por squash. A branch `feat/imports-hardening` deve ser usada no ensaio e na aplicação somente após confirmar que aponta para o trabalho atualizado com o commit `a518b35`.
 
-| Versão / nome | Git main | Git homolog | Local | Homologação | Produção |
-|---|---:|---:|---:|---:|---:|
-| `20261006230000_import_batches` | sim | sim | sim (editado) | sim (`20261009023645`) | sim (`20261006230000`) |
-| `20261013000000_p9_1_finance_payables` | não | não | sim | sim (`20261013172602`) | não |
-| `20261013010000_p9_2_finance_receivables` | não | não | sim | sim (`20261013175951`) | não |
-| `20261013020000_p9_4_finance_bills` | não | não | sim | sim (`20261013195622`) | não |
-| `20261013030000_import_preview_cleanup` | não | não | sim | sim (`20261013204354`) | não |
-| `20261013201000_resolve_relationship_import_keys` | não | não | sim | não | não |
-| `20261013211835_people_list_by_condominium` | não | não | não | sim | não |
-| `20261013213303_people_contacts_and_deduplication` | não | não | não | sim | não |
-| `20261013213832_fix_people_import_digest` | não | não | não | sim | não |
-| `20261013214455_enable_pgcrypto_for_people_import` | não | não | não | sim | não |
-| `20261013214944_remove_database_digest_from_people_import` | não | não | não | sim | não |
-| `20261013220103_optimize_people_name_search` | não | não | não | sim | não |
-| `20261013220113_trigram_people_name_search` | não | não | não | sim | não |
-| `20261013220329_store_normalized_cpf_on_people_import` | não | não | não | sim | não |
-| `20261014005505_fix_confirm_resident_occupancy_type` | não | não | não | sim | não |
-| `20261014012415_optimize_relationship_read_policies` | não | não | não | sim | não |
-| `20261014012806_optimize_direct_condominium_permission_path` | não | não | não | sim | não |
-| `20261014013222_allow_condominium_people_relationship_reads` | não | não | não | sim | não |
-| `20261014013342_add_authorized_relationship_people_lookup` | não | não | não | sim | não |
-| `20261014015353_add_relationship_units_lookup` | não | não | não | sim | não |
-| `20261014020059_sort_people_by_display_name` | não | não | não | sim | não |
-| `20261014020550_add_relationship_list_performance_indexes` | não | não | não | sim | não |
-| `20261014115426_add_people_cpf_search` | não | não | não | sim | não |
-| `20261014120305_add_condominium_unit_filter_lookup` | não | não | não | sim | não |
-| `20261014120556_add_condominium_structure_filter_lookup` | não | não | não | sim | não |
-| Migrations anteriores comuns (`001`–`035` e timestamps anteriores) | sim | sim | sim | sim | sim |
+Na homologação, a correção de permissão cujo arquivo no Git é:
 
-Produção foi consultada pelo projeto `bmaglizdavsrwbenzenp`; homologação pelo projeto `kgvbmisocqmsxcibpumq`. A produção não contém as migrations P9 nem as posteriores de pessoas/relacionamentos.
-
-## Comparação dos SQLs
-
-- P9.1: `20261013000000` e homologação `20261013172602` são equivalentes byte a byte.
-- P9.2: `20261013010000` e homologação `20261013175951` são equivalentes byte a byte.
-- P9.4: `20261013020000` e homologação `20261013195622` são equivalentes após normalizar somente a quebra de linha final.
-- Limpeza de preview: `20261013030000` e homologação `20261013204354` são equivalentes após normalizar somente a quebra de linha final.
-- `20261006230000_import_batches`: o arquivo de `origin/main` corresponde ao SQL registrado na homologação como `20261009023645`; o arquivo local editado diverge. O arquivo histórico não foi renomeado nem alterado.
-
-As migrations equivalentes foram renomeadas apenas nos worktrees dos PRs para os números registrados na homologação. O descompasso de `import_batches` fica pendente de `supabase migration repair`, mediante aprovação explícita.
-
-## Falha de segurança encontrada na homologação
-
-A migration `20261014012806_optimize_direct_condominium_permission_path`, já aplicada na homologação, permitia que o caminho `direct_allow` de `has_permission` concedesse permissão sem exigir membership ativa e condomínio ativo. A correção foi preparada em `20261019100000_fix_direct_permission_requires_active_membership.sql`, preservando `security definer` e `search_path` vazio. Ela deve ser aplicada na homologação somente após aprovação.
-
-## Migrations de pessoas e dependências
-
-As migrations `people_list_by_condominium`, contatos/deduplicação, digest/pgcrypto, CPF normalizado e busca por nome/CPF são dependências de `feat/imports-hardening` e da evolução da listagem em `feat/people-relationships-filters`. As migrations de políticas, lookups, ordenação e índices de relacionamentos são dependências de `feat/people-relationships-filters`. `fix_confirm_resident_occupancy_type` é dependência de `feat/imports-hardening`.
-
-Essas migrations existem somente na homologação e não foram recriadas nem aplicadas neste passo; a reconciliação deve ser feita em PR próprio antes de promover a base.
-
-## Migration nova para a divergência local
-
-Foi preparada `20261019120000_import_people_duplicate_updates.sql`, com `CREATE OR REPLACE FUNCTION public.confirm_import_batch(uuid)`. Ela preserva o comportamento publicado da migration histórica e adiciona atualização de duplicados de pessoas, CPF e e-mail. É idempotente quanto à definição da função e não altera a migration original.
-
-## Ordem planejada de merge e produção
-
-1. PR de recuperação `chore/db-recover-homolog-migrations`.
-2. PR #47 — imports hardening.
-3. PR #43 — branch de homologação.
-4. PR #46 — filtros e relacionamentos.
-5. PR #48 — fundação financeira P9, atualmente draft.
-
-Antes do merge dos itens 2, 3 ou 4 na `main`, as migrations correspondentes devem ser aplicadas em produção em janela planejada, com backup e aprovação explícita. O PR #48 permanece separado para validação financeira.
-
-## Repairs propostos — não executados
-
-Somente após aprovação, revisar o estado do histórico com comandos equivalentes a:
-
-```sh
-supabase migration repair --linked --status applied 20261006230000
-supabase migration repair --linked --status reverted 20261009023645
+```text
+20261019100000_fix_direct_permission_requires_active_membership.sql
 ```
 
-Os comandos acima são apenas proposta. Não foram executados, e nenhum `db push`, `migration up` ou alteração remota foi realizado.
+foi registrada pelo conector com a versão `20261019183001`. Portanto, há um descompasso entre Git (`20261019100000`) e o histórico da homologação (`20261019183001`). O repair correspondente é apenas uma proposta e não foi executado:
+
+```bash
+supabase migration repair --linked --status reverted 20261019183001
+supabase migration repair --linked --status applied 20261019100000
+```
+
+Executar esse repair somente após confirmar que o SQL aplicado é exatamente o conteúdo da migration do Git e mediante autorização específica. Não usar repair para alterar o estado do banco sem antes confirmar o estado real da função.
+
+## Roteiro de produção — preparação, sem execução
+
+Projeto de produção: `bmaglizdavsrwbenzenp`.
+
+### 1. Pré-condições e backup
+
+Antes da janela, confirmar no painel Supabase:
+
+- que o plano possui backup diário;
+- se PITR está habilitado e qual é a janela de retenção;
+- que o backup mais recente está concluído e restaurável.
+
+Usar `pg_dump` versão 17 ou superior e validar o arquivo antes da janela:
+
+```bash
+pg_dump --version
+pg_dump "$PROD_DB_URL" \
+  --format=custom \
+  --no-owner \
+  --no-privileges \
+  --schema=public \
+  --file="condovia-production-$(date +%Y%m%d-%H%M).dump"
+
+pg_restore --list condovia-production-YYYYMMDD-HHMM.dump > \
+  condovia-production-YYYYMMDD-HHMM.restore-list.txt
+```
+
+Antes do `db push`, salvar a definição atual das duas funções em arquivo local:
+
+```sql
+select pg_get_functiondef('public.has_permission(text,uuid)'::regprocedure);
+select pg_get_functiondef('public.confirm_import_batch(uuid)'::regprocedure);
+```
+
+Também registrar a confirmação do backup diário/PITR no relatório da janela.
+
+### 2. Ensaio obrigatório contra produção
+
+O ensaio deve partir da branch `feat/imports-hardening` atualizada com `a518b35`, que contém o conjunto do #49. Estando essa branch vinculada ao projeto de produção, executar somente:
+
+```bash
+supabase db push --linked --dry-run
+```
+
+Conferir que a saída contém exatamente estas 22 migrations, em ordem cronológica por versão:
+
+```text
+20261013204354_import_preview_cleanup.sql
+20261013211835_people_list_by_condominium.sql
+20261013213303_people_contacts_and_deduplication.sql
+20261013213832_fix_people_import_digest.sql
+20261013214455_enable_pgcrypto_for_people_import.sql
+20261013214944_remove_database_digest_from_people_import.sql
+20261013220103_optimize_people_name_search.sql
+20261013220113_trigram_people_name_search.sql
+20261013220329_store_normalized_cpf_on_people_import.sql
+20261014005505_fix_confirm_resident_occupancy_type.sql
+20261014012415_optimize_relationship_read_policies.sql
+20261014012806_optimize_direct_condominium_permission_path.sql
+20261014013222_allow_condominium_people_relationship_reads.sql
+20261014013342_add_authorized_relationship_people_lookup.sql
+20261014015353_add_relationship_units_lookup.sql
+20261014020059_sort_people_by_display_name.sql
+20261014020550_add_relationship_list_performance_indexes.sql
+20261014115426_add_people_cpf_search.sql
+20261014120305_add_condominium_unit_filter_lookup.sql
+20261014120556_add_condominium_structure_filter_lookup.sql
+20261019100000_fix_direct_permission_requires_active_membership.sql
+20261019110000_resolve_relationship_import_keys.sql
+20261019120000_import_people_duplicate_updates.sql
+```
+
+Qualquer migration adicional aborta a janela. Em especial, não podem aparecer migrations P9/financeiro. Se a lista não for exatamente essa, não executar o `db push`; corrigir a branch ou o vínculo e repetir o dry-run.
+
+### 3. Aplicação real
+
+Depois do backup, do dry-run aprovado e da autorização explícita para a data e o horário, a aplicação será um único comando a partir da branch validada — não uma aplicação separada “#49 depois #47”:
+
+```bash
+supabase db push --linked
+```
+
+Esse comando não deve ser executado antes da aprovação da janela.
+
+### 4. Verificações pós-aplicação
+
+Confirmar o histórico aplicado:
+
+```sql
+select version, name
+from supabase_migrations.schema_migrations
+order by version;
+```
+
+Confirmar as oito funções esperadas, sem usar `to_regprocedure`:
+
+```sql
+select p.proname, pg_get_function_identity_arguments(p.oid)
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname in (
+    'list_people_for_condominium',
+    'list_relationship_people',
+    'list_relationship_units',
+    'list_units_for_condominium',
+    'list_structures_for_condominium',
+    'resolve_relationship_import_keys',
+    'confirm_import_batch',
+    'has_permission'
+  );
+```
+
+Resultado esperado: 8 linhas. Confirmar também que a definição de `has_permission` contém o join com `public.condominium_memberships` e as condições de vínculo ativo, incluindo `status = 'active'`, início vigente e término nulo ou futuro.
+
+Teste funcional obrigatório em produção:
+
+1. Login com um usuário ativo.
+2. Abrir Moradores.
+3. Abrir Unidades.
+4. Confirmar que o usuário ativo mantém acesso e que as listas carregam sem erro.
+
+### 5. Rollback
+
+Em caso de falha, interromper a janela e preservar logs, saída do `db push`, lista de migrations e consultas pós-aplicação. Não fazer rollback apenas com `migration repair`.
+
+- Se o banco estiver inconsistente, restaurar o backup validado ou usar PITR conforme o procedimento aprovado pelo Supabase.
+- Se a aplicação tiver concluído e apenas a aplicação apresentar erro, corrigir a causa com uma nova migration revisada; não editar migrations aplicadas.
+- Qualquer repair de histórico exige confirmação de que o estado físico do banco já corresponde ao estado pretendido e autorização separada.
+
+## Ordem de promoção
+
+1. Executar backup e dry-run do conjunto único acima.
+2. Com autorização de janela, executar o único `supabase db push`.
+3. Executar as verificações SQL e o teste funcional autenticado.
+4. Registrar commit, branch, deployment, horário, resultado e qualquer divergência.
+
+Nenhum comando de produção foi executado durante a revisão deste documento.
