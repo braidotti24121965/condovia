@@ -210,3 +210,42 @@ Nenhum comando de repair foi executado.
 ### Dry-run esperado após reconciliação
 
 Depois de uma reconciliação aprovada — com migrations novas para as divergências, sem P9/financeiro — o dry-run deverá listar exatamente as 23 migrations do roteiro de produção. Nesta execução, o dry-run não atingiu esse estado: ele parou informando que as cinco versões remotas não possuem arquivos locais correspondentes.
+
+## Revisão detalhada dos cinco pares P8 — somente leitura
+
+Revisão posterior realizada em 2026-10-19. O SQL de cada `statements` remoto foi comparado integralmente com o arquivo Git candidato. Os cinco pares são byte a byte equivalentes, inclusive após normalização; portanto os diffs completos produzidos pelo `git diff --no-index --word-diff=plain -w` são vazios:
+
+```text
+20261008232457 vs 20261008000000_p8_1_maintenance_foundation.sql: (sem diff)
+20261009011713 vs 20261008010000_p8_1_fix_maintenance_settings_audit.sql: (sem diff)
+20261009011720 vs 20261009000000_p8_2_maintenance_requests.sql: (sem diff)
+20261009205711 vs 20261010000000_p8_3_maintenance_work_orders.sql: (sem diff)
+20261009205716 vs 20261011000000_maintenance_complete.sql: (sem diff)
+```
+
+Classificação: todos os cinco pares são equivalentes, sem diferença cosmética ou semântica material. Não foi necessário consultar objetos específicos do catálogo, pois não há alteração de tabela, coluna, constraint, índice, função, policy ou grant entre os SQLs comparados. A produção está no mesmo estado definido pelos arquivos Git candidatos.
+
+### Proposta de repair — não executar
+
+Como os cinco pares são equivalentes, a proposta é reparar o histórico remoto para os timestamps dos arquivos Git e depois repetir o dry-run. Estes comandos são apenas documentação e não foram executados:
+
+```bash
+supabase migration repair --db-url "$PROD_DB_URL" --status reverted 20261008232457
+supabase migration repair --db-url "$PROD_DB_URL" --status applied 20261008000000
+
+supabase migration repair --db-url "$PROD_DB_URL" --status reverted 20261009011713
+supabase migration repair --db-url "$PROD_DB_URL" --status applied 20261008010000
+
+supabase migration repair --db-url "$PROD_DB_URL" --status reverted 20261009011720
+supabase migration repair --db-url "$PROD_DB_URL" --status applied 20261009000000
+
+supabase migration repair --db-url "$PROD_DB_URL" --status reverted 20261009205711
+supabase migration repair --db-url "$PROD_DB_URL" --status applied 20261010000000
+
+supabase migration repair --db-url "$PROD_DB_URL" --status reverted 20261009205716
+supabase migration repair --db-url "$PROD_DB_URL" --status applied 20261011000000
+```
+
+Após esses repairs, sem aplicar qualquer SQL, a saída esperada do `supabase db push --db-url "$PROD_DB_URL" --dry-run` é exatamente a lista de 23 migrations do roteiro, sem P9/financeiro e sem as cinco versões remotas antigas.
+
+Observação: a primeira comparação por hashes foi conservadora e classificou os pares como divergentes; a comparação integral posterior confirmou igualdade byte a byte. Esta seção posterior é a decisão válida.
