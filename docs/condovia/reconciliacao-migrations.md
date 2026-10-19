@@ -249,7 +249,7 @@ bbb9aae89e9ed50b5004023be144c614
 
 Classificação: os cinco pares não têm diferença cosmética nem semântica; a comparação sem `-w` ficou vazia em todos. Não foi necessário consultar objetos específicos do catálogo, pois não há alteração de tabela, coluna, constraint, índice, função, policy ou grant entre os SQLs comparados.
 
-### Fingerprint P8 — divergência real; não executar repair
+### Fingerprint P8 — primeira leitura (superada; ver revisão abaixo)
 
 Após a atualização para `7246153`, os arquivos `supabase/checks/fingerprint_p8.sql` e `supabase/checks/fingerprint_p8_esperado.txt` foram encontrados. A consulta foi executada somente em leitura contra a produção e comparada com o esperado.
 
@@ -292,3 +292,13 @@ supabase migration repair --db-url "$PROD_DB_URL" --status applied 2026101100000
 Após esses repairs, sem aplicar qualquer SQL, a saída esperada do `supabase db push --db-url "$PROD_DB_URL" --dry-run` é exatamente a lista de 23 migrations do roteiro, sem P9/financeiro e sem as cinco versões remotas antigas.
 
 Correção do registro anterior: a afirmação de hashes divergentes estava incorreta. A rechecagem solicitada, com whitespace removido e também com comparação bruta sem `-w`, confirmou igualdade nos cinco pares.
+
+
+### Fingerprint P8 — revisão final: produção idêntica ao Git
+
+Revisão em 2026-10-19 com a saída bruta publicada em `supabase/checks/fingerprint_p8_producao.txt` (commit `6a17126`), gerada em produção (PostgreSQL 17.11, `en_US.UTF-8`).
+
+- `cmp supabase/checks/fingerprint_p8_esperado.txt supabase/checks/fingerprint_p8_producao.txt`: arquivos idênticos byte a byte.
+- Comparação item a item pelo nome do objeto: 153/153 iguais (45 funções, 28 policies, 20 tabelas em colunas, 20 em constraints, 20 em índices, 20 em grants). Nenhum objeto exclusivo de um dos lados.
+
+A conclusão anterior de "divergência real" decorreu de erro na comparação executada naquele momento, não de diferença no banco. Com os cinco pares P8 equivalentes no SQL e o schema de produção idêntico ao gerado pela `main`, os dez repairs propostos acima são seguros quanto ao estado físico do banco. A execução continua dependendo de autorização explícita da janela.
