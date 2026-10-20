@@ -60,6 +60,27 @@ export async function saveReceivable(form: FormData) {
   redirect(financeUrl(view, period, { saved: "receivable", savedDue: dueDate, savedOutside: outsidePeriod(dueDate, period, condominium?.timezone || "America/Sao_Paulo") ? "1" : "0" }));
 }
 
+export async function cancelFinanceEntry(form: FormData) {
+  const kind = text(form, "kind");
+  const id = text(form, "id");
+  const reason = text(form, "reason");
+  const view = (kind === "receivable" ? "receivables" : "payables") as FinanceView;
+  const permission = kind === "receivable" ? "finance.receivables.manage" : "finance.payables.manage";
+  const { supabase, context, user } = await requireCondominiumPermission(permission);
+  const period = periodOf(form);
+  if (!id || !["payable", "receivable"].includes(kind) || reason.length < 3) redirect(financeUrl(view, period, { error: "Informe um motivo para cancelar a conta." }));
+  const table = kind === "receivable" ? "condominium_receivables" : "condominium_payables";
+  const { data: entry, error: readError } = await supabase.from(table).select("id,status,notes").eq("id", id).eq("condominium_id", context.id).maybeSingle();
+  if (readError || !entry) redirect(financeUrl(view, period, { error: "Conta não encontrada." }));
+  if (!["open", "partially_paid", "partially_received"].includes(entry.status)) redirect(financeUrl(view, period, { error: "Só é possível cancelar contas em aberto." }));
+  const cancellationNote = `[Cancelada em ${new Date().toISOString()} por ${user.email ?? "usuário autenticado"}] Motivo: ${reason}`;
+  const notes = [entry.notes, cancellationNote].filter(Boolean).join("\n");
+  const { error } = await supabase.from(table).update({ status: "cancelled", notes, updated_at: new Date().toISOString() }).eq("id", id).eq("condominium_id", context.id);
+  if (error) redirect(financeUrl(view, period, { error: "Não foi possível cancelar a conta." }));
+  revalidatePath("/app/condominium/finance");
+  redirect(financeUrl(view, period, { saved: "cancelled" }));
+}
+
 export async function saveBill(form: FormData) {
   const { supabase, context } = await requireCondominiumPermission("finance.bills.manage");
   const reference = text(form, "reference");
