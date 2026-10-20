@@ -1,5 +1,6 @@
 import { getGatehouseDashboardSummary } from "@/lib/gatehouse/data";
 import { requireUser } from "@/lib/auth/context";
+import { hasPermission } from "@/lib/condominium/access";
 
 export type DashboardPeriod = "today" | "7d" | "30d";
 export type DashboardActivity = { id: string; type: string; label: string; user: string; at: string; href: string | null };
@@ -30,7 +31,7 @@ export async function getCondominiumDashboard(condominiumId: string, period: Das
   if (!supabase) return blank;
   const { data: condo } = await supabase.from("condominiums").select("name,condominium_type,status,timezone,addresses(street,number,city,state)").eq("id", condominiumId).maybeSingle();
   const timeZone = condo?.timezone || blank.timeZone; const now = new Date(); const today = dashboardLocalDate(now, timeZone); const startDate = addDays(now, -(dashboardPeriodDays(period) - 1)); const start = startDate.toISOString(); const end = addDays(now, 1).toISOString();
-  const permissionResults = await Promise.all(dashboardPermissionCodes.map((permission_code) => supabase.rpc("has_permission", { permission_code, target_condominium_id: condominiumId })));
+  const permissionResults = await Promise.all(dashboardPermissionCodes.map((permission_code) => hasPermission(permission_code, condominiumId)));
   const permissions = Object.fromEntries(dashboardPermissionCodes.map((code, index) => [code, permissionResults[index].data === true]));
   const result: CondominiumDashboard = { ...blank, timeZone, permissions, period, condo: { name: condo?.name || blank.condo.name, type: condo?.condominium_type || "", status: condo?.status || "", address: formatAddress(condo?.addresses as { street?: string; number?: string | null; city?: string; state?: string } | null) } };
   const recordError = () => { result.error ||= "Não foi possível carregar todos os dados agora."; };

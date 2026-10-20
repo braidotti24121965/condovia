@@ -6,6 +6,7 @@ import { occurrencesListSelect } from "@/lib/occurrences/query";
 import { EmptyState, Alert } from "@/components/ui/feedback";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { hasPermission } from "@/lib/condominium/access";
 
 export const metadata = { title: "Ocorrências" };
 type SearchParams = { new?: string; saved?: string; updated?: string; error?: string; q?: string; status?: string; priority?: string; category?: string; unit?: string };
@@ -24,7 +25,7 @@ export default async function OccurrencesPage({ searchParams }: { searchParams: 
   const [{ data: categories }, { data: units }, { data: canCreate }] = await Promise.all([
     supabase.from("occurrence_categories").select("id,name,default_priority").eq("condominium_id", context.id).eq("is_active", true).order("sort_order"),
     supabase.from("units").select("id,code,display_name").eq("condominium_id", context.id).eq("operational_status", "active").order("code"),
-    supabase.rpc("has_permission", { permission_code: "occurrences.create", target_condominium_id: context.id }),
+    hasPermission("occurrences.create", context.id),
   ]);
   const category = categories?.some((item) => item.id === params.category) ? params.category! : "";
   const unit = units?.some((item) => item.id === params.unit) ? params.unit! : "";

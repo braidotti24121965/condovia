@@ -1,7 +1,7 @@
 import { ContentSelect } from "@/components/ui/form-controls";
 import Link from "next/link";
 import { AlertTriangle, ChevronRight, ClipboardList } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { MaintenanceRequestForm } from "@/components/maintenance/request-form";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert, EmptyState } from "@/components/ui/feedback";
@@ -20,8 +20,8 @@ export default async function MaintenanceRequestsPage({ searchParams }: { search
     supabase.from("maintenance_requests").select("id,request_number,title,description,priority,status,opened_at,requester_person_id,structure_id,equipment_id,rejection_reason,condominium_structures(name),maintenance_equipment(identification)").eq("condominium_id", context.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("condominium_structures").select("id,name").eq("condominium_id", context.id).eq("status", "active").order("name"),
     supabase.from("maintenance_equipment").select("id,identification,structure_id").eq("condominium_id", context.id).eq("status", "active").order("identification"),
-    supabase.rpc("has_permission", { permission_code: "maintenance.requests.create", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.requests.decide", target_condominium_id: context.id }),
+    hasPermission("maintenance.requests.create", context.id),
+    hasPermission("maintenance.requests.decide", context.id),
   ]);
   const visibleRequests = (requests ?? []).filter((item) => (!params.status || item.status === params.status) && (!params.priority || item.priority === params.priority));
   return <div className="cv-page"><div className="breadcrumbs"><Link href="/app/condominium/maintenance">Manutenção</Link><ChevronRight size={14}/><strong>Solicitações</strong></div>

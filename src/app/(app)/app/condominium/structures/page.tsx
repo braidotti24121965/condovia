@@ -1,7 +1,7 @@
 import { StatusBadge } from "@/components/ui/status-badge";
 import Link from "next/link";
 import { ChevronRight, Network, Plus } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { StructureForm } from "@/components/condominium/structure-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { buildStructureTree, type StructureNode, type StructureRecord } from "@/lib/condominium/catalog";
@@ -20,7 +20,7 @@ export default async function StructuresPage({ searchParams }: { searchParams:Pr
   const [{ data: structures, error: structuresError }, { data: units, error: unitsError }, { data: canManage }, params] = await Promise.all([
     supabase.from("condominium_structures").select("id,parent_id,name,code,structure_type,sort_order,status").eq("condominium_id",context.id).order("sort_order").order("name"),
     supabase.from("units").select("structure_id,operational_status").eq("condominium_id",context.id),
-    supabase.rpc("has_permission",{permission_code:"structures.manage",target_condominium_id:context.id}), searchParams,
+    hasPermission("structures.manage", context.id), searchParams,
   ]);
   const rows = (structures ?? []) as StructureRecord[];
   const roots = buildStructureTree(rows);
