@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { ConfirmedForm } from "@/components/condominium/confirmed-form";
 import { UnitForm } from "@/components/condominium/unit-form";
 import { saveUnit } from "@/lib/condominium/actions";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { Alert } from "@/components/ui/feedback";
 import { PersonRelationshipForm } from "@/components/condominium/person-form";
 import { getCondominiumPeopleOptions, getRelationshipRows, todayInTimezone } from "@/lib/condominium/people-data";
@@ -20,11 +20,11 @@ export default async function UnitDetail({params,searchParams}:{params:Promise<{
   const [{data:unit,error},{data:structures},{data:canManage}]=await Promise.all([
     supabase.from("units").select("id,structure_id,code,display_name,unit_type,floor,area,ownership_fraction,operational_status,notes,condominium_structures(name)").eq("id",id).eq("condominium_id",context.id).maybeSingle(),
     supabase.from("condominium_structures").select("id,name,status").eq("condominium_id",context.id),
-    supabase.rpc("has_permission",{permission_code:"units.manage",target_condominium_id:context.id}),
+    hasPermission("units.manage", context.id),
   ]);
   if(error)return <Alert tone="error">Não foi possível carregar os dados da unidade agora.</Alert>;
   if(!unit)notFound();const structure=(unit.condominium_structures as unknown as {name:string}|null)?.name??"Sem estrutura";
-  const permissions=await Promise.all(["ownerships.read","ownerships.manage","residents.read","residents.manage","financial_responsibilities.read","financial_responsibilities.manage"].map((permission_code)=>supabase.rpc("has_permission",{permission_code,target_condominium_id:context.id})));
+  const permissions=await Promise.all(["ownerships.read","ownerships.manage","residents.read","residents.manage","financial_responsibilities.read","financial_responsibilities.manage"].map((permission_code)=>hasPermission(permission_code,context.id)));
   const [owners,occupancies,people,finance]=await Promise.all([
     permissions[0].data?getRelationshipRows(supabase,context.id,"ownership"):Promise.resolve({rows:[],error:null}),
     permissions[2].data?getRelationshipRows(supabase,context.id,"occupancy"):Promise.resolve({rows:[],error:null}),

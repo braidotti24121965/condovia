@@ -1,13 +1,20 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { buildAuthorizedContexts, resolveCurrentContext, type AuthorizedContext } from "@/lib/auth/context-data";
 export type { AuthorizedContext } from "@/lib/auth/context-data";
 
-export async function getAuthorizedContexts(): Promise<AuthorizedContext[]> {
+const getCurrentUser = cache(async () => {
   const supabase = await createClient();
-  if (!supabase) return [];
+  if (!supabase) return { supabase: null, user: null };
   const { data: { user } } = await supabase.auth.getUser();
+  return { supabase, user };
+});
+
+export const getAuthorizedContexts = cache(async (): Promise<AuthorizedContext[]> => {
+  const { supabase, user } = await getCurrentUser();
+  if (!supabase) return [];
   if (!user) return [];
   const { data: account } = await supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).eq("status", "active").maybeSingle();
   if (!account) return [];
@@ -28,9 +35,9 @@ export async function getAuthorizedContexts(): Promise<AuthorizedContext[]> {
     }
   }
   return contexts;
-}
+});
 
-export async function requireCurrentContext() {
+export const requireCurrentContext = cache(async () => {
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
   const selectedId = cookieStore.get("condovia_context")?.value;
@@ -39,15 +46,14 @@ export async function requireCurrentContext() {
   if (resolution.type === "none") redirect("/no-permission");
   if (resolution.type === "choose") redirect("/select-context");
   return resolution.context;
-}
+});
 
-export async function requireUser() {
-  const supabase = await createClient();
+export const requireUser = cache(async () => {
+  const { supabase, user } = await getCurrentUser();
   if (!supabase) return { supabase: null, user: null };
-  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   return { supabase, user };
-}
+});
 
 export async function requireContext(contextId?: string) {
   const contexts = await getAuthorizedContexts();

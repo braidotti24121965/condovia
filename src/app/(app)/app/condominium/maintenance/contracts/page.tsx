@@ -1,6 +1,6 @@
 import { ContractFeedback } from "@/components/maintenance/contract-feedback";
 import { ContractForm, type Contract } from "@/components/maintenance/contract-form";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { DocumentUpload } from "@/components/maintenance/management-ui";
 import { civilDate, money } from "@/lib/maintenance/validation";
 import { DocumentList } from "@/components/maintenance/document-list";
@@ -10,8 +10,8 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
   const [{ data: contracts, error }, { data: rawProviders }, { data: canManage }, { data: canUpload }] = await Promise.all([
     supabase.from("maintenance_contracts").select("*").eq("condominium_id", context.id).order("ends_on"),
     supabase.from("service_providers").select("id,full_name").eq("condominium_id", context.id).eq("status", "active"),
-    supabase.rpc("has_permission", { permission_code: "maintenance.contracts.manage", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.documents.manage", target_condominium_id: context.id }),
+    hasPermission("maintenance.contracts.manage", context.id),
+    hasPermission("maintenance.documents.manage", context.id),
   ]);
   const providers = (rawProviders ?? []).map(p => ({ id: p.id, name: p.full_name }));
   const params = await searchParams;

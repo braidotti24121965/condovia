@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, Users, Clock, FileQuestion, Package as PackageIcon } from "lucide-react";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
+import { hasPermission } from "@/lib/condominium/access";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { QuickActions } from "@/components/gatehouse/quick-actions";
@@ -34,10 +35,7 @@ export default async function GatehouseDashboardPage() {
   }
 
   // Check permission
-  const { data: canRead } = await supabase.rpc("has_permission", {
-    permission_code: "gatehouse.read",
-    target_condominium_id: context.id,
-  });
+  const { data: canRead } = await hasPermission("gatehouse.read", context.id);
 
   if (!canRead) {
     return (

@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { ConfirmedForm } from "@/components/condominium/confirmed-form";
 import { StructureForm } from "@/components/condominium/structure-form";
 import { saveStructure } from "@/lib/condominium/actions";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 
 export const metadata = { title: "Editar estrutura" };
 export default async function StructureDetail({ params }: { params:Promise<{id:string}> }) {
@@ -13,7 +13,7 @@ export default async function StructureDetail({ params }: { params:Promise<{id:s
   const [{data:item}, {data:all}, {data:canManage}]=await Promise.all([
     supabase.from("condominium_structures").select("id,parent_id,name,code,structure_type,sort_order,status").eq("id",id).eq("condominium_id",context.id).maybeSingle(),
     supabase.from("condominium_structures").select("id,parent_id,name,code,structure_type,sort_order,status").eq("condominium_id",context.id),
-    supabase.rpc("has_permission",{permission_code:"structures.manage",target_condominium_id:context.id}),
+    hasPermission("structures.manage", context.id),
   ]);
   if(!item) notFound(); if(canManage!==true) redirect("/no-permission");
   const {count:children}=await supabase.from("condominium_structures").select("id",{count:"exact",head:true}).eq("parent_id",id).eq("status","active");

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import { friendlyDatabaseError } from "@/lib/condominium/format";
 import { shouldShowFloor } from "@/lib/condominium/unit-presentation";
 import { filterUnitCatalog, sanitizeCatalogSearch } from "@/lib/condominium/catalog";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { UnitForm } from "@/components/condominium/unit-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 
@@ -25,7 +25,7 @@ export default async function UnitsPage({searchParams}:{searchParams:Promise<{q?
   const [{count,error},{data:structures},{data:canManage}]=await Promise.all([
     countQuery,
     supabase.from("condominium_structures").select("id,name,status").eq("condominium_id",context.id).order("name"),
-    supabase.rpc("has_permission",{permission_code:"units.manage",target_condominium_id:context.id}),
+    hasPermission("units.manage", context.id),
   ]);
   const { data: condominium } = await supabase.from("condominiums").select("condominium_type").eq("id",context.id).maybeSingle();
   const isHorizontal = !shouldShowFloor(condominium?.condominium_type);
