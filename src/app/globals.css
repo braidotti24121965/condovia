@@ -941,20 +941,17 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-finance-reversal-confirmation p { margin: 0; color: var(--cv-text); }
 .cv-finance-reversal-confirmation { display: grid; gap: 12px; margin-top: 16px; padding: 16px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); background: var(--cv-surface-muted); }
 @media (max-width: 767px) {
-  .cv-panel > .cv-table-wrap { display: block; overflow: visible; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) { display: block; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) thead { display: none; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) tbody { display: grid; gap: 10px; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; padding: 12px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td { display: grid; min-width: 0; height: auto; padding: 0; border: 0; overflow-wrap: anywhere; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td::before { color: var(--cv-text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td:nth-child(1)::before { content: "Descrição"; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td:nth-child(2)::before { content: "Competência"; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td:nth-child(3)::before { content: "Vencimento"; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td:nth-child(4)::before { content: "Valor"; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td:nth-child(5)::before { content: "Status"; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td:last-child { grid-column: 1 / -1; }
-  .cv-panel > .cv-table-wrap > .cv-table:not(.cv-finance-payments-table) td:last-child::before { content: "Ações"; }
+  .cv-table-wrap:has(.cv-finance-cards) { display: block; overflow: visible; }
+  .cv-finance-cards { display: block; width: 100%; }
+  .cv-finance-cards thead { display: none; }
+  .cv-finance-cards tbody { display: grid; gap: 10px; }
+  .cv-finance-cards tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; padding: 12px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); }
+  .cv-finance-cards td { display: grid; min-width: 0; height: auto; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .cv-finance-cards td::before { content: attr(data-label); color: var(--cv-text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .cv-finance-cards td:last-child { grid-column: 1 / -1; }
+  .cv-finance-cards .cv-finance-payment-detail-row { display: block; }
+  .cv-finance-cards .cv-finance-payment-detail-row td { display: block; }
+  .cv-finance-cards .cv-finance-payment-detail-row td::before { display: none; }
 }
 @media (max-width: 639px) { .cv-finance-dialog-grid { grid-template-columns: 1fr; }.cv-finance-dialog-grid .cv-form-wide, .cv-finance-dialog-grid footer { grid-column: auto; }.cv-finance-dialog { padding: 18px; }.cv-finance-entry-actions { overflow-x: auto; justify-content: flex-start; }.cv-finance-payments-table { display: block; }.cv-finance-payments-table thead { display: none; }.cv-finance-payments-table tbody, .cv-finance-payments-table tr { display: block; }.cv-finance-payments-table tr:not(.cv-finance-payment-detail-row) { margin-bottom: 12px; padding: 10px; border: 1px solid var(--cv-border); border-radius: var(--cv-radius-md); }.cv-finance-payments-table td { display: flex; width: 100% !important; gap: 8px; border: 0; }.cv-finance-payments-table td::before { min-width: 88px; color: var(--cv-text-muted); font-weight: 600; content: attr(data-label); }.cv-finance-payments-table .cv-finance-payment-detail-row td { display: block; }.cv-finance-payments-table .cv-finance-payment-detail-row td::before { display: none; }.cv-finance-dialog-actions { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .cv-finance-dialog { transition: none; } }
