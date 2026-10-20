@@ -49,3 +49,7 @@ pnpm build
 ## Homologação
 
 Configure no Supabase Auth a URL pública da Vercel e permita o callback `/auth/callback?next=%2Freset-password`. Configure as três variáveis do `.env.example` na Vercel. O deploy deve ser ligado ao repositório GitHub do projeto depois que este diretório for publicado em um remoto.
+
+### Feature flag do Financeiro (P9)
+
+`FINANCE_ENABLED` é uma variável server-side, sem prefixo `NEXT_PUBLIC_`. Use `true` para habilitar o Financeiro no Preview e mantenha-a desligada em Production (`false` ou ausente) até o aceite do P9. Com a flag desligada, o menu, a página `/app/condominium/finance` e a API `/api/finance/cash-flow` ficam indisponíveis e não são feitas consultas às tabelas financeiras do P9.

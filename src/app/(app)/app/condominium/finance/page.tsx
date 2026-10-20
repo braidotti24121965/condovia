@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { Alert } from "@/components/ui/feedback";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -10,6 +11,7 @@ import { FinanceCancelForm } from "@/components/finance/finance-cancel-form";
 import { FinanceCategoryTable } from "@/components/finance/finance-category-actions";
 import { money } from "@/lib/maintenance/validation";
 import { cancelFinanceEntry, deleteFinanceCategory, saveBill, saveFinanceCategory, savePayable, saveReceivable, setFinanceCategoryStatus, updateBillStatus, updateFinanceCategory } from "@/lib/finance/actions";
+import { isFinanceEnabled } from "@/lib/finance/flag";
 
 type View = "overview" | "payables" | "receivables" | "cash-flow" | "bills";
 const displayDate = (value: string) => {
@@ -21,6 +23,7 @@ const todayInTimezone = (timeZone: string) => new Intl.DateTimeFormat("en-CA", {
 const openStatuses = new Set(["open", "partially_paid", "partially_received"]);
 
 export default async function FinanceGeneralPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; savedDue?: string; savedOutside?: string; view?: View; period?: FinancePeriod }> }) {
+  if (!isFinanceEnabled()) notFound();
   const { supabase, context } = await requireCondominiumPermission("finance.payables.read");
   const params = await searchParams;
   const view = params.view ?? "overview";

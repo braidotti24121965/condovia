@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { isFinanceEnabled } from "@/lib/finance/flag";
+import { notFound } from "next/navigation";
 
 const csv = (value: unknown) => `"${String(value ?? "").replace(/^[=+@-]/, "'$&").replaceAll('"', '""')}"`;
 const displayDate = (value: string) => { const [year, month, day] = value.split("-"); return `${day}/${month}/${year}`; };
 
 export async function GET() {
+  if (!isFinanceEnabled()) notFound();
   const { supabase, context } = await requireCondominiumPermission("finance.payables.read");
   const [{ data: payables }, { data: receivables }] = await Promise.all([
     supabase.from("condominium_payables").select("description,competence_date,due_date,amount_cents,status").eq("condominium_id", context.id).order("due_date"),
