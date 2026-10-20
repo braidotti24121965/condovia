@@ -1,5 +1,5 @@
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, House, KeyRound, Pencil } from "lucide-react";
@@ -59,7 +59,7 @@ export default async function PersonDossier({ params, searchParams }: { params: 
 }
 function RelationshipRows({kind,rows,personId,canManage}:{kind:"ownership"|"occupancy"|"financial";rows:Relation[];personId:string;canManage:boolean}) {
   if(!rows.length)return <p className="cv-muted">Nenhum vínculo registrado.</p>;
-  return <div className="cv-person-relations">{rows.map((r)=><article key={r.id}><strong>{relationUnitValue(r)}</strong><span>{kind==="ownership"?r.ownership_percentage===null?"Participação não informada":`${r.ownership_percentage}%`:kind==="occupancy"?`${occupancyTypeLabels[r.occupancy_type||""]||"Morador"}${r.is_primary?" · Principal":""}`:"Responsável financeiro"}</span><small>{r.starts_at} → {r.ends_at||"sem término definido"}</small>{canManage&&!r.ends_at&&<form action={endPersonRelationship} className="cv-end-form"><input type="hidden" name="kind" value={kind}/><input type="hidden" name="id" value={r.id}/><input type="hidden" name="person_id" value={personId}/><label>Encerrar com término em<input type="date" name="ends_at" required min={nextDate(r.starts_at)}/></label><Button variant="secondary" size="compact" type="submit">Encerrar</Button><small>A data final é exclusiva.</small></form>}</article>)}</div>;
+  return <div className="cv-person-relations">{rows.map((r)=><article key={r.id}><strong>{relationUnitValue(r)}</strong><span>{kind==="ownership"?r.ownership_percentage===null?"Participação não informada":`${r.ownership_percentage}%`:kind==="occupancy"?`${occupancyTypeLabels[r.occupancy_type||""]||"Morador"}${r.is_primary?" · Principal":""}`:"Responsável financeiro"}</span><small>{r.starts_at} → {r.ends_at||"sem término definido"}</small>{canManage&&!r.ends_at&&<form action={endPersonRelationship} className="cv-end-form"><input type="hidden" name="kind" value={kind}/><input type="hidden" name="id" value={r.id}/><input type="hidden" name="person_id" value={personId}/><label>Encerrar com término em<input type="date" name="ends_at" required min={nextDate(r.starts_at)}/></label><SubmitButton variant="secondary" size="compact" type="submit" pendingLabel="Encerrando...">Encerrar</SubmitButton><small>A data final é exclusiva.</small></form>}</article>)}</div>;
 }
 function relationUnitValue(r:Relation){return r.units?.display_name||r.units?.code||"Unidade";}
 function nextDate(day:string){const d=new Date(`${day}T00:00:00Z`);d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10);}

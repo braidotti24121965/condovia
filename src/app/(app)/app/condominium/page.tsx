@@ -5,7 +5,7 @@ import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { saveCondominiumProfile } from "@/lib/condominium/actions";
 import { Alert } from "@/components/ui/feedback";
 import { friendlyDatabaseError } from "@/lib/condominium/format";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 export const metadata = { title: "Visão geral do condomínio" };
@@ -50,7 +50,7 @@ export default async function CondominiumOverview({ searchParams }: { searchPara
           <label className="cv-field-sm">CEP<input name="postal_code" inputMode="numeric" defaultValue={address?.postal_code ?? ""}/></label><label className="cv-field-lg">Logradouro<input name="street" defaultValue={address?.street ?? ""}/></label><label className="cv-field-xs">Número<input name="number" defaultValue={address?.number ?? ""}/></label><label className="cv-field-md">Complemento<input name="complement" defaultValue={address?.complement ?? ""}/></label><label className="cv-field-md">Bairro<input name="district" defaultValue={address?.district ?? ""}/></label><label className="cv-field-md">Cidade<input name="city" defaultValue={address?.city ?? ""}/></label><label className="cv-field-sm">Estado<input name="state" maxLength={60} defaultValue={address?.state ?? ""}/></label><label className="cv-field-xs">País (código)<input name="country_code" required maxLength={2} defaultValue={address?.country_code ?? "BR"}/></label>
         </div><p className="cv-form-hint">Se informar um logradouro, cidade e estado também são obrigatórios. O CEP brasileiro deve ter 8 dígitos.</p></div>
         <div className="cv-form-section"><h3>Configurações</h3><div className="cv-form-grid"><label className="cv-field-lg">Fuso horário IANA<input name="timezone" required defaultValue={data.timezone}/></label></div></div>
-        <Button type="submit">Salvar alterações</Button>
+        <SubmitButton type="submit">Salvar alterações</SubmitButton>
       </form> : <div className="cv-read-grid"><p><span>Nome</span><strong>{data.name}</strong></p><p><span>Razão social</span><strong>{data.legal_name || "Não informado"}</strong></p><p><span>Documento</span><strong>{data.document_number || "Não informado"}</strong></p><p><span>E-mail</span><strong>{data.email || "Não informado"}</strong></p><p><span>Telefone</span><strong>{data.phone || "Não informado"}</strong></p><p><span>Fuso horário</span><strong>{data.timezone}</strong></p><p className="cv-read-wide"><span>Endereço</span><strong>{address ? [address.street, address.number, address.complement, address.district, address.city, address.state, address.postal_code].filter(Boolean).join(", ") : "Não informado"}</strong></p></div>}
     </section>
   </div>;

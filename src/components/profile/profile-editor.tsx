@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { updateMyDisplayName, type ActionState } from "@/lib/auth/actions";
 
 const initialState: ActionState = {};
@@ -33,7 +34,7 @@ export function ProfileEditor({ displayName, email }: { displayName: string; ema
     </div>
     {state.error && <p className="profile-feedback profile-feedback-error" role="alert">{state.error}</p>}
     {state.success && <p className="profile-feedback profile-feedback-success" role="status">{state.success}</p>}
-    <div className="profile-edit-actions"><Button variant="secondary" type="button" onClick={cancel} disabled={pending}>Cancelar</Button><Button type="submit" disabled={pending}>{pending ? "Salvando…" : "Salvar alterações"}</Button></div>
+    <div className="profile-edit-actions"><Button variant="secondary" type="button" onClick={cancel} disabled={pending}>Cancelar</Button><SubmitButton type="submit" disabled={pending}>{pending ? "Salvando…" : "Salvar alterações"}</SubmitButton></div>
   </form> : <>
     <div className="profile-fields"><div><span>Nome</span><strong>{displayName || "Não informado"}</strong></div><div><span>E-mail de acesso</span><strong>{email || "Não informado"}</strong></div></div>
     {state.success && <p className="profile-feedback profile-feedback-success" role="status">{state.success}</p>}

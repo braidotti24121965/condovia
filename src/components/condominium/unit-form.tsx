@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { saveUnit } from "@/lib/condominium/actions";
 
 type Structure = { id: string; name: string; status: string };
@@ -21,7 +21,7 @@ export function UnitForm({ structures, current }: { structures: Structure[]; cur
         <label htmlFor="unit-notes">Observações</label>
         <div className="cv-unit-form-notes-controls">
           <textarea id="unit-notes" name="notes" rows={3} defaultValue={current?.notes ?? ""} />
-          <Button variant="primary" size="default" type="submit">{current ? "Salvar unidade" : "Criar unidade"}</Button>
+          <SubmitButton variant="primary" size="default" type="submit">{current ? "Salvar unidade" : "Criar unidade"}</SubmitButton>
         </div>
       </div>
     </div>

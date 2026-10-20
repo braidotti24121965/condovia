@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { useState } from "react";
 import { signIn, requestPasswordReset, updatePassword, type ActionState } from "@/lib/auth/actions";
 import { Alert } from "@/components/ui/feedback";
@@ -27,7 +28,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       {mode === "reset" && <div className="field"><label htmlFor="confirmation">Confirme a senha</label><input id="confirmation" name="confirmation" type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={8} required /></div>}
       {state.error && <Alert tone="error">{state.error}</Alert>}
       {state.success && <Alert tone="success">{state.success}</Alert>}
-      <Button className="auth-submit" type="submit" disabled={pending}>{pending && <LoaderCircle size={18} className="spin" />}{pending ? "Aguarde…" : isLogin ? "Entrar" : mode === "forgot" ? "Enviar instruções" : "Salvar nova senha"}</Button>
+      <SubmitButton className="auth-submit" type="submit" disabled={pending}>{pending && <LoaderCircle size={18} className="spin" />}{pending ? "Aguarde…" : isLogin ? "Entrar" : mode === "forgot" ? "Enviar instruções" : "Salvar nova senha"}</SubmitButton>
     </form>
     <div className="auth-footer">{isLogin ? <Link href="/forgot-password">Esqueci minha senha</Link> : <Link href="/login">Voltar para entrar</Link>}</div>
   </section>;

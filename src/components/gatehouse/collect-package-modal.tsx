@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { collectPackageAction } from "@/lib/gatehouse/actions";
 
@@ -100,9 +101,9 @@ export function CollectPackageModal({ packageId, packageDescription, unitCode }:
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={loading}>
+                <SubmitButton type="submit" disabled={loading}>
                   {loading ? "Liberando..." : "Confirmar Entrega"}
-                </Button>
+                </SubmitButton>
               </div>
             </form>
           </div>
