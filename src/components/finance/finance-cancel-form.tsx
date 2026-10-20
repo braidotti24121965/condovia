@@ -11,6 +11,6 @@ export function FinanceCancelForm({ action, id, kind, period, label }: { action:
       <span className="sr-only">Motivo do cancelamento de {label}</span>
     <input name="reason" required minLength={3} autoComplete="off" placeholder="Motivo obrigatório" aria-label={`Motivo do cancelamento de ${label}`} />
     </label>
-    <SubmitButton type="submit" variant="destructive" pendingLabel="Cancelando...">Cancelar</SubmitButton>
+    <SubmitButton type="submit" size="compact" variant="destructive" pendingLabel="Cancelando...">Cancelar</SubmitButton>
   </form>;
 }

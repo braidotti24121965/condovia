@@ -17,7 +17,7 @@ export function FinanceCategoryActions({ id, name, kind, status, period, updateA
         <SubmitButton type="submit" pendingLabel="Salvando...">Salvar</SubmitButton>
       </form>
     </details>
-    <form action={statusAction}><input type="hidden" name="id" value={id} /><input type="hidden" name="period" value={period} /><input type="hidden" name="status" value={status === "active" ? "inactive" : "active"} /><SubmitButton type="submit" variant="secondary" pendingLabel={status === "active" ? "Inativando..." : "Reativando..."}>{status === "active" ? "Inativar" : "Reativar"}</SubmitButton></form>
-    {confirming ? <form action={deleteAction}><input type="hidden" name="id" value={id} /><input type="hidden" name="period" value={period} /><SubmitButton type="submit" variant="destructive" pendingLabel="Excluindo...">Confirmar exclusão</SubmitButton></form> : <button type="button" className="button button-destructive button-compact" onClick={() => setConfirming(true)}>Excluir</button>}
+    <form action={statusAction}><input type="hidden" name="id" value={id} /><input type="hidden" name="period" value={period} /><input type="hidden" name="status" value={status === "active" ? "inactive" : "active"} /><SubmitButton type="submit" size="compact" variant="secondary" pendingLabel={status === "active" ? "Inativando..." : "Reativando..."}>{status === "active" ? "Inativar" : "Reativar"}</SubmitButton></form>
+    {confirming ? <form action={deleteAction}><input type="hidden" name="id" value={id} /><input type="hidden" name="period" value={period} /><SubmitButton type="submit" size="compact" variant="destructive" pendingLabel="Excluindo...">Confirmar exclusão</SubmitButton></form> : <button type="button" className="button button-destructive button-compact" onClick={() => setConfirming(true)}>Excluir</button>}
   </div>;
 }
