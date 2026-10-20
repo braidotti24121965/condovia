@@ -3,11 +3,13 @@ import { AppShell } from "@/components/layout/app-shell";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { hasPermission } from "@/lib/condominium/access";
 import { getNotifications } from "@/lib/notifications/notification-actions";
+import { isFinanceEnabled } from "@/lib/finance/flag";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { supabase, user } = await requireUser();
   if (!supabase || !user) redirect("/login");
   const context = await requireCurrentContext();
+  const financeEnabled = isFinanceEnabled();
   const condominiumNavigation = context.type === "condominium" ? await Promise.all([
     hasPermission("condominium.read", context.id),
     hasPermission("structures.read", context.id),
@@ -24,7 +26,8 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     hasPermission("occurrences.read", context.id),
     hasPermission("dashboard.read", context.id),
     hasPermission("imports.read", context.id),
-  ]).then(([overview, structures, maintenance, maintenanceRequestsRead, maintenanceRequestsCreate, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports]) => ({
+    financeEnabled ? hasPermission("finance.payables.read", context.id) : Promise.resolve({ data: false }),
+  ]).then(([overview, structures, maintenance, maintenanceRequestsRead, maintenanceRequestsCreate, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports, finance]) => ({
     overview: overview.data === true,
     structures: structures.data === true,
     maintenanceFoundation: maintenance.data === true,
@@ -38,6 +41,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     occurrences: occurrenceCreate.data === true || occurrenceRead.data === true,
     dashboard: dashboard.data === true,
     imports: imports.data === true,
+    finance: finance.data === true,
   })) : undefined;
   const { data: account } = await supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).maybeSingle();
   const { data: displayName } = await supabase.rpc("get_my_display_name");
