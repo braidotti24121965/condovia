@@ -13,7 +13,7 @@ export function FinanceCategoryActions({ id, name, kind, status, period, updateA
       <form action={updateAction} className="cv-finance-category-edit-form">
         <input type="hidden" name="id" value={id} /><input type="hidden" name="period" value={period} />
         <input name="name" defaultValue={name} required minLength={2} aria-label="Nome da categoria" />
-        <select name="kind" defaultValue={kind} aria-label="Aplicação da categoria"><option value="both">Entradas e saídas</option><option value="payable">Entradas</option><option value="receivable">Saídas</option></select>
+        <select name="kind" defaultValue={kind} aria-label="Aplicação da categoria"><option value="both">Entradas e saídas</option><option value="payable">Saídas</option><option value="receivable">Entradas</option></select>
         <SubmitButton type="submit" pendingLabel="Salvando...">Salvar</SubmitButton>
       </form>
     </details>
