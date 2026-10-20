@@ -904,3 +904,8 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-finance-entry-actions button { flex: 0 0 auto; }
 .cv-finance-category-actions { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
 .cv-finance-category-actions > form { display: inline-flex; margin: 0; }
+.cv-finance-payable-actions { align-items: flex-start; flex-wrap: wrap; }
+.cv-finance-payable-actions details { display: inline-flex; flex-wrap: wrap; }
+.cv-finance-payable-edit-form, .cv-finance-payment-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cv-finance-payment-history { display: grid; gap: 8px; margin-top: 8px; }
+.cv-finance-payment-history > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

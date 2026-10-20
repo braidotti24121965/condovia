@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { isFinanceEnabled } from "@/lib/finance/flag";
+import { notFound } from "next/navigation";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 type FinanceView = "overview" | "payables" | "receivables" | "cash-flow" | "bills";
@@ -15,8 +17,10 @@ const financeUrl = (view: FinanceView, period: FinancePeriod, params: Record<str
 const localToday = (timeZone: string) => new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const addDays = (date: string, days: number) => { const result = new Date(`${date}T00:00:00Z`); result.setUTCDate(result.getUTCDate() + days); return result.toISOString().slice(0, 10); };
 const outsidePeriod = (dueDate: string, period: FinancePeriod, timeZone: string) => { if (period === "all") return false; const today = localToday(timeZone); const days = period === "today" ? 0 : Number(period.replace("d", "")); return dueDate > addDays(today, days); };
+const requireFinanceEnabled = () => { if (!isFinanceEnabled()) notFound(); };
 
 export async function saveFinanceCategory(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.categories.manage");
   const view = viewOf(form, "overview"); const period = periodOf(form);
   const name = text(form, "name");
@@ -29,6 +33,7 @@ export async function saveFinanceCategory(form: FormData) {
 }
 
 export async function updateFinanceCategory(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.categories.manage");
   const id = text(form, "id"); const name = text(form, "name"); const kind = text(form, "kind");
   if (!id || name.length < 2 || !["payable", "receivable", "both"].includes(kind)) redirect(financeUrl("overview", periodOf(form), { error: "Confira o nome e a aplicação da categoria." }));
@@ -39,6 +44,7 @@ export async function updateFinanceCategory(form: FormData) {
 }
 
 export async function setFinanceCategoryStatus(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.categories.manage");
   const id = text(form, "id"); const status = text(form, "status");
   if (!id || !["active", "inactive"].includes(status)) redirect(financeUrl("overview", periodOf(form), { error: "Situação de categoria inválida." }));
@@ -49,6 +55,7 @@ export async function setFinanceCategoryStatus(form: FormData) {
 }
 
 export async function deleteFinanceCategory(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.categories.manage");
   const id = text(form, "id");
   if (!id) redirect(financeUrl("overview", periodOf(form), { error: "Categoria inválida." }));
@@ -64,6 +71,7 @@ export async function deleteFinanceCategory(form: FormData) {
 }
 
 export async function savePayable(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.payables.manage");
   const view = viewOf(form, "payables"); const period = periodOf(form);
   const description = text(form, "description");
@@ -80,6 +88,7 @@ export async function savePayable(form: FormData) {
 }
 
 export async function saveReceivable(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.receivables.manage");
   const view = viewOf(form, "receivables"); const period = periodOf(form);
   const description = text(form, "description");
@@ -96,27 +105,61 @@ export async function saveReceivable(form: FormData) {
 }
 
 export async function cancelFinanceEntry(form: FormData) {
+  requireFinanceEnabled();
   const kind = text(form, "kind");
   const id = text(form, "id");
   const reason = text(form, "reason");
   const view = (kind === "receivable" ? "receivables" : "payables") as FinanceView;
   const permission = kind === "receivable" ? "finance.receivables.manage" : "finance.payables.manage";
-  const { supabase, context, user } = await requireCondominiumPermission(permission);
+  const { supabase } = await requireCondominiumPermission(permission);
   const period = periodOf(form);
   if (!id || !["payable", "receivable"].includes(kind) || reason.length < 3) redirect(financeUrl(view, period, { error: "Informe um motivo para cancelar a conta." }));
-  const table = kind === "receivable" ? "condominium_receivables" : "condominium_payables";
-  const { data: entry, error: readError } = await supabase.from(table).select("id,status,notes").eq("id", id).eq("condominium_id", context.id).maybeSingle();
-  if (readError || !entry) redirect(financeUrl(view, period, { error: "Conta não encontrada." }));
-  if (!["open", "partially_paid", "partially_received"].includes(entry.status)) redirect(financeUrl(view, period, { error: "Só é possível cancelar contas em aberto." }));
-  const cancellationNote = `[Cancelada em ${new Date().toISOString()} por ${user.email ?? "usuário autenticado"}] Motivo: ${reason}`;
-  const notes = [entry.notes, cancellationNote].filter(Boolean).join("\n");
-  const { error } = await supabase.from(table).update({ status: "cancelled", notes, updated_at: new Date().toISOString() }).eq("id", id).eq("condominium_id", context.id);
-  if (error) redirect(financeUrl(view, period, { error: "Não foi possível cancelar a conta." }));
+  const { error } = await supabase.rpc("cancel_finance_entry", { p_kind: kind, p_entry_id: id, p_reason: reason });
+  if (error) redirect(financeUrl(view, period, { error: error.message.includes("pagamentos ativos") ? "Não é possível cancelar uma conta com pagamentos ativos." : "Não foi possível cancelar a conta." }));
   revalidatePath("/app/condominium/finance");
   redirect(financeUrl(view, period, { saved: "cancelled" }));
 }
 
+export async function registerFinancePayment(form: FormData) {
+  requireFinanceEnabled();
+  const kind = text(form, "kind"); const id = text(form, "id"); const amount = Number(text(form, "amount"));
+  const amountCents = Math.round(amount * 100); const paidOn = text(form, "paid_on"); const method = text(form, "method"); const period = periodOf(form);
+  const view = (kind === "receivable" ? "receivables" : "payables") as FinanceView;
+  const permission = kind === "receivable" ? "finance.receivables.manage" : "finance.payables.manage";
+  const { supabase } = await requireCondominiumPermission(permission);
+  if (!id || !["payable", "receivable"].includes(kind) || !Number.isInteger(amountCents) || amountCents <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(paidOn) || !["pix", "boleto", "transferencia", "dinheiro", "cartao", "outro"].includes(method)) redirect(financeUrl(view, period, { error: "Confira os dados do pagamento." }));
+  const { error } = await supabase.rpc("register_finance_payment", { p_kind: kind, p_entry_id: id, p_amount_cents: amountCents, p_paid_on: paidOn, p_method: method, p_notes: text(form, "notes") || null });
+  if (error) redirect(financeUrl(view, period, { error: error.message.includes("excede") ? "O pagamento excede o saldo da conta." : "Não foi possível registrar o pagamento." }));
+  revalidatePath("/app/condominium/finance");
+  redirect(financeUrl(view, period, { saved: "payment" }));
+}
+
+export async function reverseFinancePayment(form: FormData) {
+  requireFinanceEnabled();
+  const id = text(form, "id"); const reason = text(form, "reason"); const kind = text(form, "kind"); const period = periodOf(form);
+  const view = (kind === "receivable" ? "receivables" : "payables") as FinanceView;
+  const permission = kind === "receivable" ? "finance.receivables.manage" : "finance.payables.manage";
+  const { supabase } = await requireCondominiumPermission(permission);
+  if (!id || reason.length < 3) redirect(financeUrl(view, period, { error: "Informe o motivo do estorno." }));
+  const { error } = await supabase.rpc("reverse_finance_payment", { p_payment_id: id, p_reason: reason });
+  if (error) redirect(financeUrl(view, period, { error: "Não foi possível estornar o pagamento." }));
+  revalidatePath("/app/condominium/finance");
+  redirect(financeUrl(view, period, { saved: "reversal" }));
+}
+
+export async function updatePayable(form: FormData) {
+  requireFinanceEnabled();
+  const { supabase, context } = await requireCondominiumPermission("finance.payables.manage");
+  const id = text(form, "id"); const description = text(form, "description"); const competenceDate = text(form, "competence_date"); const dueDate = text(form, "due_date"); const amount = Number(text(form, "amount")); const amountCents = Math.round(amount * 100); const period = periodOf(form);
+  if (!id || description.length < 2 || !/^\d{4}-\d{2}-\d{2}$/.test(competenceDate) || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || dueDate < competenceDate || !Number.isFinite(amount) || amountCents <= 0) redirect(financeUrl("payables", period, { error: "Confira os dados da conta a pagar." }));
+  const { error } = await supabase.from("condominium_payables").update({ description, category_id: text(form, "category_id") || null, competence_date: competenceDate, due_date: dueDate, amount_cents: amountCents, supplier_id: text(form, "supplier_id") || null, notes: text(form, "notes") || null, updated_at: new Date().toISOString() }).eq("id", id).eq("condominium_id", context.id).eq("status", "open");
+  if (error) redirect(financeUrl("payables", period, { error: "Não foi possível editar a conta. Contas com pagamentos não podem ser editadas." }));
+  revalidatePath("/app/condominium/finance");
+  redirect(financeUrl("payables", period, { saved: "payable" }));
+}
+
 export async function saveBill(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.bills.manage");
   const reference = text(form, "reference");
   const dueDate = text(form, "due_date");
@@ -130,6 +173,7 @@ export async function saveBill(form: FormData) {
 }
 
 export async function updateBillStatus(form: FormData) {
+  requireFinanceEnabled();
   const { supabase, context } = await requireCondominiumPermission("finance.bills.manage");
   const id = text(form, "id");
   const status = text(form, "status");
