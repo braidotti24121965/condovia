@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Pencil, MapPin } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { saveCondominiumProfile } from "@/lib/condominium/actions";
 import { Alert } from "@/components/ui/feedback";
 import { friendlyDatabaseError } from "@/lib/condominium/format";
@@ -14,13 +14,13 @@ const types: Record<string,string> = { vertical:"Vertical", horizontal:"Horizont
 export default async function CondominiumOverview({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const { supabase, context } = await requireCondominiumPermission("condominium.read");
   const structureCount = async () => {
-    const { data: allowed } = await supabase.rpc("has_permission", { permission_code: "structures.read", target_condominium_id: context.id });
+    const { data: allowed } = await hasPermission("structures.read", context.id);
     if (allowed !== true) return null;
     const { count } = await supabase.from("condominium_structures").select("id", { count: "exact", head: true }).eq("condominium_id", context.id);
     return count;
   };
   const unitCount = async () => {
-    const { data: allowed } = await supabase.rpc("has_permission", { permission_code: "units.read", target_condominium_id: context.id });
+    const { data: allowed } = await hasPermission("units.read", context.id);
     if (allowed !== true) return null;
     const { count } = await supabase.from("units").select("id", { count: "exact", head: true }).eq("condominium_id", context.id);
     return count;
@@ -28,7 +28,7 @@ export default async function CondominiumOverview({ searchParams }: { searchPara
   const [{ data, error }, params, { data: canManage }, structuresCount, unitsCount] = await Promise.all([
     supabase.from("condominiums").select("id,name,status,legal_name,document_number,email,phone,condominium_type,timezone,addresses(id,postal_code,street,number,complement,district,city,state,country_code)").eq("id", context.id).maybeSingle(),
     searchParams,
-    supabase.rpc("has_permission", { permission_code: "condominiums.manage", target_condominium_id: context.id }),
+    hasPermission("condominiums.manage", context.id),
     structureCount(), unitCount(),
   ]);
   if (error) return <div className="cv-page"><Alert tone="error">{friendlyDatabaseError(error.message)}</Alert></div>;

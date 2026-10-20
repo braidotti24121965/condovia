@@ -1,5 +1,5 @@
 import { ContentSelect } from "@/components/ui/form-controls";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { Feedback, DocumentUpload } from "@/components/maintenance/management-ui";
 import { DocumentList } from "@/components/maintenance/document-list";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -12,7 +12,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
     supabase.from("maintenance_contracts").select("id,title").eq("condominium_id", context.id),
     supabase.from("maintenance_work_orders").select("id,work_order_number").eq("condominium_id", context.id).order("created_at", { ascending: false }),
     supabase.from("maintenance_quotations").select("id,description").eq("condominium_id", context.id),
-    supabase.rpc("has_permission", { permission_code: "maintenance.documents.manage", target_condominium_id: context.id }),
+    hasPermission("maintenance.documents.manage", context.id),
   ]);
   const target = ["contract", "work_order", "equipment", "quotation"].includes(params.target ?? "") ? params.target as "contract" | "work_order" | "equipment" | "quotation" : "equipment";
   const options = target === "equipment" ? (equipment.data ?? []).map(e => ({ id: e.id, name: e.identification })) : target === "contract" ? (contracts.data ?? []).map(c => ({ id: c.id, name: c.title })) : target === "quotation" ? (quotations.data ?? []).map(q => ({ id: q.id, name: q.description })) : (orders.data ?? []).map(o => ({ id: o.id, name: `OS #${o.work_order_number}` }));

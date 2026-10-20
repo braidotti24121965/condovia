@@ -1,7 +1,7 @@
 import { ContentSelect } from "@/components/ui/form-controls";
 import Link from "next/link";
 import { ClipboardCheck, ChevronRight } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { WorkOrderForm } from "@/components/maintenance/work-order-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -22,8 +22,8 @@ export default async function WorkOrdersPage({ searchParams }: { searchParams: P
     supabase.from("maintenance_equipment").select("id,identification,structure_id").eq("condominium_id", context.id).eq("status", "active").order("identification"),
     supabase.rpc("list_maintenance_work_order_assignees", { p_condominium_id: context.id }),
     supabase.from("service_providers").select("id,full_name,company_name").eq("condominium_id", context.id).eq("status", "active").order("full_name"),
-    supabase.rpc("has_permission", { permission_code: "maintenance.orders.create", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.finance.manage", target_condominium_id: context.id }),
+    hasPermission("maintenance.orders.create", context.id),
+    hasPermission("maintenance.finance.manage", context.id),
     supabase.from("maintenance_service_types").select("id,name").eq("condominium_id", context.id).eq("status", "active"),
     supabase.from("maintenance_contracts").select("id,title").eq("condominium_id", context.id).eq("status", "active"),
   ]);

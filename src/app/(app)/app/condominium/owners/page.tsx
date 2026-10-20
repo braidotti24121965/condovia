@@ -1,4 +1,4 @@
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { getCondominiumPeopleOptions, getCondominiumUnits, getRelationshipRows, todayInTimezone } from "@/lib/condominium/people-data";
 import { RelationshipIndex } from "@/components/condominium/relationship-index";
 import { Alert } from "@/components/ui/feedback";
@@ -8,7 +8,7 @@ export default async function OwnersPage({searchParams}:{searchParams:Promise<{s
   const {supabase,context}=await requireCondominiumPermission("ownerships.read"); const params=await searchParams;
   const [{data:condo},{rows,error},people,units,{data:canManage}]=await Promise.all([
     supabase.from("condominiums").select("timezone").eq("id",context.id).maybeSingle(),
-    (params.q||params.cpf||params.structure||params.unit||params.mode||params.page)?getRelationshipRows(supabase,context.id,"ownership",{query:params.q,cpf:params.cpf}):Promise.resolve({rows:[],error:null}),params.new==="1"||Boolean(params.newPersonId)?getCondominiumPeopleOptions(supabase,context.id):Promise.resolve([]),getCondominiumUnits(supabase,context.id),supabase.rpc("has_permission",{permission_code:"ownerships.manage",target_condominium_id:context.id}),
+    (params.q||params.cpf||params.structure||params.unit||params.mode||params.page)?getRelationshipRows(supabase,context.id,"ownership",{query:params.q,cpf:params.cpf}):Promise.resolve({rows:[],error:null}),params.new==="1"||Boolean(params.newPersonId)?getCondominiumPeopleOptions(supabase,context.id):Promise.resolve([]),getCondominiumUnits(supabase,context.id),hasPermission("ownerships.manage", context.id),
   ]);
   if(error)return <div className="cv-page"><Alert tone="error">Não foi possível carregar os proprietários.</Alert></div>;
   const mode=["current","future","ended","all"].includes(params.mode||"")?params.mode!:"current";

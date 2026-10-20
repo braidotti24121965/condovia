@@ -2,7 +2,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import Link from "next/link";
 import { ChevronRight, Plus, Search, Users, UserCheck } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 
 export const metadata = { title: "Pessoas" };
@@ -11,7 +11,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   const { supabase, context } = await requireCondominiumPermission("people.read");
   const params = await searchParams; const page = Math.max(1, Number(params.page) || 1); const q = (params.q || "").trim(); const cpf = (params.cpf || "").trim(); const hasFilter = Boolean(q || cpf || params.status);
   const [{ data: canManage }, { data: peopleData, error: peopleError }, { count: activeCount }] = await Promise.all([
-    supabase.rpc("has_permission",{permission_code:"people.manage",target_condominium_id:context.id}),
+    hasPermission("people.manage", context.id),
     hasFilter ? supabase.rpc("list_people_for_condominium", {
       p_condominium_id: context.id,
       p_limit: 50,

@@ -6,6 +6,7 @@ import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { resolveAppOrigin } from "@/lib/auth/app-origin";
+import { hasPermission } from "@/lib/condominium/access";
 
 const emailSchema = z.string().trim().email();
 const passwordSchema = z.string().min(8);
@@ -89,11 +90,7 @@ export async function selectContext(formData: FormData) {
   cookieStore.set("condovia_context", context.id, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 60 * 12 });
   if (context.type === "platform") redirect("/app/platform");
   if (context.type !== "condominium") redirect("/app/dashboard");
-  const supabase = await createClient();
-  const { data: canReadDashboard } = await supabase!.rpc("has_permission", {
-    permission_code: "dashboard.read",
-    target_condominium_id: context.id,
-  });
+  const { data: canReadDashboard } = await hasPermission("dashboard.read", context.id);
   redirect(canReadDashboard === true ? "/app/dashboard" : "/app/my-units");
 }
 

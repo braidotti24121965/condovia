@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, ClipboardCheck, Settings, Wrench } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { EquipmentForm } from "@/components/maintenance/equipment-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -16,9 +16,9 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
     supabase.from("condominium_structures").select("id,name").eq("condominium_id", context.id).eq("status", "active").order("name"),
     supabase.from("maintenance_equipment_categories").select("id,name").eq("condominium_id", context.id).eq("status", "active").order("name"),
     supabase.from("maintenance_settings").select("*").eq("condominium_id", context.id).maybeSingle(),
-    supabase.rpc("has_permission", { permission_code: "maintenance.manage", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.requests.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.orders.read", target_condominium_id: context.id }), searchParams ]);
+    hasPermission("maintenance.manage", context.id),
+    hasPermission("maintenance.requests.read", context.id),
+    hasPermission("maintenance.orders.read", context.id), searchParams ]);
   const rows = (equipment ?? []) as unknown as Equipment[];
   return <div className="cv-page"><div className="breadcrumbs"><Link href="/app/condominium">Condomínio</Link><ChevronRight size={14}/><strong>Manutenção</strong></div>
     <section className="page-heading"><div><p className="page-overline">P8.1 · ESTRUTURA BÁSICA</p><h1>Manutenção</h1><p>Equipamentos e configurações das áreas comuns de {context.name}.</p></div></section>

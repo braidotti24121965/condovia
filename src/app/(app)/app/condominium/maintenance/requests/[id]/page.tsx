@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, ClipboardList } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -17,8 +17,8 @@ export default async function MaintenanceRequestDetailPage({ params, searchParam
   const [{ data: request }, { data: history }, { data: canDecide }, { data: canCreateOrder }] = await Promise.all([
     supabase.from("maintenance_requests").select("*,condominium_structures(name),maintenance_equipment(identification)").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
     supabase.from("maintenance_request_history").select("id,event_type,previous_status,new_status,reason,created_at").eq("request_id", id).eq("condominium_id", context.id).order("created_at"),
-    supabase.rpc("has_permission", { permission_code: "maintenance.requests.decide", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.orders.create", target_condominium_id: context.id }),
+    hasPermission("maintenance.requests.decide", context.id),
+    hasPermission("maintenance.orders.create", context.id),
   ]);
   if (!request) return <div className="cv-page"><EmptyState title="Solicitação não encontrada" description="A solicitação pode ter sido removida ou não pertence a este condomínio."/></div>;
   return <div className="cv-page"><div className="breadcrumbs"><Link href="/app/condominium/maintenance/requests">Solicitações</Link><ChevronRight size={14}/><strong>#{request.request_number}</strong></div>
