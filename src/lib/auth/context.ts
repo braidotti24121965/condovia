@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { buildAuthorizedContexts, resolveCurrentContext, type AuthorizedContext } from "@/lib/auth/context-data";
+import { hasPermission } from "@/lib/condominium/permissions";
 export type { AuthorizedContext } from "@/lib/auth/context-data";
 
 const getCurrentUser = cache(async () => {
@@ -15,18 +16,18 @@ const getCurrentUser = cache(async () => {
   return { supabase, user: { id: subject, email } };
 });
 
-export const getAuthorizedContexts = cache(async (): Promise<AuthorizedContext[]> => {
+export const getAuthorizedContexts = cache(async (platformAdminOverride?: boolean): Promise<AuthorizedContext[]> => {
   const { supabase, user } = await getCurrentUser();
   if (!supabase) return [];
   if (!user) return [];
-  const { data: account } = await supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).eq("status", "active").maybeSingle();
-  if (!account) return [];
-
-  const [{ data: condominiumRows }, { data: adminRows }, { data: platformAdmin }] = await Promise.all([
+  const [{ data: account }, { data: condominiumRows }, { data: adminRows }, platformPermission] = await Promise.all([
+    supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).eq("status", "active").maybeSingle(),
     supabase.rpc("get_authorized_condominiums"),
     supabase.rpc("get_authorized_administrators"),
-    supabase.rpc("has_platform_permission", { permission_code: "platform.manage" }),
+    platformAdminOverride === undefined ? supabase.rpc("has_platform_permission", { permission_code: "platform.manage" }) : Promise.resolve({ data: platformAdminOverride, error: null }),
   ]);
+  if (!account) return [];
+  const platformAdmin = platformPermission.data === true;
   const contexts = buildAuthorizedContexts(condominiumRows ?? [], adminRows ?? [], platformAdmin === true);
   if (platformAdmin === true) {
     const cookieStore = await cookies();
@@ -40,11 +41,11 @@ export const getAuthorizedContexts = cache(async (): Promise<AuthorizedContext[]
   return contexts;
 });
 
-export const requireCurrentContext = cache(async () => {
+export const requireCurrentContext = cache(async (platformAdminOverride?: boolean) => {
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
   const selectedId = cookieStore.get("condovia_context")?.value;
-  const contexts = await getAuthorizedContexts();
+  const contexts = await getAuthorizedContexts(platformAdminOverride);
   const resolution = resolveCurrentContext(contexts, selectedId);
   if (resolution.type === "none") redirect("/no-permission");
   if (resolution.type === "choose") redirect("/select-context");
@@ -68,4 +69,12 @@ export async function requireContext(contextId?: string) {
   const context = contexts.find((item) => item.id === contextId);
   if (!context) redirect("/select-context?error=invalid-context");
   return context;
+}
+
+export async function getPostLoginDestination(platformAdminOverride?: boolean) {
+  const context = await requireCurrentContext(platformAdminOverride);
+  if (context.type === "platform") return "/app/platform";
+  if (context.type !== "condominium") return "/app/dashboard";
+  const { data: canReadDashboard } = await hasPermission("dashboard.read", context.id);
+  return canReadDashboard === true ? "/app/dashboard" : "/app/my-units";
 }
