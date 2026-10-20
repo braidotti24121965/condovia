@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
+import { hasPermission } from "@/lib/condominium/access";
 import { getNotifications } from "@/lib/notifications/notification-actions";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -8,21 +9,21 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   if (!supabase || !user) redirect("/login");
   const context = await requireCurrentContext();
   const condominiumNavigation = context.type === "condominium" ? await Promise.all([
-    supabase.rpc("has_permission", { permission_code: "condominium.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "structures.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.requests.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.requests.create", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "units.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "people.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "residents.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "ownerships.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "gatehouse.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "reservations.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "occurrences.create", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "occurrences.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "dashboard.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "imports.read", target_condominium_id: context.id }),
+    hasPermission("condominium.read", context.id),
+    hasPermission("structures.read", context.id),
+    hasPermission("maintenance.read", context.id),
+    hasPermission("maintenance.requests.read", context.id),
+    hasPermission("maintenance.requests.create", context.id),
+    hasPermission("units.read", context.id),
+    hasPermission("people.read", context.id),
+    hasPermission("residents.read", context.id),
+    hasPermission("ownerships.read", context.id),
+    hasPermission("gatehouse.read", context.id),
+    hasPermission("reservations.read", context.id),
+    hasPermission("occurrences.create", context.id),
+    hasPermission("occurrences.read", context.id),
+    hasPermission("dashboard.read", context.id),
+    hasPermission("imports.read", context.id),
   ]).then(([overview, structures, maintenance, maintenanceRequestsRead, maintenanceRequestsCreate, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports]) => ({
     overview: overview.data === true,
     structures: structures.data === true,

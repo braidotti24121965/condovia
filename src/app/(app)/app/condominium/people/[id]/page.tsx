@@ -1,9 +1,9 @@
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, House, KeyRound, Pencil } from "lucide-react";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { Alert } from "@/components/ui/feedback";
 import { PersonContactForms, PersonCpfForm, PersonEditForm, ResidentInviteForm } from "@/components/condominium/person-form";
 import { endPersonRelationship } from "@/lib/condominium/actions";
@@ -20,14 +20,14 @@ export default async function PersonDossier({ params, searchParams }: { params: 
     supabase.from("person_documents").select("id,document_type,normalized_number,is_primary,created_at").eq("person_id",id).order("created_at"),
     supabase.from("person_emails").select("id,email,is_primary,is_verified").eq("person_id",id),
     supabase.from("person_phones").select("id,phone_e164,phone_type,is_primary,is_verified,is_whatsapp").eq("person_id",id),
-    supabase.rpc("has_permission",{permission_code:"people.manage",target_condominium_id:context.id}),
-    supabase.rpc("has_permission",{permission_code:"users.invite",target_condominium_id:context.id}),
-    supabase.rpc("has_permission",{permission_code:"ownerships.read",target_condominium_id:context.id}),
-    supabase.rpc("has_permission",{permission_code:"ownerships.manage",target_condominium_id:context.id}),
-    supabase.rpc("has_permission",{permission_code:"residents.read",target_condominium_id:context.id}),
-    supabase.rpc("has_permission",{permission_code:"residents.manage",target_condominium_id:context.id}),
-    supabase.rpc("has_permission",{permission_code:"financial_responsibilities.read",target_condominium_id:context.id}),
-    supabase.rpc("has_permission",{permission_code:"financial_responsibilities.manage",target_condominium_id:context.id}),
+    hasPermission("people.manage", context.id),
+    hasPermission("users.invite", context.id),
+    hasPermission("ownerships.read", context.id),
+    hasPermission("ownerships.manage", context.id),
+    hasPermission("residents.read", context.id),
+    hasPermission("residents.manage", context.id),
+    hasPermission("financial_responsibilities.read", context.id),
+    hasPermission("financial_responsibilities.manage", context.id),
     supabase.rpc("get_person_resident_access_summary",{p_person_id:id,p_condominium_id:context.id}),
   ]);
   if(!person||!link) notFound();
@@ -59,7 +59,7 @@ export default async function PersonDossier({ params, searchParams }: { params: 
 }
 function RelationshipRows({kind,rows,personId,canManage}:{kind:"ownership"|"occupancy"|"financial";rows:Relation[];personId:string;canManage:boolean}) {
   if(!rows.length)return <p className="cv-muted">Nenhum vínculo registrado.</p>;
-  return <div className="cv-person-relations">{rows.map((r)=><article key={r.id}><strong>{relationUnitValue(r)}</strong><span>{kind==="ownership"?r.ownership_percentage===null?"Participação não informada":`${r.ownership_percentage}%`:kind==="occupancy"?`${occupancyTypeLabels[r.occupancy_type||""]||"Morador"}${r.is_primary?" · Principal":""}`:"Responsável financeiro"}</span><small>{r.starts_at} → {r.ends_at||"sem término definido"}</small>{canManage&&!r.ends_at&&<form action={endPersonRelationship} className="cv-end-form"><input type="hidden" name="kind" value={kind}/><input type="hidden" name="id" value={r.id}/><input type="hidden" name="person_id" value={personId}/><label>Encerrar com término em<input type="date" name="ends_at" required min={nextDate(r.starts_at)}/></label><Button variant="secondary" size="compact" type="submit">Encerrar</Button><small>A data final é exclusiva.</small></form>}</article>)}</div>;
+  return <div className="cv-person-relations">{rows.map((r)=><article key={r.id}><strong>{relationUnitValue(r)}</strong><span>{kind==="ownership"?r.ownership_percentage===null?"Participação não informada":`${r.ownership_percentage}%`:kind==="occupancy"?`${occupancyTypeLabels[r.occupancy_type||""]||"Morador"}${r.is_primary?" · Principal":""}`:"Responsável financeiro"}</span><small>{r.starts_at} → {r.ends_at||"sem término definido"}</small>{canManage&&!r.ends_at&&<form action={endPersonRelationship} className="cv-end-form"><input type="hidden" name="kind" value={kind}/><input type="hidden" name="id" value={r.id}/><input type="hidden" name="person_id" value={personId}/><label>Encerrar com término em<input type="date" name="ends_at" required min={nextDate(r.starts_at)}/></label><SubmitButton variant="secondary" size="compact" type="submit" pendingLabel="Encerrando...">Encerrar</SubmitButton><small>A data final é exclusiva.</small></form>}</article>)}</div>;
 }
 function relationUnitValue(r:Relation){return r.units?.display_name||r.units?.code||"Unidade";}
 function nextDate(day:string){const d=new Date(`${day}T00:00:00Z`);d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10);}

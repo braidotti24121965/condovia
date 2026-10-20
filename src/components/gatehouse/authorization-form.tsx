@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { KeyRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { createAuthorizationAction } from "@/lib/gatehouse/actions";
 import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
@@ -177,9 +178,9 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={loading}>
+                <SubmitButton type="submit" disabled={loading}>
                   {loading ? "Salvando..." : "Conceder Autorização"}
-                </Button>
+                </SubmitButton>
               </div>
             </form>
             <ConfirmationDialog open={Boolean(overlap)} title="Autorização sobreposta" description={overlap ? `Já existe uma autorização para esta pessoa nesta unidade durante parte deste período: ${formatDateTimeInTimezone(overlap.valid_from, timeZone)} até ${formatDateTimeInTimezone(overlap.valid_until, timeZone)}.` : ""} confirmLabel="Continuar mesmo assim" onCancel={() => setOverlap(null)} onConfirm={() => { setOverlap(null); const form = document.querySelector(".cv-form") as HTMLFormElement | null; if (form) { (form.elements.namedItem("allow_overlap") as HTMLInputElement).value = "true"; form.requestSubmit(); } }} />

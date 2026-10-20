@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { ContentSelect, FormattedInput } from "@/components/ui/form-controls";
 import { validateBrazilianCnpj } from "@/lib/condominium/format";
 import { isValidCpf, normalizeDigits } from "@/lib/condominium/person-validation";
@@ -31,6 +31,6 @@ export function ProviderFields({ item }: { item?: Provider }) {
     <label className="cv-field-md">Especialidade<input name="service_type" defaultValue={item?.service_type ?? ""} /></label>
     <label className="cv-field-sm">Situação<ContentSelect name="status" defaultValue={item?.status ?? "active"}><option value="active">Ativo</option><option value="inactive">Inativo</option></ContentSelect></label>
     {documentError && <p className="cv-alert cv-alert-error" role="alert">{documentError}</p>}
-    <div className="cv-form-actions"><Button type="submit">{item ? "Salvar fornecedor" : "Cadastrar fornecedor"}</Button></div>
+    <div className="cv-form-actions"><SubmitButton type="submit">{item ? "Salvar fornecedor" : "Cadastrar fornecedor"}</SubmitButton></div>
   </div>;
 }

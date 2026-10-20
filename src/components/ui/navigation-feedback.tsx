@@ -38,5 +38,5 @@ export function NavigationFeedback() {
   useEffect(() => setPending(false), [pathname, searchKey]);
 
   if (!pending) return null;
-  return <div className="cv-navigation-feedback" role="status" aria-live="polite">Salvando…</div>;
+  return <div className="cv-navigation-feedback" role="status" aria-live="polite"><span className="cv-navigation-feedback-spinner" aria-hidden="true" />Salvando…</div>;
 }

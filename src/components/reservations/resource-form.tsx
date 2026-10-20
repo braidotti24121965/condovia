@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { saveReservableResource } from "@/lib/reservations/resource-actions";
 import { formatCurrencyBRL, toMinutes, validateResourceValues, type MinuteUnit } from "@/lib/reservations/resource-validation";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { useDialogFocus } from "@/components/ui/use-dialog-focus";
 
 const weekdays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -64,7 +65,7 @@ export function ResourceForm({ resource, hours = [] }: { resource?: Record<strin
         <section className="cv-form-section"><h3>Disponibilidade semanal</h3><p className="cv-form-hint">{reservationMode === "day" ? "Marque os dias em que o recurso poderá ser reservado integralmente." : "Horários locais do condomínio. Marque os dias em que o recurso estará disponível."}</p><div className={`cv-resource-schedule ${reservationMode === "day" ? "is-day-mode" : ""}`} role="table" aria-label="Disponibilidade semanal"><div className="cv-resource-schedule-row cv-resource-schedule-head" role="row"><strong>Dia</strong><strong>Disponível</strong>{reservationMode === "time_slot" && <><strong>Início</strong><strong>Fim</strong></>}</div>{weekdays.map((day, weekday) => { const item = schedule.find((entry) => entry.weekday === weekday); const active = Boolean(item?.active); return <div className="cv-resource-schedule-row" key={day} role="row"><span role="cell">{day}</span><label className="cv-checkbox-label" role="cell"><input type="checkbox" checked={active} onChange={(event) => updateDay(weekday, "active", event.target.checked)} /> Disponível</label>{reservationMode === "time_slot" && <><input role="cell" aria-label={`${day} início`} type="time" disabled={!active} value={item?.start_time || "08:00"} onChange={(event) => updateDay(weekday, "start_time", event.target.value)} /><input role="cell" aria-label={`${day} fim`} type="time" disabled={!active} value={item?.end_time || "18:00"} onChange={(event) => updateDay(weekday, "end_time", event.target.value)} /></>}</div>; })}</div></section>
 
         <section className="cv-form-section"><h3>Instruções</h3><label>Instruções de uso<textarea name="instructions" defaultValue={String(resource?.instructions || "")} /></label></section>
-        <input type="hidden" name="id" value={String(resource?.id || "")} /><input type="hidden" name="hours" value={JSON.stringify(schedule)} /><div className="cv-resource-actions"><Button variant="secondary" type="button" onClick={() => setOpen(false)}>Cancelar</Button><Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button></div>
+        <input type="hidden" name="id" value={String(resource?.id || "")} /><input type="hidden" name="hours" value={JSON.stringify(schedule)} /><div className="cv-resource-actions"><Button variant="secondary" type="button" onClick={() => setOpen(false)}>Cancelar</Button><SubmitButton type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</SubmitButton></div>
       </form>
     </section></div>}
   </>;

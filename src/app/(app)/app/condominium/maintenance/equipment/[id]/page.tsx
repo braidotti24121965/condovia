@@ -1,23 +1,29 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { redirect } from "next/navigation";
+import { hasPermission } from "@/lib/condominium/access";
+import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EquipmentForm } from "@/components/maintenance/equipment-form";
 import { DocumentList } from "@/components/maintenance/document-list";
 import { DocumentUpload } from "@/components/maintenance/management-ui";
 import type { Equipment } from "@/lib/maintenance/types";
 import { civilDate } from "@/lib/maintenance/validation";
 export default async function EquipmentPage({ params }: { params: Promise<{ id: string }> }) {
-  const { supabase, context } = await requireCondominiumPermission("maintenance.read");
+  const { supabase, user } = await requireUser();
+  const context = await requireCurrentContext();
+  if (!supabase || !user || context.type !== "condominium") redirect("/no-permission");
   const { id } = await params;
-  const [equipment, structures, categories, orders, manage, documents, upload] = await Promise.all([
+  const [equipment, structures, categories, orders, read, manage, documents, upload] = await Promise.all([
     supabase.from("maintenance_equipment").select("*").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
     supabase.from("condominium_structures").select("id,name").eq("condominium_id", context.id).eq("status", "active"),
     supabase.from("maintenance_equipment_categories").select("id,name").eq("condominium_id", context.id).eq("status", "active"),
     supabase.from("maintenance_work_orders").select("id,work_order_number,description,due_at,status").eq("equipment_id", id).eq("condominium_id", context.id).order("created_at", { ascending: false }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.manage", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.documents.read", target_condominium_id: context.id }),
-    supabase.rpc("has_permission", { permission_code: "maintenance.documents.manage", target_condominium_id: context.id }),
+    hasPermission("maintenance.read", context.id),
+    hasPermission("maintenance.manage", context.id),
+    hasPermission("maintenance.documents.read", context.id),
+    hasPermission("maintenance.documents.manage", context.id),
   ]);
+  if (read.data !== true) redirect("/no-permission");
   if (!equipment.data || equipment.error) notFound();
   return <div className="cv-page"><section className="page-heading"><div><h1>{equipment.data.identification}</h1><p>Equipamento · garantia até {civilDate(equipment.data.warranty_until)}</p></div></section>
     <section className="cv-panel"><h2>Cadastro</h2>{manage.data === true ? <EquipmentForm current={equipment.data as Equipment} structures={structures.data ?? []} categories={categories.data ?? []} /> : <p>{equipment.data.location ?? "Local não informado"} · {equipment.data.manufacturer ?? ""} · {equipment.data.model ?? ""}</p>}</section>

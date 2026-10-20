@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireCondominiumPermission } from "@/lib/condominium/access";
+import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { ReservationForm } from "@/components/reservations/reservation-form";
 import { formatReservationSchedule } from "@/lib/reservations/reservation-presenters";
 import { ReservationList, type ReservationListRow } from "@/components/reservations/reservation-list";
@@ -21,7 +21,7 @@ export default async function ReservationsPage({ searchParams }: { searchParams?
     supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle(),
     supabase.from("user_accounts").select("person_id").eq("auth_user_id", user.id).eq("status", "active").maybeSingle(),
     supabase.rpc("get_reservation_resource_blocks", { p_condominium_id: context.id, p_resource_id: null }),
-    supabase.rpc("has_permission", { permission_code: "reservations.manage", target_condominium_id: context.id }),
+    hasPermission("reservations.manage", context.id),
     supabase.from("reservations").select("resource_id,starts_at,ends_at,requester_person_id,status").eq("condominium_id", context.id).in("status", ["pending", "approved"]),
   ]);
   let reservationQuery = supabase.from("reservations").select("id,resource_id,requester_person_id,starts_at,ends_at,status,created_at,reservation_mode,notes,usage_fee,resource:reservable_resources(name,reservation_mode,cancellation_allowed,cancellation_deadline_minutes),unit:units(code),requester:person_condominium_links!reservations_requester_person_id_condominium_id_fkey(person:people(full_name))", { count: "exact" }).eq("condominium_id", context.id);

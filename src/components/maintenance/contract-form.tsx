@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { ContentSelect, DateInput } from "@/components/ui/form-controls";
 import { saveContract } from "@/lib/maintenance/management-actions";
 import { MoneyField, SelectField, type NamedOption } from "@/components/maintenance/management-ui";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { useClearContractFeedback } from "@/components/maintenance/contract-feedback";
 import { Alert } from "@/components/ui/feedback";
 
@@ -18,5 +18,5 @@ export function ContractForm({ providers, item }: { providers: NamedOption[]; it
     <label className="cv-field-date">Início<DateInput name="starts_on" required defaultValue={(values?.starts_on ?? item?.starts_on)} /></label><label className="cv-field-date">Término<DateInput name="ends_on" required defaultValue={(values?.ends_on ?? item?.ends_on)} /></label>
     <MoneyField label="Valor total (R$)" name="amount" value={(values?.amount ?? item?.amount)} />
     <label className="cv-field-sm">Situação<ContentSelect name="status" defaultValue={(values?.status ?? item?.status) ?? "draft"}><option value="draft">Rascunho</option><option value="active">Ativo</option><option value="expired">Encerrado</option><option value="cancelled">Cancelado</option></ContentSelect></label>
-    <label className="cv-form-wide">Observações<textarea name="notes" rows={3} defaultValue={(values?.notes ?? item?.notes) ?? ""} /></label><div className="cv-form-actions"><Button type="submit" disabled={pending}>{pending ? "Salvando…" : "Salvar contrato"}</Button></div></form></>;
+    <label className="cv-form-wide">Observações<textarea name="notes" rows={3} defaultValue={(values?.notes ?? item?.notes) ?? ""} /></label><div className="cv-form-actions"><SubmitButton type="submit" disabled={pending}>{pending ? "Salvando…" : "Salvar contrato"}</SubmitButton></div></form></>;
 }

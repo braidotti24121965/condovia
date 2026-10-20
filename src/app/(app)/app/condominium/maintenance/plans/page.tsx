@@ -2,7 +2,7 @@ import { ContentSelect, DateInput } from "@/components/ui/form-controls";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { generateDueOrders, savePlan } from "@/lib/maintenance/management-actions";
 import { Feedback, MoneyField, SelectField } from "@/components/maintenance/management-ui";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { civilDate } from "@/lib/maintenance/validation";
 
 type Plan = { id: string; structure_id: string; equipment_id: string | null; service_type_id: string | null; service_provider_id: string | null; contract_id: string | null; responsible_user_account_id: string | null; description: string; interval_days: number; next_due_on: string; advance_days: number; estimated_amount: number; checklist_template: string[]; status: string };
@@ -31,8 +31,8 @@ export default async function PlansPage({ searchParams }: { searchParams: Promis
     <label className="cv-field-xs">Gerar com antecedência (dias)<input type="number" name="advance_days" min="0" max="365" required defaultValue={item?.advance_days ?? 7} /></label>
     <MoneyField label="Orçamento previsto (R$)" name="estimated_amount" value={item?.estimated_amount} />
     <label>Situação<ContentSelect name="status" defaultValue={item?.status ?? "active"}><option value="active">Ativo</option><option value="paused">Pausado</option><option value="ended">Encerrado</option></ContentSelect></label>
-    <label className="cv-form-wide">Checklist obrigatório (um item por linha)<textarea name="checklist_template" rows={4} defaultValue={item?.checklist_template?.join("\n")} /></label><div className="cv-form-actions"><Button type="submit">Salvar plano</Button></div></>;
-  return <div className="cv-page"><section className="page-heading"><div><h1>Manutenção preventiva</h1><p>Planos recorrentes com geração de OS por vencimento, sem duplicar o mesmo ciclo.</p></div><form action={generateDueOrders}><div className="cv-form-actions"><Button type="submit">Gerar OS previstas agora</Button></div></form></section>
+    <label className="cv-form-wide">Checklist obrigatório (um item por linha)<textarea name="checklist_template" rows={4} defaultValue={item?.checklist_template?.join("\n")} /></label><div className="cv-form-actions"><SubmitButton type="submit">Salvar plano</SubmitButton></div></>;
+  return <div className="cv-page"><section className="page-heading"><div><h1>Manutenção preventiva</h1><p>Planos recorrentes com geração de OS por vencimento, sem duplicar o mesmo ciclo.</p></div><form action={generateDueOrders}><div className="cv-form-actions"><SubmitButton type="submit" pendingLabel="Gerando...">Gerar OS previstas agora</SubmitButton></div></form></section>
     <Feedback params={plans.error ? { error: "Não foi possível carregar os planos." } : await searchParams} />
     <section className="cv-panel"><h2>Novo plano</h2><form action={savePlan} className="cv-form cv-form-grid"><Fields /></form></section>
     <section className="cv-panel"><h2>Planos cadastrados</h2>{!plans.data?.length && <p>Nenhum plano cadastrado.</p>}{(plans.data as Plan[] ?? []).map(p => <details key={p.id} className="cv-maintenance-details"><summary>{p.description} · próximo {civilDate(p.next_due_on)} · {p.status === "active" ? "Ativo" : p.status === "paused" ? "Pausado" : "Encerrado"}</summary><form action={savePlan} className="cv-form cv-form-grid"><Fields item={p} /></form></details>)}</section>

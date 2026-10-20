@@ -4,7 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { ProviderForm } from "@/components/gatehouse/provider-form";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getServiceProviders } from "@/lib/gatehouse/data";
 import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
@@ -55,7 +55,7 @@ export default async function ProvidersPage({
               aria-label="Buscar prestador"
             />
           </div>
-          <Button type="submit" variant="secondary">Buscar</Button>
+          <SubmitButton type="submit" variant="secondary">Buscar</SubmitButton>
         </form>
 
         {providers.length === 0 ? (
