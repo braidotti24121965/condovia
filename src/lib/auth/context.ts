@@ -8,8 +8,11 @@ export type { AuthorizedContext } from "@/lib/auth/context-data";
 const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   if (!supabase) return { supabase: null, user: null };
-  const { data: { user } } = await supabase.auth.getUser();
-  return { supabase, user };
+  const { data, error } = await supabase.auth.getClaims();
+  const subject = data?.claims?.sub;
+  if (error || typeof subject !== "string" || !subject) return { supabase, user: null };
+  const email = typeof data.claims.email === "string" ? data.claims.email : "";
+  return { supabase, user: { id: subject, email } };
 });
 
 export const getAuthorizedContexts = cache(async (): Promise<AuthorizedContext[]> => {
