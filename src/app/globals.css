@@ -336,7 +336,8 @@ button:disabled { cursor: not-allowed; opacity: .62; }
   .cv-form-grid > .cv-field-md { grid-column: span 3; }
   .cv-form-grid > .cv-field-lg { grid-column: span 4; }
   .cv-form-grid > .cv-field-wide,.cv-form-grid > .cv-form-wide,.cv-form-grid > .cv-person-picker,.cv-form-grid > .cv-field-auto { grid-column: 1 / -1; }
-  .cv-table-wrap { display: none; }
+  .cv-table-wrap { display: block; min-width: 0; overflow-x: auto; }
+  .cv-table-wrap--has-cards { display: none; overflow: visible; }
   .cv-person-cards, .cv-unit-cards { display: grid; gap: 8px; }
   .button-small { min-height: 44px !important; }
   .topbar .search-box { min-height: 44px; }
