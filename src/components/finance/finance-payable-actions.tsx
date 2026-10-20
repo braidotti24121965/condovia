@@ -58,6 +58,11 @@ export function FinancePayableActions({ id, kind, status, description, categoryI
   const open = (nextMode: Exclude<DialogMode, null>) => { setSuccessMessage(null); setHideErrors(true); setMode(nextMode); };
   const reversePayment = reverseTarget ? payments.find((payment) => payment.id === reverseTarget) : null;
   useEffect(() => { if (successMessage) { const timer = window.setTimeout(() => setSuccessMessage(null), 4000); return () => window.clearTimeout(timer); } }, [successMessage]);
+  useEffect(() => {
+    if (reverseTarget || mode === "cancel") {
+      window.requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLInputElement>('input[name="reason"]')?.focus());
+    }
+  }, [mode, reverseTarget]);
   const title = mode === "edit" ? "Editar conta a pagar" : mode === "payment" ? "Registrar pagamento" : mode === "payments" ? `Pagamentos (${payments.length})` : mode === "cancel" ? "Cancelar conta" : "Detalhes da conta cancelada";
   const hidden = (name: string, value: string) => <input type="hidden" name={name} value={value} />;
 
