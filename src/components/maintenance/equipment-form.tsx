@@ -1,5 +1,5 @@
 import { ContentSelect, DateInput } from "@/components/ui/form-controls";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { saveEquipment } from "@/lib/maintenance/actions";
 import type { Equipment } from "@/lib/maintenance/types";
 
@@ -19,6 +19,6 @@ export function EquipmentForm({ structures, categories, current }: { structures:
       {current && <label className="cv-maintenance-equipment-status">Situação<ContentSelect name="status" defaultValue={current.status}><option value="active">Ativo</option><option value="inactive">Inativo</option><option value="retired">Desativado</option></ContentSelect></label>}
       <label className="cv-maintenance-equipment-notes">Observações<textarea name="notes" defaultValue={current?.notes ?? ""} rows={3} /></label>
     </div>
-    <Button type="submit">{current ? "Salvar equipamento" : "Cadastrar equipamento"}</Button>
+    <SubmitButton type="submit">{current ? "Salvar equipamento" : "Cadastrar equipamento"}</SubmitButton>
   </form>;
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LogIn, LogOut, FileQuestion, PackagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { formatAuthorizationWindowInTimezone } from "@/lib/gatehouse/timezone";
 import {
@@ -238,9 +239,9 @@ export function QuickActions({
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                   <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
-                  <Button type="submit" disabled={loading}>
+                  <SubmitButton type="submit" disabled={loading}>
                     {loading ? "Registrando..." : "Confirmar Entrada"}
-                  </Button>
+                  </SubmitButton>
                 </div>
               </form>
             )}
@@ -289,9 +290,9 @@ export function QuickActions({
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                   <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
-                  <Button type="submit" disabled={loading}>
+                  <SubmitButton type="submit" disabled={loading}>
                     {loading ? "Registrando..." : "Confirmar Saída"}
-                  </Button>
+                  </SubmitButton>
                 </div>
               </form>
             )}
@@ -362,9 +363,9 @@ export function QuickActions({
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                   <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
-                  <Button type="submit" disabled={loading}>
+                  <SubmitButton type="submit" disabled={loading}>
                     {loading ? "Enviando..." : "Enviar Solicitação"}
-                  </Button>
+                  </SubmitButton>
                 </div>
               </form>
             )}
@@ -398,9 +399,9 @@ export function QuickActions({
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                   <Button type="button" variant="secondary" onClick={reset}>Cancelar</Button>
-                  <Button type="submit" disabled={loading}>
+                  <SubmitButton type="submit" disabled={loading}>
                     {loading ? "Recebendo..." : "Confirmar Recebimento"}
-                  </Button>
+                  </SubmitButton>
                 </div>
               </form>
             )}

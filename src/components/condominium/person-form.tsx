@@ -2,11 +2,10 @@
 
 import { useActionState, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { addPersonRelationship, inviteResident, savePerson, savePersonContact, setPersonCpf, updatePerson } from "@/lib/condominium/actions";
 import { ConfirmedRelationshipForm } from "@/components/condominium/confirmed-relationship-form";
 import { PersonPicker } from "@/components/condominium/person-picker";
-import { RelationshipSubmitButton } from "@/components/condominium/relationship-submit-button";
 import type { PersonRelationshipKind } from "@/lib/condominium/person-return";
 import { validatePersonFields } from "@/lib/condominium/person-validation";
 
@@ -47,7 +46,7 @@ export function PersonForm({ returnPath = "", returnKind = "" }: { returnPath?: 
       <label className="cv-field-md">Telefone<input type="tel" name="phone" autoComplete="tel" maxLength={19} placeholder="+55 (11) 99999-9999" onChange={(event) => { event.currentTarget.value = formatPhone(event.currentTarget.value); validateField(event.currentTarget.form!, "phone"); }} onBlur={(event) => validateField(event.currentTarget.form!, "phone")}/>{fieldErrors.phone && <FieldError message={fieldErrors.phone}/>}</label>
     </div><p className="cv-form-hint">O CPF é opcional. Pessoas com o mesmo nome podem ser cadastradas; e-mail ou telefone já usados no condomínio pedem revisão antes de um novo cadastro.</p></div>
     {error && <p className="cv-alert cv-alert-error" role="alert">{error}</p>}
-    <Button type="submit" disabled={pending}>{pending ? "Salvando…" : "Cadastrar pessoa"}</Button>
+    <SubmitButton type="submit" disabled={pending}>{pending ? "Salvando…" : "Cadastrar pessoa"}</SubmitButton>
   </form>;
 }
 
@@ -76,7 +75,7 @@ function formatPhone(value: string) {
 export function PersonRelationshipForm({ people, units, kind, returnTo, selectedPersonId, defaultUnitId }: { people: { id: string; full_name: string }[]; units: { id: string; code: string; display_name: string | null; operational_status: string }[]; kind: PersonRelationshipKind; returnTo: string; selectedPersonId?: string; defaultUnitId?: string }) {
   const [dateErrors, setDateErrors] = useState<Record<string, string>>({});
   const [occupancyType, setOccupancyType] = useState("tenant");
-  const [state, formAction, pending] = useActionState(addPersonRelationship, { error: "" });
+  const [state, formAction] = useActionState(addPersonRelationship, { error: "" });
   const formatRelationshipDate = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 8); return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3"); };
   const validateRelationshipDates = (event: FormEvent<HTMLFormElement>) => {
     const form = new FormData(event.currentTarget);
@@ -108,7 +107,7 @@ export function PersonRelationshipForm({ people, units, kind, returnTo, selected
     {kind === "occupancy" && occupancyType === "owner" && <p className="cv-form-hint" role="status">Para cadastrar como Proprietário, primeiro crie o vínculo de propriedade em <Link href="/app/condominium/owners">Proprietários</Link> para a mesma pessoa, unidade e período. Depois retorne a esta tela para registrar a moradia.</p>}
     {kind === "ownership" && <p className="cv-form-hint">A soma das participações conhecidas não pode ultrapassar 100% nos períodos sobrepostos. Deixe em branco quando a participação não estiver informada.</p>}
     {state.error && <p className="cv-alert cv-alert-error" role="alert">{state.error}</p>}
-    <RelationshipSubmitButton />
+    <SubmitButton pendingLabel="Salvando...">Adicionar vínculo</SubmitButton>
   </ConfirmedRelationshipForm>;
 }
 
@@ -116,12 +115,12 @@ export function PersonEditForm({ person }: { person: { id:string; full_name:stri
   return <form action={updatePerson} className="cv-form"><input type="hidden" name="person_id" value={person.id}/><div className="cv-form-grid">
     <label className="cv-field-lg">Nome completo<input name="full_name" required defaultValue={person.full_name}/></label><label className="cv-field-lg">Nome preferencial<input name="preferred_name" defaultValue={person.preferred_name||""}/></label>
     <label className="cv-field-md">Data de nascimento<input name="birth_date" type="date" defaultValue={person.birth_date||""}/></label><label className="cv-field-auto">Situação<select name="status" defaultValue={person.status}><option value="active">Ativa</option><option value="inactive">Inativa</option><option value="suspended">Suspensa</option><option value="archived">Arquivada</option></select></label>
-  </div><Button type="submit">Salvar dados</Button></form>;
+  </div><SubmitButton type="submit">Salvar dados</SubmitButton></form>;
 }
 
 export function PersonCpfForm({ personId, currentCpf }: { personId:string; currentCpf:string|null }) {
   const [error, setError] = useState("");
-  return <form action={setPersonCpf} className="cv-form" onSubmit={(event) => { const cpf = String(new FormData(event.currentTarget).get("cpf") || ""); const message = cpf && !validatePersonFields({ fullName: "Pessoa", cpf }).cpf ? "" : "Informe um CPF válido."; setError(message); if (message) event.preventDefault(); }}><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-md">Novo CPF<input name="cpf" inputMode="numeric" required placeholder="000.000.000-00" maxLength={14}/></label><label className="cv-checkbox-label"><input name="confirm" type="checkbox" value="yes" required/> Confirmo a alteração do documento</label></div>{error && <p className="cv-alert cv-alert-error" role="alert">{error}</p>}<p className="cv-form-hint">{currentCpf?"O documento anterior será preservado no histórico e não será exibido após a troca.":"A inclusão será registrada no histórico."} Um CPF que pertence a outra identidade não pode ser usado.</p><Button variant="secondary" type="submit">{currentCpf?"Alterar CPF":"Adicionar CPF"}</Button></form>;
+  return <form action={setPersonCpf} className="cv-form" onSubmit={(event) => { const cpf = String(new FormData(event.currentTarget).get("cpf") || ""); const message = cpf && !validatePersonFields({ fullName: "Pessoa", cpf }).cpf ? "" : "Informe um CPF válido."; setError(message); if (message) event.preventDefault(); }}><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-md">Novo CPF<input name="cpf" inputMode="numeric" required placeholder="000.000.000-00" maxLength={14}/></label><label className="cv-checkbox-label"><input name="confirm" type="checkbox" value="yes" required/> Confirmo a alteração do documento</label></div>{error && <p className="cv-alert cv-alert-error" role="alert">{error}</p>}<p className="cv-form-hint">{currentCpf?"O documento anterior será preservado no histórico e não será exibido após a troca.":"A inclusão será registrada no histórico."} Um CPF que pertence a outra identidade não pode ser usado.</p><SubmitButton variant="secondary" type="submit">{currentCpf?"Alterar CPF":"Adicionar CPF"}</SubmitButton></form>;
 }
 
 export function PersonContactForms({ personId, emails, phones, canManage }: {
@@ -149,7 +148,7 @@ function ContactForm({personId,contactType,contactId,value,kind,isPrimary,isWhat
     <label className="cv-checkbox-label"><input name="is_primary" type="checkbox" value="yes" defaultChecked={isPrimary}/> Principal</label>
     {contactType==="phone"&&<label className="cv-checkbox-label"><input name="is_whatsapp" type="checkbox" value="yes" defaultChecked={isWhatsapp}/> WhatsApp</label>}
     {error && <p className="cv-alert cv-alert-error" role="alert">{error}</p>}
-    <Button variant="secondary" size="compact" type="submit">{contactId?"Salvar contato":"Adicionar contato"}</Button>
+    <SubmitButton variant="secondary" size="compact" type="submit">{contactId?"Salvar contato":"Adicionar contato"}</SubmitButton>
   </form>;
 }
 
@@ -157,6 +156,6 @@ export function ResidentInviteForm({ personId, emails, canInvite }: { personId:s
   if(!canInvite)return null;
   const ordered=[...emails].sort((a,b)=>Number(b.is_primary)-Number(a.is_primary));
   return <section className="cv-panel"><h2>Convidar para acesso residente</h2>
-    {!ordered.length?<p className="cv-muted">Cadastre um e-mail antes de enviar o convite.</p>:<form action={inviteResident} className="cv-form cv-inline-form"><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-lg">E-mail do convite<select name="email" required defaultValue={ordered[0].email}>{ordered.map((item)=><option value={item.email} key={item.email}>{item.email}{item.is_primary?" · Principal":""}</option>)}</select></label></div><p className="cv-form-hint">Convite disponível somente para pessoa ativa com vínculo de propriedade ou moradia vigente/futuro neste condomínio. Responsabilidade financeira isolada não habilita acesso.</p><Button type="submit">Enviar convite</Button></form>}
+    {!ordered.length?<p className="cv-muted">Cadastre um e-mail antes de enviar o convite.</p>:<form action={inviteResident} className="cv-form cv-inline-form"><input type="hidden" name="person_id" value={personId}/><div className="cv-form-grid"><label className="cv-field-lg">E-mail do convite<select name="email" required defaultValue={ordered[0].email}>{ordered.map((item)=><option value={item.email} key={item.email}>{item.email}{item.is_primary?" · Principal":""}</option>)}</select></label></div><p className="cv-form-hint">Convite disponível somente para pessoa ativa com vínculo de propriedade ou moradia vigente/futuro neste condomínio. Responsabilidade financeira isolada não habilita acesso.</p><SubmitButton type="submit" pendingLabel="Enviando...">Enviar convite</SubmitButton></form>}
   </section>;
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PackagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { receivePackageAction } from "@/lib/gatehouse/actions";
 
@@ -98,9 +99,9 @@ export function ReceivePackageButton({ units }: Props) {
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={loading}>
+                <SubmitButton type="submit" disabled={loading}>
                   {loading ? "Registrando..." : "Confirmar Recebimento"}
-                </Button>
+                </SubmitButton>
               </div>
             </form>
           </div>

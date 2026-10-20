@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { createAccessPointAction } from "@/lib/gatehouse/actions";
 
@@ -39,7 +40,7 @@ export function AccessPointForm() {
                   <option value="pedestrian">Pedestres</option><option value="vehicle">Veículos</option><option value="service">Serviço</option><option value="mixed">Misto</option>
                 </select>
               </label>
-              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button><Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button></div>
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button><SubmitButton type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</SubmitButton></div>
             </form>
           </div>
         </div>

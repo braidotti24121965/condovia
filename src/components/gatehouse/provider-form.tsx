@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Briefcase, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { createProviderAction } from "@/lib/gatehouse/actions";
 import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
@@ -112,9 +113,9 @@ export function ProviderForm() {
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={loading}>
+                <SubmitButton type="submit" disabled={loading}>
                   {loading ? "Cadastrando..." : "Salvar Prestador"}
-                </Button>
+                </SubmitButton>
               </div>
             </form>
           </div>
