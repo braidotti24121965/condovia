@@ -7,6 +7,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { resolveAppOrigin } from "@/lib/auth/app-origin";
 import { hasPermission } from "@/lib/condominium/access";
+import { getPostLoginDestination } from "@/lib/auth/context";
 
 const emailSchema = z.string().trim().email();
 const passwordSchema = z.string().min(8);
@@ -35,14 +36,18 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
   if (!supabase) return { error: "A conexão com o serviço de autenticação não está configurada." };
   const { data, error } = await supabase.auth.signInWithPassword({ email: email.data, password: password.data });
   if (error || !data.user) return { error: "Não foi possível entrar com esses dados. Confira as informações e tente novamente." };
-  const { data: accountReady, error: accountError } = await supabase.rpc("record_user_login");
+  const [{ data: accountReady, error: accountError }, { data: platformAdmin }] = await Promise.all([
+    supabase.rpc("record_user_login"),
+    supabase.rpc("has_platform_permission", { permission_code: "platform.manage" }),
+  ]);
   if (accountError || accountReady !== true) {
     await supabase.auth.signOut();
     return { error: "Não foi possível entrar com esses dados. Confira as informações e tente novamente." };
   }
-  const { data: platformAdmin } = await supabase.rpc("has_platform_permission", { permission_code: "platform.manage" });
-  if (platformAdmin === true) redirect("/app/platform");
-  redirect("/app");
+  if (process.env.NODE_ENV === "development" && process.env.CONDOVIA_LOG_SUPABASE_CALLS === "1") {
+    console.info("[condovia:login] Supabase sequential rounds", { rounds: 4, baselineRounds: 7 });
+  }
+  redirect(await getPostLoginDestination(platformAdmin === true));
 }
 
 export async function requestPasswordReset(_previous: ActionState, formData: FormData): Promise<ActionState> {

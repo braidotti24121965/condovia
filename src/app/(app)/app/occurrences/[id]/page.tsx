@@ -1,8 +1,10 @@
 import { RelatedMaintenanceOrders } from "@/components/maintenance/related-orders";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
+import { hasPermission } from "@/lib/condominium/access";
 import { addOccurrenceCommentAction, transitionOccurrenceAction } from "@/lib/occurrences/actions";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -19,13 +21,14 @@ const priorityBadgeVariants: Record<string, "success" | "neutral" | "warning" | 
 export default async function OccurrenceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [{ id }, { supabase }, context] = await Promise.all([params, requireUser(), requireCurrentContext()]);
   if (!supabase || context.type !== "condominium") return notFound();
-  const [{ data: occurrence, error: occurrenceError }, { data: comments }, { data: history }, { data: assigneeRows }] = await Promise.all([
+  const [{ data: occurrence, error: occurrenceError }, { data: comments }, { data: history }, { data: assigneeRows }, { data: canRead }] = await Promise.all([
     supabase.from("occurrences").select("*, category:occurrence_categories!occurrences_category_id_condominium_id_fkey(name)").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
     supabase.from("occurrence_comments").select("id,body,visibility,created_at,author_user_account_id").eq("occurrence_id", id).eq("condominium_id", context.id),
     supabase.from("occurrence_history").select("id,event_type,previous_status,new_status,reason,created_at").eq("occurrence_id", id).eq("condominium_id", context.id),
     supabase.from("role_assignments").select("user_account_id,user_accounts(id,people(full_name,preferred_name)),roles!inner(code)").eq("condominium_id", context.id).eq("status", "active").in("roles.code", ["condominium.syndic", "condominium.manager"]),
+    hasPermission("occurrences.read", context.id),
   ]);
-  if (!occurrence || occurrenceError) return notFound();
+  if (canRead !== true || !occurrence || occurrenceError) return notFound();
   const sortedComments = [...(comments || [])].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
   const sortedHistory = [...(history || [])].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
   const assignees = (assigneeRows || []) as AssigneeRow[];
@@ -39,7 +42,7 @@ export default async function OccurrenceDetailPage({ params }: { params: Promise
       {occurrence.status === "resolved" && <><form action={transitionOccurrenceAction}><input type="hidden" name="occurrence_id" value={id}/><input type="hidden" name="action" value="close"/><SubmitButton type="submit" pendingLabel="Encerrando...">Encerrar</SubmitButton></form><form action={transitionOccurrenceAction}><input type="hidden" name="occurrence_id" value={id}/><input type="hidden" name="action" value="reopen"/><input name="reason" required placeholder="Motivo da reabertura"/><SubmitButton variant="secondary" type="submit" pendingLabel="Reabrindo...">Reabrir</SubmitButton></form></>}
       {["open", "triage", "in_progress"].includes(occurrence.status) && <form action={transitionOccurrenceAction}><input type="hidden" name="occurrence_id" value={id}/><input type="hidden" name="action" value="cancel"/><input name="reason" required placeholder="Motivo do cancelamento"/><SubmitButton variant="destructive" type="submit" pendingLabel="Cancelando...">Cancelar</SubmitButton></form>}
     </div></section>}
-    <RelatedMaintenanceOrders occurrenceId={id} />
+    <Suspense fallback={<div className="cv-panel loading-page" role="status" aria-label="Carregando ordens relacionadas"><span className="skeleton skeleton-section-title" /><div className="skeleton skeleton-table" /><span className="sr-only">Carregando ordens relacionadas…</span></div>}><RelatedMaintenanceOrders occurrenceId={id} /></Suspense>
     <section className="cv-panel occurrence-detail-panel occurrence-comments-panel"><div className="cv-panel-heading"><div><span className="occurrence-section-eyebrow">Colaboração</span><h2>Comentários</h2><p>{sortedComments.length ? `${sortedComments.length} registro${sortedComments.length === 1 ? "" : "s"}` : "Nenhum comentário registrado"}</p></div></div><div className="occurrence-comments">{sortedComments.map((comment) => <article key={comment.id} className="occurrence-comment"><strong>{comment.visibility === "internal" ? "Interno" : "Solicitante"}</strong><p>{comment.body}</p></article>)}</div><form action={addOccurrenceCommentAction} className="cv-form-grid occurrence-comment-form"><input type="hidden" name="occurrence_id" value={id}/><label className="occurrence-comment-body"><span>Adicionar comentário</span><textarea name="body" required minLength={1} placeholder="Escreva uma atualização para esta ocorrência"/></label><label className="occurrence-comment-visibility">Visibilidade<select name="visibility" defaultValue="requester"><option value="requester">Solicitante</option><option value="internal">Interno</option></select></label><SubmitButton type="submit" pendingLabel="Enviando...">Comentar</SubmitButton></form></section>
     <section className="cv-panel occurrence-detail-panel occurrence-history-panel"><div className="cv-panel-heading"><div><span className="occurrence-section-eyebrow">Linha do tempo</span><h2>Histórico</h2><p>Movimentações em ordem cronológica.</p></div></div><ol className="occurrence-timeline">{sortedHistory.map((event) => <li key={event.id}><span className="occurrence-timeline-dot" aria-hidden="true"/><div className="occurrence-timeline-card"><div className="occurrence-timeline-topline"><strong>{eventLabels[event.event_type] || event.event_type}</strong><time>{new Date(event.created_at).toLocaleString("pt-BR")}</time></div><p>{event.previous_status ? `${statusLabels[event.previous_status] || event.previous_status}${event.new_status ? ` → ${statusLabels[event.new_status] || event.new_status}` : ""}` : "Registro criado"}</p>{event.reason && <small>{event.reason}</small>}</div></li>)}</ol></section></main><aside className="occurrence-detail-aside"><section className="cv-panel occurrence-detail-summary"><span className="occurrence-section-eyebrow">Visão rápida</span><h2>Resumo</h2><div><span>Status</span><strong>{statusLabels[occurrence.status] || occurrence.status}</strong></div><div><span>Prioridade</span><strong>{priorityLabels[occurrence.priority] || occurrence.priority}</strong></div><div><span>Categoria</span><strong>{occurrence.category?.name || "Sem categoria"}</strong></div></section></aside></div>
   </div>;

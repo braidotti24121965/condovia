@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ChevronRight, ClipboardList } from "lucide-react";
-import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
+import { redirect } from "next/navigation";
+import { hasPermission } from "@/lib/condominium/access";
+import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -11,15 +13,19 @@ const statusLabels = { pending_review: "Aguardando análise", approved: "Aprovad
 const priorityLabels = { low: "Baixa", medium: "Média", high: "Alta", emergency: "Emergência" } as const;
 
 export default async function MaintenanceRequestDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ decide?: string; error?: string }> }) {
-  const { supabase, context } = await requireCondominiumPermission("maintenance.requests.read");
+  const { supabase, user } = await requireUser();
+  const context = await requireCurrentContext();
+  if (!supabase || !user || context.type !== "condominium") redirect("/no-permission");
   const { id } = await params;
   const query = await searchParams;
-  const [{ data: request }, { data: history }, { data: canDecide }, { data: canCreateOrder }] = await Promise.all([
+  const [{ data: request }, { data: history }, { data: canRead }, { data: canDecide }, { data: canCreateOrder }] = await Promise.all([
     supabase.from("maintenance_requests").select("*,condominium_structures(name),maintenance_equipment(identification)").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
     supabase.from("maintenance_request_history").select("id,event_type,previous_status,new_status,reason,created_at").eq("request_id", id).eq("condominium_id", context.id).order("created_at"),
+    hasPermission("maintenance.requests.read", context.id),
     hasPermission("maintenance.requests.decide", context.id),
     hasPermission("maintenance.orders.create", context.id),
   ]);
+  if (canRead !== true) redirect("/no-permission");
   if (!request) return <div className="cv-page"><EmptyState title="Solicitação não encontrada" description="A solicitação pode ter sido removida ou não pertence a este condomínio."/></div>;
   return <div className="cv-page"><div className="breadcrumbs"><Link href="/app/condominium/maintenance/requests">Solicitações</Link><ChevronRight size={14}/><strong>#{request.request_number}</strong></div>
     <section className="page-heading"><div><p className="page-overline">SOLICITAÇÃO #{request.request_number}</p><h1>{request.title}</h1><p>{(request.condominium_structures as { name?: string } | null)?.name ?? "Área comum"}</p></div><div className="cv-import-actions"><StatusBadge variant={request.status === "approved" ? "success" : request.status === "rejected" ? "danger" : "warning"}>{statusLabels[request.status as keyof typeof statusLabels] ?? request.status}</StatusBadge><StatusBadge variant={request.priority === "emergency" ? "danger" : "neutral"}>{priorityLabels[request.priority as keyof typeof priorityLabels] ?? request.priority}</StatusBadge></div></section>

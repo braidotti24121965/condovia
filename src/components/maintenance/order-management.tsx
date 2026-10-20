@@ -14,6 +14,9 @@ type Detail = { id: string; due_at: string | null; responsible_user_account_id: 
 type Finance = { actual_cost_recorded: boolean; estimated_amount: number; actual_amount: number; approved_amount: number | null; financial_revision: number; approved_revision: number | null; selected_quotation_id: string | null };
 type Step = { id: string; revision: number; amount: number; rule_name: string; required_approvals: number; role_id: string; maintenance_approval_decisions: { id: string; decision: string; reason: string; created_at: string; decided_by: string; decided_by_name: string }[] };
 export type OrderManagementPermissions = Record<string, boolean>;
+export function OrderManagementSkeleton() {
+  return <div className="cv-panel loading-page" role="status" aria-label="Carregando gestão da ordem de serviço"><span className="skeleton skeleton-section-title" /><div className="skeleton skeleton-banner" /><div className="skeleton-grid"><span className="skeleton" /><span className="skeleton" /></div><span className="sr-only">Carregando gestão da ordem de serviço…</span></div>;
+}
 type OrderManagementProps = {
   order: Detail;
   supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>;
