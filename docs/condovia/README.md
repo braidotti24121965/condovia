@@ -1,12 +1,14 @@
 # Documentação consolidada do CondoVia
 
-Data de referência: 08/10/2026
+Data de referência: 19/10/2026
 Produção: `https://condovia.kynovia.com.br`
+Homologação: `https://homolog-condovia.kynovia.com.br`
 Repositório: `braidotti24121965/condovia`
 
 ## Índice
 
 - [Documento mestre](./documento-mestre.md)
+- [Ambientes](./ambientes.md)
 - [Entrega integral da manutenção](./manutencao-entrega-integral.md)
 - [Estado funcional dos módulos](./estado-funcional.md)
 - [Arquitetura e segurança](./arquitetura-e-seguranca.md)

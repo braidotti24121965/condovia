@@ -1,11 +1,26 @@
 "use client";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { ContentSelect, FormattedInput } from "@/components/ui/form-controls";
+import { validateBrazilianCnpj } from "@/lib/condominium/format";
+import { isValidCpf, normalizeDigits } from "@/lib/condominium/person-validation";
 export type Provider = { id: string; full_name: string; company_name: string | null; document_type: string | null; document_number: string | null; phone: string | null; email: string | null; address: string | null; service_type: string | null; status: string };
 export function ProviderFields({ item }: { item?: Provider }) {
   const [documentType, setDocumentType] = useState(item?.document_type ?? "cnpj");
-  return <>{item && <input type="hidden" name="id" value={item.id} />}
+  const [documentError, setDocumentError] = useState("");
+  const validateDocument = (event: FormEvent<HTMLDivElement>) => {
+    const formElement = event.currentTarget.closest("form");
+    if (!formElement) return;
+    const form = new FormData(formElement);
+    const document = String(form.get("document_number") || "").trim();
+    const valid = documentType === "cnpj" ? validateBrazilianCnpj(document) : documentType === "cpf" ? isValidCpf(document) : normalizeDigits(document).length > 0;
+    if (!valid) {
+      event.preventDefault();
+      setDocumentError(documentType === "cnpj" ? "Informe um CNPJ válido." : documentType === "cpf" ? "Informe um CPF válido." : "Informe um documento válido.");
+    } else setDocumentError("");
+  };
+  return <div onSubmit={validateDocument}>
+    {item && <input type="hidden" name="id" value={item.id} />}
     <label className="cv-field-md">Nome do profissional ou fornecedor<input name="full_name" defaultValue={item?.full_name} required minLength={2} maxLength={180} /></label>
     <label className="cv-field-md">Empresa / razão social<input name="company_name" defaultValue={item?.company_name ?? ""} /></label>
     <label className="cv-field-sm">Documento<ContentSelect name="document_type" value={documentType} onChange={event => setDocumentType(event.target.value)}><option value="cnpj">CNPJ</option><option value="cpf">CPF</option><option value="rg">RG</option><option value="cnh">CNH</option><option value="other">Outro</option></ContentSelect></label>
@@ -15,6 +30,7 @@ export function ProviderFields({ item }: { item?: Provider }) {
     <label className="cv-form-wide">Endereço<input name="address" defaultValue={item?.address ?? ""} /></label>
     <label className="cv-field-md">Especialidade<input name="service_type" defaultValue={item?.service_type ?? ""} /></label>
     <label className="cv-field-sm">Situação<ContentSelect name="status" defaultValue={item?.status ?? "active"}><option value="active">Ativo</option><option value="inactive">Inativo</option></ContentSelect></label>
+    {documentError && <p className="cv-alert cv-alert-error" role="alert">{documentError}</p>}
     <div className="cv-form-actions"><Button type="submit">{item ? "Salvar fornecedor" : "Cadastrar fornecedor"}</Button></div>
-  </>;
+  </div>;
 }

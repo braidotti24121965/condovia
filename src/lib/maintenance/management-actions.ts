@@ -103,7 +103,16 @@ export async function selectQuotation(f: FormData) {
 }
 
 export async function requestApproval(f: FormData) {
-  await call("maintenance.finance.manage", "request_maintenance_financial_approval", { p_order: text(f, "work_order_id") }, orderPath(f));
+  const path = orderPath(f);
+  const { supabase } = await requireCondominiumPermission("maintenance.finance.manage");
+  const { error } = await supabase.rpc("request_maintenance_financial_approval", { p_order: text(f, "work_order_id") });
+  if (error) {
+    const safe = /^[A-ZÀ-Úa-zà-ú]/.test(error.message) && !/(column|relation|constraint|syntax|violates|duplicate|function)/i.test(error.message)
+      ? error.message : "Não foi possível solicitar a aprovação financeira.";
+    redirect(`${path}?error=${encodeURIComponent(safe)}`);
+  }
+  revalidatePath(path);
+  redirect(`${path}?updated=1`);
 }
 
 export async function decideApproval(f: FormData) {

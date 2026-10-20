@@ -24,10 +24,19 @@ export function isValidBrazilianPhone(value: string) {
 }
 
 export function isValidIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split("-").map(Number);
+  const normalized = normalizeDateInput(value);
+  if (!normalized) return false;
+  const [year, month, day] = normalized.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+export function normalizeDateInput(value: string) {
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    const [day, month, year] = value.split("/");
+    return `${year}-${month}-${day}`;
+  }
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
 }
 
 export function validatePersonFields(fields: { fullName: string; preferredName?: string; birthDate?: string; cpf?: string; email?: string; phone?: string }) {
