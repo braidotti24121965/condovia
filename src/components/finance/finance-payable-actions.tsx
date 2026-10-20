@@ -9,6 +9,7 @@ import type { FinanceActionState } from "@/lib/finance/actions";
 type Action = (previousState: FinanceActionState, formData: FormData) => Promise<FinanceActionState>;
 type Payment = { id: string; amount_cents: number; paid_on: string; method: string; notes: string | null; reversed_at: string | null; reversal_reason: string | null };
 type Option = { id: string; name: string };
+type UnitOption = { id: string; name: string; payerOptions: Option[] };
 type Kind = "payable" | "receivable";
 type Status = "open" | "partially_paid" | "partially_received" | "paid" | "received" | "cancelled";
 type DialogMode = "edit" | "payment" | "payments" | "cancel" | "details" | null;
@@ -16,7 +17,7 @@ type DialogMode = "edit" | "payment" | "payments" | "cancel" | "details" | null;
 const methodLabels: Record<string, string> = { pix: "PIX", boleto: "Boleto", transferencia: "Transferência", dinheiro: "Dinheiro", cartao: "Cartão", outro: "Outro" };
 const formatDate = (value: string) => value.split("-").reverse().join("/");
 
-export function FinancePayableActions({ id, kind, status, description, categoryId, competenceDate, dueDate, amountCents, supplierId, notes, remainingCents, today, payments, categories, suppliers, period, updateAction, paymentAction, reverseAction, cancelAction, cancelledAt, cancelledBy, cancellationReason }: { id: string; kind: Kind; status: Status; description: string; categoryId: string | null; competenceDate: string; dueDate: string; amountCents: number; supplierId: string | null; notes: string | null; remainingCents: number; today: string; payments: Payment[]; categories: Option[]; suppliers: Option[]; period: string; updateAction?: Action; paymentAction: Action; reverseAction: Action; cancelAction: Action; cancelledAt?: string | null; cancelledBy?: string | null; cancellationReason?: string | null }) {
+export function FinancePayableActions({ id, kind, status, description, categoryId, competenceDate, dueDate, amountCents, supplierId, unitId, payerPersonId, notes, remainingCents, today, payments, categories, suppliers, units, period, updateAction, paymentAction, reverseAction, cancelAction, cancelledAt, cancelledBy, cancellationReason }: { id: string; kind: Kind; status: Status; description: string; categoryId: string | null; competenceDate: string; dueDate: string; amountCents: number; supplierId: string | null; unitId?: string | null; payerPersonId?: string | null; notes: string | null; remainingCents: number; today: string; payments: Payment[]; categories: Option[]; suppliers: Option[]; units?: UnitOption[]; period: string; updateAction?: Action; paymentAction: Action; reverseAction: Action; cancelAction: Action; cancelledAt?: string | null; cancelledBy?: string | null; cancellationReason?: string | null }) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<"edit" | "payment" | "payments" | "cancel" | "details" | null>(null);
@@ -30,7 +31,7 @@ export function FinancePayableActions({ id, kind, status, description, categoryI
   const [paymentState, paymentFormAction] = useActionState(paymentAction, { ok: false });
   const [reverseState, reverseFormAction] = useActionState(reverseAction, { ok: false });
   const [cancelState, cancelFormAction] = useActionState(cancelAction, { ok: false });
-  const canEdit = kind === "payable" && status === "open" && Boolean(updateAction);
+  const canEdit = status === "open" && Boolean(updateAction);
   const canPay = (status === "open" || status === "partially_paid" || status === "partially_received") && remainingCents > 0;
   const canCancel = status === "open" || status === "partially_paid" || status === "partially_received";
 
@@ -63,7 +64,8 @@ export function FinancePayableActions({ id, kind, status, description, categoryI
       window.requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLInputElement>('input[name="reason"]')?.focus());
     }
   }, [mode, reverseTarget]);
-  const title = mode === "edit" ? "Editar conta a pagar" : mode === "payment" ? "Registrar pagamento" : mode === "payments" ? `Pagamentos (${payments.length})` : mode === "cancel" ? "Cancelar conta" : "Detalhes da conta cancelada";
+  const receiving = kind === "receivable";
+  const title = mode === "edit" ? (receiving ? "Editar receita" : "Editar conta a pagar") : mode === "payment" ? (receiving ? "Registrar recebimento" : "Registrar pagamento") : mode === "payments" ? `${receiving ? "Recebimentos" : "Pagamentos"} (${payments.length})` : mode === "cancel" ? (receiving ? "Cancelar receita" : "Cancelar conta") : "Detalhes da conta cancelada";
   const hidden = (name: string, value: string) => <input type="hidden" name={name} value={value} />;
 
   return <>
@@ -82,6 +84,7 @@ export function FinancePayableActions({ id, kind, status, description, categoryI
           {!hideErrors && !editState.ok && editState.message && <Alert tone="error">{editState.message}</Alert>}{hidden("id", id)}{hidden("period", period)}
           <label>Descrição<input name="description" defaultValue={description} required minLength={2} autoComplete="off" /></label>
           <label>Categoria<select name="category_id" defaultValue={categoryId ?? ""}><option value="">Não informado</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+          {receiving && <><label>Unidade<select name="unit_id" defaultValue={unitId ?? ""}><option value="">Sem unidade</option>{(units ?? []).map(unit => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select></label><label>Pagador<select name="payer_person_id" defaultValue={payerPersonId ?? ""}><option value="">Não informado</option>{(units?.find(unit => unit.id === unitId)?.payerOptions ?? []).map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label></>}
           <label>Competência<input name="competence_date" type="date" defaultValue={competenceDate} required autoComplete="off" /></label>
           <label>Vencimento<input name="due_date" type="date" defaultValue={dueDate} required autoComplete="off" /></label>
           <label>Valor (R$)<input name="amount" type="number" min="0.01" step="0.01" defaultValue={(amountCents / 100).toFixed(2)} required autoComplete="off" /></label>
@@ -92,7 +95,7 @@ export function FinancePayableActions({ id, kind, status, description, categoryI
         {mode === "payment" && <form action={paymentFormAction} className="cv-form cv-form-grid cv-finance-dialog-grid">
           {!hideErrors && !paymentState.ok && paymentState.message && <Alert tone="error">{paymentState.message}</Alert>}{hidden("id", id)}{hidden("kind", kind)}{hidden("period", period)}
           <label>Valor (R$)<input name="amount" type="number" min="0.01" step="0.01" defaultValue={(remainingCents / 100).toFixed(2)} required autoComplete="off" /></label>
-          <label>Data<input name="paid_on" type="date" defaultValue={today} required autoComplete="off" /></label>
+          <label>{receiving ? "Data do recebimento" : "Data do pagamento"}<input name="paid_on" type="date" defaultValue={today} required autoComplete="off" /></label>
           <label>Forma<select name="method" defaultValue="pix"><option value="pix">PIX</option><option value="boleto">Boleto</option><option value="transferencia">Transferência</option><option value="dinheiro">Dinheiro</option><option value="cartao">Cartão</option><option value="outro">Outro</option></select></label>
           <label>Observação<input name="notes" autoComplete="off" /></label>
           <footer className="cv-finance-dialog-actions"><button type="button" className="button button-secondary button-compact" onClick={close}>Fechar</button><SubmitButton type="submit" pendingLabel="Registrando...">Confirmar</SubmitButton></footer>
