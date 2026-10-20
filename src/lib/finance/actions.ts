@@ -28,6 +28,41 @@ export async function saveFinanceCategory(form: FormData) {
   redirect(financeUrl(view, period, { saved: "category" }));
 }
 
+export async function updateFinanceCategory(form: FormData) {
+  const { supabase, context } = await requireCondominiumPermission("finance.categories.manage");
+  const id = text(form, "id"); const name = text(form, "name"); const kind = text(form, "kind");
+  if (!id || name.length < 2 || !["payable", "receivable", "both"].includes(kind)) redirect(financeUrl("overview", periodOf(form), { error: "Confira o nome e a aplicação da categoria." }));
+  const { error } = await supabase.from("condominium_finance_categories").update({ name, kind, updated_at: new Date().toISOString() }).eq("id", id).eq("condominium_id", context.id);
+  if (error) redirect(financeUrl("overview", periodOf(form), { error: error.message.includes("duplicate") ? "Esta categoria já existe." : "Não foi possível atualizar a categoria." }));
+  revalidatePath("/app/condominium/finance");
+  redirect(financeUrl("overview", periodOf(form), { saved: "category" }));
+}
+
+export async function setFinanceCategoryStatus(form: FormData) {
+  const { supabase, context } = await requireCondominiumPermission("finance.categories.manage");
+  const id = text(form, "id"); const status = text(form, "status");
+  if (!id || !["active", "inactive"].includes(status)) redirect(financeUrl("overview", periodOf(form), { error: "Situação de categoria inválida." }));
+  const { error } = await supabase.from("condominium_finance_categories").update({ status, updated_at: new Date().toISOString() }).eq("id", id).eq("condominium_id", context.id);
+  if (error) redirect(financeUrl("overview", periodOf(form), { error: "Não foi possível alterar a situação da categoria." }));
+  revalidatePath("/app/condominium/finance");
+  redirect(financeUrl("overview", periodOf(form), { saved: "category" }));
+}
+
+export async function deleteFinanceCategory(form: FormData) {
+  const { supabase, context } = await requireCondominiumPermission("finance.categories.manage");
+  const id = text(form, "id");
+  if (!id) redirect(financeUrl("overview", periodOf(form), { error: "Categoria inválida." }));
+  const [{ count: payables }, { count: receivables }] = await Promise.all([
+    supabase.from("condominium_payables").select("id", { count: "exact", head: true }).eq("category_id", id).eq("condominium_id", context.id),
+    supabase.from("condominium_receivables").select("id", { count: "exact", head: true }).eq("category_id", id).eq("condominium_id", context.id),
+  ]);
+  if ((payables ?? 0) > 0 || (receivables ?? 0) > 0) redirect(financeUrl("overview", periodOf(form), { error: "Esta categoria já foi usada em contas e não pode ser excluída. Inative-a para que não apareça em novos lançamentos." }));
+  const { error } = await supabase.from("condominium_finance_categories").delete().eq("id", id).eq("condominium_id", context.id);
+  if (error) redirect(financeUrl("overview", periodOf(form), { error: "Não foi possível excluir a categoria." }));
+  revalidatePath("/app/condominium/finance");
+  redirect(financeUrl("overview", periodOf(form), { saved: "category" }));
+}
+
 export async function savePayable(form: FormData) {
   const { supabase, context } = await requireCondominiumPermission("finance.payables.manage");
   const view = viewOf(form, "payables"); const period = periodOf(form);
