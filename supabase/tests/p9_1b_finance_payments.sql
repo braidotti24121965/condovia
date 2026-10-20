@@ -1,6 +1,6 @@
 begin;
 
-select plan(34);
+select plan(37);
 select has_table('public', 'condominium_payments', 'payments table exists');
 select has_table('public', 'condominium_finance_events', 'finance events table exists');
 select has_column('public', 'condominium_payables', 'cancelled_at', 'payables have cancellation timestamp');
@@ -64,6 +64,7 @@ set local role postgres;
 select is((select status from public.condominium_payables where id = 'b1b17000-0000-4000-8000-000000000001'), 'paid', 'total payment marks payable paid');
 select is((select notes from public.condominium_payments where payable_id = 'b1b17000-0000-4000-8000-000000000001'), 'pagamento total', 'payment notes are trimmed');
 set local role authenticated;
+select throws_ok($$update public.condominium_payables set description = 'Tentativa paga' where id = 'b1b17000-0000-4000-8000-000000000001'$$, '23514', 'Conta encerrada não pode ser editada', 'paid payable cannot be edited');
 select throws_ok($$update public.condominium_payments set notes = 'direct update' where payable_id = 'b1b17000-0000-4000-8000-000000000001'$$, '42501', null, 'direct payment update is rejected');
 select (public.register_finance_payment('payable', 'b1b17000-0000-4000-8000-000000000002', 4000, current_date, 'boleto', null)).id is not null;
 set local role postgres;
@@ -77,11 +78,13 @@ set local role postgres;
 select is((select status from public.condominium_payables where id = 'b1b17000-0000-4000-8000-000000000002'), 'open', 'reversal recalculates payable status');
 select is((select payload->>'reason' from public.condominium_finance_events where event_type = 'payment_reversed' and entity_type = 'payment' limit 1), 'erro de teste', 'reversal event reason is trimmed');
 set local role authenticated;
+select lives_ok($$update public.condominium_payables set description = 'Conta aberta editada' where id = 'b1b17000-0000-4000-8000-000000000003'$$, 'open payable can be edited');
 select ok(public.cancel_finance_entry('payable', 'b1b17000-0000-4000-8000-000000000003', '  sem pagamento  '), 'cancellation without payment succeeds');
 set local role postgres;
 select is((select status from public.condominium_payables where id = 'b1b17000-0000-4000-8000-000000000003'), 'cancelled', 'cancellation stores cancelled status');
 select is((select cancellation_reason from public.condominium_payables where id = 'b1b17000-0000-4000-8000-000000000003'), 'sem pagamento', 'cancellation reason is trimmed');
 set local role authenticated;
+select throws_ok($$update public.condominium_payables set notes = 'Tentativa cancelada' where id = 'b1b17000-0000-4000-8000-000000000003'$$, '23514', 'Conta encerrada não pode ser editada', 'cancelled payable cannot be edited');
 select throws_ok($$select public.register_finance_payment('payable', 'b1b17000-0000-4000-8000-000000000004', 1000, current_date, 'pix', null)$$, '42501', 'Conta a pagar não autorizada', 'cross-condominium payment is rejected');
 
 select * from finish();
