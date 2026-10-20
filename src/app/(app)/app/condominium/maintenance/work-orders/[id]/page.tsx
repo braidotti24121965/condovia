@@ -1,9 +1,12 @@
 import { formatEventDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 import { ContentSelect } from "@/components/ui/form-controls";
 import Link from "next/link";
-import { OrderManagement, type OrderManagementPermissions } from "@/components/maintenance/order-management";
+import { Suspense } from "react";
+import { OrderManagement, OrderManagementSkeleton, type OrderManagementPermissions } from "@/components/maintenance/order-management";
 import { ChevronRight, ClipboardCheck } from "lucide-react";
-import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
+import { redirect } from "next/navigation";
+import { hasPermission } from "@/lib/condominium/access";
+import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { transitionMaintenanceWorkOrderAction, updateMaintenanceWorkOrderActivityAction } from "@/lib/maintenance/actions";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -15,10 +18,12 @@ const eventLabels: Record<string, string> = {"created": "Criada", "assigned": "A
 type MaintenanceAssignee = { user_account_id: string; display_name: string };
 
 export default async function WorkOrderDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; updated?: string }> }) {
-  const { supabase, context } = await requireCondominiumPermission("maintenance.orders.read");
+  const { supabase, user } = await requireUser();
+  const context = await requireCurrentContext();
+  if (!supabase || !user || context.type !== "condominium") redirect("/no-permission");
   const { id } = await params;
   const query = await searchParams;
-  const permissionCodes = ["maintenance.finance.read", "maintenance.finance.manage", "maintenance.finance.approve", "maintenance.documents.read", "maintenance.documents.manage", "maintenance.orders.manage", "maintenance.orders.update", "occurrences.read"] as const;
+  const permissionCodes = ["maintenance.orders.read", "maintenance.finance.read", "maintenance.finance.manage", "maintenance.finance.approve", "maintenance.documents.read", "maintenance.documents.manage", "maintenance.orders.manage", "maintenance.orders.update", "occurrences.read"] as const;
   const [orderResult, historyResult, rawUsersResult, ...permissionResults] = await Promise.all([
     supabase.from("maintenance_work_orders").select("id,condominium_id,work_order_number,description,priority,status,origin,due_at,equipment_id,structure_id,responsible_user_account_id,service_provider_id,activity_notes,observations,technical_conclusion,maintenance_kind,service_type_id,contract_id,occurrence_id,scheduled_on,condominium_structures(name),maintenance_equipment(identification),service_providers!maintenance_work_orders_service_provider_id_condominium_id_fkey(full_name,company_name),user_accounts:responsible_user_account_id(id,people(full_name,preferred_name))").eq("id", id).eq("condominium_id", context.id).maybeSingle(),
     supabase.rpc("get_maintenance_order_history", { p_order: id }),
@@ -29,6 +34,7 @@ export default async function WorkOrderDetailPage({ params, searchParams }: { pa
   const { data: history } = historyResult;
   const { data: rawUsers } = rawUsersResult;
   const permissions = Object.fromEntries(permissionCodes.map((code, index) => [code, permissionResults[index]?.data === true])) as OrderManagementPermissions;
+  if (permissions["maintenance.orders.read"] !== true) redirect("/no-permission");
   const canManage = permissions["maintenance.orders.manage"] === true;
   const canUpdate = permissions["maintenance.orders.update"] === true;
   if (process.env.NODE_ENV === "development" && process.env.CONDOVIA_LOG_SUPABASE_CALLS === "1") {
@@ -52,7 +58,7 @@ export default async function WorkOrderDetailPage({ params, searchParams }: { pa
     <section className="cv-panel"><h2><ClipboardCheck size={18}/> Dados da ordem</h2><div className="cv-read-grid"><p><span>Área comum</span><strong>{structure?.name ?? "—"}</strong></p><p><span>Equipamento</span><strong>{equipment?.identification ?? "Não informado"}</strong></p><p><span>Responsável</span><strong>{responsible?.preferred_name ?? responsible?.full_name ?? users?.find(item => item.user_account_id === order.responsible_user_account_id)?.display_name ?? "A definir"}</strong></p><p><span>Prestador cadastrado</span><strong>{provider ? [provider.full_name, provider.company_name].filter(Boolean).join(" · ") : "Nenhum"}</strong></p><p><span>Prazo</span><strong>{order.due_at ? new Date(`${order.due_at}T00:00:00Z`).toLocaleDateString("pt-BR") : "Não definido"}</strong></p><p><span>Origem</span><strong>{order.origin === "maintenance_request" ? "Solicitação aprovada" : order.origin === "preventive_plan" ? "Plano preventivo" : order.origin === "occurrence" ? "Ocorrência" : "Abertura direta"}</strong></p><p className="cv-read-wide"><span>Descrição</span><strong>{order.description}</strong></p></div></section>
     {(canUpdate === true || canManage === true) && !["completed", "cancelled"].includes(order.status) && <section className="cv-panel"><h2>Execução e registro técnico</h2><form action={updateMaintenanceWorkOrderActivityAction} className="cv-form cv-form-grid"><input type="hidden" name="work_order_id" value={id}/><label className="cv-form-wide">Atividades executadas<textarea name="activity_notes" rows={5} defaultValue={order.activity_notes ?? ""}/></label><label className="cv-form-wide">Observações<textarea name="observations" rows={4} defaultValue={order.observations ?? ""}/></label><label className="cv-form-wide">Conclusão técnica<textarea name="technical_conclusion" rows={4} defaultValue={order.technical_conclusion ?? ""}/></label><div className="cv-form-actions"><SubmitButton type="submit">Salvar registro técnico</SubmitButton></div></form></section>}
     {(canManage === true || canUpdate === true) && !["completed", "cancelled"].includes(order.status) && <section className="cv-panel"><h2>Próxima etapa</h2><div className="cv-import-actions">{canManage === true && order.status === "open" && <form action={transitionMaintenanceWorkOrderAction} className="cv-form"><input type="hidden" name="work_order_id" value={id}/><input type="hidden" name="action" value="assign"/><label>Responsável interno<ContentSelect name="responsible_user_account_id" required><option value="">Selecione</option>{(users ?? []).map((item) => <option key={item.user_account_id} value={item.user_account_id}>{item.display_name}</option>)}</ContentSelect></label><div className="cv-form-actions"><SubmitButton type="submit" pendingLabel="Atribuindo...">Atribuir</SubmitButton></div></form>}{canUpdate === true && order.status === "assigned" && <form action={transitionMaintenanceWorkOrderAction}><input type="hidden" name="work_order_id" value={id}/><input type="hidden" name="action" value="start"/><div className="cv-form-actions"><SubmitButton type="submit" pendingLabel="Iniciando...">Iniciar execução</SubmitButton></div></form>}{canUpdate === true && order.status === "in_progress" && <form action={transitionMaintenanceWorkOrderAction}><input type="hidden" name="work_order_id" value={id}/><input type="hidden" name="action" value="submit_validation"/><div className="cv-form-actions"><SubmitButton type="submit" pendingLabel="Enviando...">Enviar para validação</SubmitButton></div></form>}{canManage === true && order.status === "awaiting_validation" && <form action={transitionMaintenanceWorkOrderAction}><input type="hidden" name="work_order_id" value={id}/><input type="hidden" name="action" value="validate"/><div className="cv-form-actions"><SubmitButton type="submit" pendingLabel="Validando...">Validar e concluir</SubmitButton></div></form>}{canManage === true && <form action={transitionMaintenanceWorkOrderAction} className="cv-form"><input type="hidden" name="work_order_id" value={id}/><input type="hidden" name="action" value="cancel"/><label>Motivo do cancelamento<input name="reason" required minLength={3}/></label><div className="cv-form-actions"><SubmitButton variant="secondary" type="submit" pendingLabel="Cancelando...">Cancelar OS</SubmitButton></div></form>}</div></section>}
-    <OrderManagement order={order} supabase={supabase} context={context} permissions={permissions} />
+    <Suspense fallback={<OrderManagementSkeleton />}><OrderManagement order={order} supabase={supabase} context={context} permissions={permissions} /></Suspense>
     <section className="cv-panel"><h2>Histórico</h2>{events.length === 0 ? <EmptyState title="Histórico indisponível" description="Nenhum evento foi registrado."/> : <ul className="cv-history">{events.map((event) => <li key={event.id}><span>{eventLabels[event.event_type] ?? "Evento de manutenção"}{event.previous_status && event.new_status && event.previous_status !== event.new_status ? ` · ${statuses[event.previous_status as keyof typeof statuses] ?? event.previous_status} → ${statuses[event.new_status as keyof typeof statuses] ?? event.new_status}` : ""}</span><strong>{formatEventDateTimeInTimezone(event.created_at, "America/Sao_Paulo")}{event.actor_name ? ` · ${event.actor_name}` : ""}{event.reason ? ` · ${event.reason}` : ""}</strong></li>)}</ul>}</section>
   </div>;
 }
