@@ -1,6 +1,6 @@
 begin;
 
-select plan(30);
+select plan(34);
 select has_table('public', 'condominium_payments', 'payments table exists');
 select has_table('public', 'condominium_finance_events', 'finance events table exists');
 select has_column('public', 'condominium_payables', 'cancelled_at', 'payables have cancellation timestamp');
@@ -41,6 +41,15 @@ values
   ('b1b17000-0000-4000-8000-000000000002', 'b1b11000-0000-4000-8000-000000000001', 'b1b16000-0000-4000-8000-000000000001', 'Conta parcial', current_date, current_date, 10000, 'open', 'b1b14000-0000-4000-8000-000000000001'),
   ('b1b17000-0000-4000-8000-000000000003', 'b1b11000-0000-4000-8000-000000000001', 'b1b16000-0000-4000-8000-000000000001', 'Conta cancelar', current_date, current_date, 10000, 'open', 'b1b14000-0000-4000-8000-000000000001'),
   ('b1b17000-0000-4000-8000-000000000004', 'b1b11000-0000-4000-8000-000000000002', null, 'Conta outro condominio', current_date, current_date, 10000, 'open', 'b1b14000-0000-4000-8000-000000000001');
+insert into public.condominium_payables (id, condominium_id, category_id, description, competence_date, due_date, amount_cents, status, created_by, paid_at, cancelled_at, cancelled_by, cancellation_reason)
+values ('b1b17000-0000-4000-8000-000000000005', 'b1b11000-0000-4000-8000-000000000001', 'b1b16000-0000-4000-8000-000000000001', 'Conta normalizada', current_date, current_date, 10000, 'paid', 'b1b14000-0000-4000-8000-000000000001', now(), now(), 'b1b14000-0000-4000-8000-000000000001', 'ignorar');
+insert into public.condominium_receivables (id, condominium_id, category_id, description, competence_date, due_date, amount_cents, status, created_by, received_at, cancelled_at, cancelled_by, cancellation_reason)
+values ('b1b18000-0000-4000-8000-000000000001', 'b1b11000-0000-4000-8000-000000000001', 'b1b16000-0000-4000-8000-000000000001', 'Receita normalizada', current_date, current_date, 10000, 'received', 'b1b14000-0000-4000-8000-000000000001', now(), now(), 'b1b14000-0000-4000-8000-000000000001', 'ignorar');
+
+select is((select status from public.condominium_payables where id = 'b1b17000-0000-4000-8000-000000000005'), 'open', 'direct payable insert forces open status');
+select is((select status from public.condominium_receivables where id = 'b1b18000-0000-4000-8000-000000000001'), 'open', 'direct receivable insert forces open status');
+select ok((select paid_at is null and cancelled_at is null and cancelled_by is null and cancellation_reason is null from public.condominium_payables where id = 'b1b17000-0000-4000-8000-000000000005'), 'payable insert clears lifecycle fields');
+select ok((select received_at is null and cancelled_at is null and cancelled_by is null and cancellation_reason is null from public.condominium_receivables where id = 'b1b18000-0000-4000-8000-000000000001'), 'receivable insert clears lifecycle fields');
 
 grant select on public.condominium_payables, public.condominium_payments, public.condominium_finance_events to authenticated;
 

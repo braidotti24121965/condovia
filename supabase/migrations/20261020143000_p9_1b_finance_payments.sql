@@ -61,6 +61,30 @@ revoke update on public.condominium_payables, public.condominium_receivables fro
 grant update(description, category_id, supplier_id, competence_date, due_date, amount_cents, notes, updated_at) on public.condominium_payables to authenticated;
 grant update(description, category_id, competence_date, due_date, amount_cents, notes, updated_at) on public.condominium_receivables to authenticated;
 
+create or replace function public.normalize_finance_entry_insert()
+returns trigger language plpgsql security definer set search_path = ''
+as $$
+begin
+  new.status := 'open';
+  if tg_table_name = 'condominium_payables' then
+    new.paid_at := null;
+  else
+    new.received_at := null;
+  end if;
+  new.cancelled_at := null;
+  new.cancelled_by := null;
+  new.cancellation_reason := null;
+  return new;
+end;
+$$;
+
+create trigger condominium_payables_insert_normalizer
+before insert on public.condominium_payables
+for each row execute function public.normalize_finance_entry_insert();
+create trigger condominium_receivables_insert_normalizer
+before insert on public.condominium_receivables
+for each row execute function public.normalize_finance_entry_insert();
+
 create or replace function public.prevent_finance_paid_edit()
 returns trigger language plpgsql security definer set search_path = ''
 as $$
