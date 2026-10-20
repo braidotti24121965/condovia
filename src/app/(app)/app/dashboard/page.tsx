@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import { requireCurrentContext } from "@/lib/auth/context";
 import { redirect } from "next/navigation";
-import { getDashboardShell, type DashboardPeriod } from "@/lib/dashboard/data";
+import { dashboardLocalDate, dashboardPeriodDays, getDashboardShell, type DashboardPeriod } from "@/lib/dashboard/data";
 import { DashboardPeriodFilter } from "@/components/dashboard/dashboard-period-filter";
 import { DashboardActivity, DashboardAnalytics, DashboardImports, DashboardKpis, DashboardQuickInfo } from "@/components/dashboard/dashboard-sections";
 export const metadata: Metadata = { title: "Painel" };
@@ -19,12 +19,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const period = periods.has(requested as DashboardPeriod) ? requested as DashboardPeriod : "today";
   const shell = await getDashboardShell(context.id);
   if (!shell) return null;
+  const now = new Date();
+  const today = dashboardLocalDate(now, shell.timeZone);
+  const startDate = new Date(now);
+  startDate.setUTCDate(startDate.getUTCDate() - (dashboardPeriodDays(period) - 1));
+  const dates = { today, start: startDate.toISOString(), end: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString() };
   return <div className="cv-page dashboard-v2"><div className="breadcrumbs"><Link href="/app/dashboard">Início</Link><ChevronRight size={13} /><strong>Painel</strong></div>
        <header className="v2-page-header"><div><p className="page-overline">PAINEL</p><h1>{shell.condo.name}</h1><p><strong>Condomínio</strong> · Visão operacional e atividades recentes.</p></div><DashboardPeriodFilter period={period} /></header>
-    <Suspense fallback={<DashboardSectionSkeleton label="indicadores" />}><DashboardKpis shell={shell} condominiumId={context.id} period={period} /></Suspense>
+    <Suspense fallback={<DashboardSectionSkeleton label="indicadores" />}><DashboardKpis shell={shell} condominiumId={context.id} dates={dates} /></Suspense>
     <div className="v2-main-grid"><main className="v2-main-column">
-      <Suspense fallback={<DashboardSectionSkeleton label="atividade recente" />}><DashboardActivity shell={shell} condominiumId={context.id} period={period} /></Suspense>
-      <Suspense fallback={<DashboardSectionSkeleton label="gráficos" />}><DashboardAnalytics shell={shell} condominiumId={context.id} period={period} /></Suspense>
+      <Suspense fallback={<DashboardSectionSkeleton label="atividade recente" />}><DashboardActivity shell={shell} condominiumId={context.id} dates={dates} /></Suspense>
+      <Suspense fallback={<DashboardSectionSkeleton label="gráficos" />}><DashboardAnalytics shell={shell} condominiumId={context.id} dates={dates} /></Suspense>
       <Suspense fallback={<DashboardSectionSkeleton label="importações" />}><DashboardImports shell={shell} condominiumId={context.id} /></Suspense>
     </main>
        <Suspense fallback={<DashboardSectionSkeleton label="ações rápidas" />}><DashboardQuickInfo shell={shell} /></Suspense>
