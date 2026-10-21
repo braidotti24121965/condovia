@@ -174,6 +174,8 @@ export function PassCheckScanner({ accessPoints }: Props) {
 
   return (
     <div style={{ display: "grid", gap: "16px" }}>
+      {/* Camera and pasted link sit side by side; the result follows right below them. */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px", alignItems: "start" }}>
       <section className="cv-panel" aria-labelledby="pass-camera-title">
         <h2 id="pass-camera-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Camera size={18} /> Leitura pela câmera
@@ -221,6 +223,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
           </Button>
         </form>
       </section>
+      </div>
 
       <section aria-live="polite" aria-label="Resultado da consulta">
         {result && "error" in result ? <Alert tone="error">{result.error}</Alert> : null}
