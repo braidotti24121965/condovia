@@ -2,7 +2,7 @@
 
 Leia este documento antes de qualquer alteração no módulo de portaria. Ele registra o que já foi decidido e o que não pode ser desfeito sem nova decisão. Atualize-o junto com cada PR relevante.
 
-Última atualização: 21/10/2026 (tarde, após a PR #87 e a limpeza de dados de teste).
+Última atualização: 21/10/2026 (após a PR #89).
 
 ## Ambientes e deploy
 
@@ -49,7 +49,6 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 ## Pendências conhecidas
 
 - Forma de prova da retirada: hoje o registro usa a observação "Retirada com código de retirada do morador". Campo próprio para a forma de prova exige migration e não foi decidido.
-- Padronizar o leitor de QR do passe e o da etiqueta em um componente único (`qr-camera-reader` já existe e é reutilizável).
 
 ## Preferências da equipe
 
@@ -105,3 +104,10 @@ Pendências abertas:
 Cuidados com ferramentas:
 - Não rodar `vercel deploy` a partir de uma worktree sem vínculo com o projeto `condovia`. Isso cria um projeto novo na Vercel. Para publicar, usar sempre o fluxo de PR para `homolog`, que dispara o deploy de preview automaticamente.
 - O projeto `acesso-wt`, criado por engano, foi apagado.
+
+## Atualização após a PR #89 (21/10/2026)
+
+- PR #89 integrada: a validação do passe usa o componente único `qr-camera-reader`. A regra de reconsulta (só quando o QR sai do quadro e volta, sem reset por quadro vazio) está em função pura e testada. Validada no homolog.
+- Pendência de unificação do leitor: encerrada.
+- Leitura facial do visitante: não implementada. Depende da fase de controle de acesso inteligente (levantamento de equipamentos, contrato de integração e consentimento LGPD). Não iniciar sem decisão do responsável.
+- Próxima tarefa sugerida: documento de contrato de integração facial (somente documentação), listando o que cada equipamento precisa informar e o que o sistema precisa guardar, sem código de integração.
