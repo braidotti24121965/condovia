@@ -15,7 +15,7 @@ export function PackageReleaseByCode() {
   const [scanning, setScanning] = useState(false);
   const [checked, setChecked] = useState<CheckedPackage | null>(null);
   const [checkedCode, setCheckedCode] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
   const [isWorking, startWorking] = useTransition();
 
   const check = (rawCode: string) => {
@@ -35,14 +35,17 @@ export function PackageReleaseByCode() {
 
   const release = () => {
     if (!checkedCode) return;
+    const codeToRelease = checkedCode;
+    // Give immediate feedback: the confirmation card leaves while the server finishes.
+    setChecked(null);
+    setCheckedCode(null);
+    setMessage({ tone: "info", text: "Liberando encomenda..." });
     startWorking(async () => {
-      const result = await releasePackageByCodeAction(checkedCode);
+      const result = await releasePackageByCodeAction(codeToRelease);
       if ("error" in result) {
         setMessage({ tone: "error", text: result.error ?? "Não foi possível liberar a encomenda." });
         return;
       }
-      setChecked(null);
-      setCheckedCode(null);
       setCodeInput("");
       setMessage({ tone: "success", text: "Encomenda liberada e retirada registrada." });
     });

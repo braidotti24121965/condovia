@@ -10,6 +10,7 @@ import { formatDateTimeInTimezone, formatTimeInTimezone, getAuthorizationOperati
 import type { AccessAuthorization, AccessRequest, Package, Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 import { getPackagePickupCodeAction } from "@/lib/gatehouse/actions";
 import { Ecc, QrCode as QrCodeGenerator } from "@/lib/gatehouse/qrcode";
+import { qrPngBlob } from "@/lib/gatehouse/qr-image";
 
 interface Props {
   units: { id: string; code: string; display_name: string | null }[];
@@ -304,7 +305,28 @@ function PackagePickupQrModal({ open, onClose, packageData, timeZone }: { open: 
   if (!open || !packageData) return null;
   const qr = code ? QrCodeGenerator.encodeText(code, Ecc.MEDIUM).toDataUrl() : null;
   const formattedExpiry = expiresAt ? formatDateTimeInTimezone(expiresAt, timeZone) : "";
-  const whatsappUrl = code ? `https://wa.me/?text=${encodeURIComponent(`*Código de retirada - CondoVia*\nEncomenda: *${packageData.description}*\nUnidade: *${packageData.unit?.code || "—"}*\nVálido até: *${formattedExpiry}*\n\nCódigo: ${code}`)}` : null;
+  const shareText = `Código de retirada - CondoVia\nEncomenda: ${packageData.description}\nUnidade: ${packageData.unit?.code || "—"}\nVálido até: ${formattedExpiry}`;
+  const shareQr = async () => {
+    if (!code) return;
+    const blob = await qrPngBlob(code);
+    const file = new File([blob], "codigo-retirada.png", { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Código de retirada", text: shareText });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    // Fallback: this browser cannot attach files. Save the image and open WhatsApp with the text.
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "codigo-retirada.png";
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n\nA imagem do QR foi baixada: anexe-a nesta conversa.`)}`, "_blank", "noopener,noreferrer");
+  };
   const generate = () => startGenerating(async () => {
     const result = await getPackagePickupCodeAction(packageData.id);
     if ("error" in result) { setError(result.error ?? "Não foi possível gerar o código."); return; }
@@ -335,7 +357,7 @@ function PackagePickupQrModal({ open, onClose, packageData, timeZone }: { open: 
         {qr ? <img src={qr} alt="QR Code do código de retirada" width={240} height={240} style={{ display: "block", margin: "16px auto" }} /> : null}
         {expiresAt ? <p style={{ margin: "16px 0 0 0" }}><strong>Validade:</strong> {formattedExpiry}</p> : null}
         <div className="cv-form-actions" style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "20px", justifyContent: "flex-end" }}>
-          {whatsappUrl ? <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><Button variant="primary"><Share2 size={15} /> Compartilhar pelo WhatsApp</Button></a> : null}
+          {code ? <Button variant="primary" type="button" onClick={() => void shareQr()}><Share2 size={15} /> Compartilhar QR</Button> : null}
           <Button type="button" variant="secondary" onClick={generate} disabled={isGenerating}><RefreshCw size={15} /> {isGenerating ? "Gerando..." : code ? "Gerar novo código" : "Gerar código"}</Button>
           <Button type="button" variant="ghost" onClick={onClose}><Check size={15} /> Concluir</Button>
         </div>
