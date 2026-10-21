@@ -8,6 +8,7 @@ import { StatusBadge, type StatusBadgeVariant } from "@/components/ui/status-bad
 import { ContentSelect } from "@/components/ui/form-controls";
 import { checkVisitorPassAction, registerEntryAction, type VisitorPassCheckResult } from "@/lib/gatehouse/actions";
 import { decodeQrFrame } from "@/lib/gatehouse/qr-frame";
+import { canAutoRegisterEntry } from "@/lib/gatehouse/entry-rules";
 
 type DetectedCode = { rawValue: string };
 type BarcodeDetectorLike = { detect: (source: CanvasImageSource) => Promise<DetectedCode[]> };
@@ -62,28 +63,50 @@ export function PassCheckScanner({ accessPoints }: Props) {
   const [result, setResult] = useState<VisitorPassCheckResult | { error: string } | null>(null);
   const [isChecking, startChecking] = useTransition();
   const [accessPointId, setAccessPointId] = useState(accessPoints[0]?.id ?? "");
+  // The camera loop reads this ref, so it always sees the selected access point.
+  const accessPointIdRef = useRef(accessPointId);
+  useEffect(() => {
+    accessPointIdRef.current = accessPointId;
+  }, [accessPointId]);
   const [entryMessage, setEntryMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [isRegistering, startRegistering] = useTransition();
 
-  const checkPass = (rawValue: string) => {
+  const registerEntry = async (authorizationId: string, pointId: string) => {
+    const formData = new FormData();
+    formData.append("authorization_id", authorizationId);
+    formData.append("access_point_id", pointId);
+    const response = await registerEntryAction(null, formData);
+    if ("error" in response) {
+      return { tone: "error" as const, text: response.error ?? "Não foi possível registrar a entrada." };
+    }
+    return { tone: "success" as const, text: "Entrada registrada." };
+  };
+
+  // autoRegister is set only for camera reads, so the operator always confirms
+  // typed or pasted links through the explicit button.
+  const checkPass = (rawValue: string, autoRegister: boolean) => {
     startChecking(async () => {
       const response = await checkVisitorPassAction(rawValue);
       setEntryMessage(null);
       setResult(response);
+      if (autoRegister && "status" in response && canAutoRegisterEntry(response, accessPointIdRef.current)) {
+        const authorizationId = "authorizationId" in response ? response.authorizationId : null;
+        if (authorizationId) {
+          setEntryMessage(await registerEntry(authorizationId, accessPointIdRef.current));
+        }
+      }
     });
   };
 
+  // The camera loop calls the latest checkPass through this ref.
+  const checkPassRef = useRef(checkPass);
+  useEffect(() => {
+    checkPassRef.current = checkPass;
+  });
+
   const handleRegisterEntry = (authorizationId: string) => {
     startRegistering(async () => {
-      const formData = new FormData();
-      formData.append("authorization_id", authorizationId);
-      formData.append("access_point_id", accessPointId);
-      const response = await registerEntryAction(null, formData);
-      if ("error" in response) {
-        setEntryMessage({ tone: "error", text: response.error ?? "Não foi possível registrar a entrada." });
-        return;
-      }
-      setEntryMessage({ tone: "success", text: "Entrada registrada." });
+      setEntryMessage(await registerEntry(authorizationId, accessPointId));
     });
   };
 
@@ -120,7 +143,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
             const value = await detectCode(videoRef.current);
             if (value && value !== lastCodeRef.current) {
               lastCodeRef.current = value;
-              checkPass(value);
+              checkPassRef.current(value, true);
             }
           } catch {
             // Frame could not be decoded; the next tick tries again.
@@ -144,7 +167,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
     event.preventDefault();
     if (!manualInput.trim()) return;
     lastCodeRef.current = null;
-    checkPass(manualInput);
+    checkPass(manualInput, false);
   };
 
   return (
