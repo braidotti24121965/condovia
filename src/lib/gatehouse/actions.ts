@@ -10,6 +10,7 @@ import {
 } from "@/lib/gatehouse/timezone";
 import { extractPassToken } from "@/lib/gatehouse/pass-token";
 import { extractDceKeyFromNotes, packageDescriptionFor } from "@/lib/gatehouse/package-label";
+import { passEventCooldownRemaining } from "@/lib/gatehouse/entry-rules";
 import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
 import { generateResidentPickupCode, pickupRejectionMessage, verifyPickupCode } from "@/lib/gatehouse/package-pickup";
 
@@ -425,6 +426,23 @@ export async function decideAccessRequestAction(prevState: unknown, formData: Fo
   return { success: true };
 }
 
+/**
+ * Refuses a second entry or exit of the same pass within the cooldown. It protects against a single
+ * reading being recorded twice, for example an entry immediately followed by an exit.
+ */
+async function passCooldownError(supabase: NonNullable<Awaited<ReturnType<typeof requireUser>>["supabase"]>, condominiumId: string, authorizationId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("access_events")
+    .select("occurred_at")
+    .eq("condominium_id", condominiumId)
+    .eq("authorization_id", authorizationId)
+    .order("occurred_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const remaining = passEventCooldownRemaining(data?.occurred_at ?? null);
+  return remaining > 0 ? `Este passe acabou de registrar um movimento. Aguarde ${remaining} segundos para uma nova leitura.` : null;
+}
+
 export async function registerEntryAction(prevState: unknown, formData: FormData) {
   const { supabase } = await requireUser();
   if (!supabase) return { error: "Não autenticado." };
@@ -437,6 +455,9 @@ export async function registerEntryAction(prevState: unknown, formData: FormData
 
   if (!authorization_id) return { error: "Selecione a autorização." };
   if (!access_point_id) return { error: "Selecione o ponto de acesso." };
+
+  const cooldownError = await passCooldownError(supabase, context.id, authorization_id);
+  if (cooldownError) return { error: cooldownError };
 
   const { error } = await supabase.rpc("register_access_entry", {
     p_condominium_id: context.id,
@@ -501,6 +522,9 @@ export async function registerPassExitAction(prevState: unknown, formData: FormD
   const notes = String(formData.get("notes") || "").trim() || null;
   if (!authorization_id) return { error: "Selecione a autorização." };
   if (!access_point_id) return { error: "Selecione o ponto de acesso de saída." };
+
+  const cooldownError = await passCooldownError(supabase, context.id, authorization_id);
+  if (cooldownError) return { error: cooldownError };
 
   const { error } = await supabase.rpc("register_access_exit", {
     p_condominium_id: context.id,
