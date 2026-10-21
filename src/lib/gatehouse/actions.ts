@@ -757,3 +757,30 @@ export async function releasePackageByCodeAction(rawCode: string) {
   revalidatePath("/app/my-units");
   return { success: true, description: checked.description, unitCode: checked.unitCode };
 }
+
+/**
+ * Deletes a package that is still waiting for pickup. Packages already released
+ * are kept, because their collection record is part of the custody history.
+ */
+export async function deleteReceivedPackageAction(packageId: string) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." };
+
+  const { data, error } = await supabase
+    .from("packages")
+    .delete()
+    .eq("id", packageId)
+    .eq("condominium_id", context.id)
+    .eq("status", "received")
+    .select("id");
+
+  if (error) return { error: "Não foi possível excluir a encomenda." };
+  if (!data || data.length !== 1) return { error: "Só é possível excluir encomendas aguardando retirada." };
+
+  revalidatePath("/app/gatehouse");
+  revalidatePath("/app/gatehouse/packages");
+  revalidatePath("/app/my-units");
+  return { success: true };
+}

@@ -6,6 +6,7 @@ import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { ReceivePackageButton } from "@/components/gatehouse/receive-package-button";
 import { CollectPackageModal } from "@/components/gatehouse/collect-package-modal";
 import { PackageReleaseByCode } from "@/components/gatehouse/package-release-by-code";
+import { DeletePackageButton } from "@/components/gatehouse/delete-package-button";
 import { getPackages, getCondoUnits } from "@/lib/gatehouse/data";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
@@ -83,11 +84,14 @@ export default async function GatehousePackagesPage() {
                     <td>{formatDateTimeInTimezone(pkg.received_at, timeZone)}</td>
                     <td>{pkg.notes || "—"}</td>
                     <td>
-                      <CollectPackageModal
-                        packageId={pkg.id}
-                        packageDescription={pkg.description}
-                        unitCode={pkg.unit?.code || ""}
-                      />
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <CollectPackageModal
+                          packageId={pkg.id}
+                          packageDescription={pkg.description}
+                          unitCode={pkg.unit?.code || ""}
+                        />
+                        <DeletePackageButton packageId={pkg.id} packageDescription={pkg.description} />
+                      </div>
                     </td>
                   </tr>
                 ))}
