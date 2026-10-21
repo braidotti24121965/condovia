@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { KeyRound, FileQuestion, Package as PackageIcon } from "lucide-react";
+import { KeyRound, FileQuestion, Package as PackageIcon, QrCode } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
+import { AuthorizationQrModal, type AuthorizationQrData } from "@/components/gatehouse/authorization-qr-modal";
 import { formatDateTimeInTimezone, formatTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import type { AccessAuthorization, AccessRequest, Package, Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 
@@ -15,6 +17,7 @@ interface Props {
   requests: AccessRequest[];
   packages: Package[];
   timeZone?: string;
+  condoName?: string;
 }
 
 export function ResidentGatehouseSection({
@@ -25,8 +28,10 @@ export function ResidentGatehouseSection({
   requests,
   packages,
   timeZone = "America/Sao_Paulo",
+  condoName,
 }: Props) {
   const [tab, setTab] = useState<"authorizations" | "requests" | "packages">("requests");
+  const [viewingQrAuth, setViewingQrAuth] = useState<AuthorizationQrData | null>(null);
 
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const waitingPackages = packages.filter((p) => p.status === "received");
@@ -39,7 +44,7 @@ export function ResidentGatehouseSection({
           <h2>Portaria e Acessos das Minhas Unidades</h2>
           <p>Gerencie autorizações, decida solicitações na portaria e acompanhe encomendas.</p>
         </div>
-        <AuthorizationForm units={units} visitors={visitors} providers={providers} residentMode timeZone={timeZone} />
+        <AuthorizationForm units={units} visitors={visitors} providers={providers} residentMode timeZone={timeZone} condoName={condoName} />
       </div>
 
       {/* Tabs */}
@@ -139,6 +144,7 @@ export function ResidentGatehouseSection({
                     <th>Início</th>
                     <th>Validade</th>
                     <th>Status</th>
+                    <th>QR Code</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,6 +168,26 @@ export function ResidentGatehouseSection({
                           <span className={`cv-status cv-status-${opStatus.tone}`}>
                             {opStatus.label}
                           </span>
+                        </td>
+                        <td>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="compact"
+                            onClick={() =>
+                              setViewingQrAuth({
+                                id: a.id,
+                                visitorName: name || "Visitante",
+                                unitCode: a.unit?.code || "",
+                                condoName,
+                                validFrom: a.valid_from,
+                                validUntil: a.valid_until,
+                                timeZone,
+                              })
+                            }
+                          >
+                            <QrCode size={14} /> Ver QR
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -245,6 +271,12 @@ export function ResidentGatehouseSection({
           )}
         </div>
       )}
+
+      <AuthorizationQrModal
+        open={Boolean(viewingQrAuth)}
+        onClose={() => setViewingQrAuth(null)}
+        authorization={viewingQrAuth}
+      />
     </div>
   );
 }
