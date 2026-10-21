@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { KeyRound, FileQuestion, Package as PackageIcon, QrCode } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Check, FileQuestion, KeyRound, Package as PackageIcon, QrCode, RefreshCw, Share2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
 import { AuthorizationQrModal, type AuthorizationQrData } from "@/components/gatehouse/authorization-qr-modal";
 import { formatDateTimeInTimezone, formatTimeInTimezone, getAuthorizationOperationalStatus } from "@/lib/gatehouse/timezone";
 import type { AccessAuthorization, AccessRequest, Package, Visitor, ServiceProvider } from "@/lib/gatehouse/types";
+import { getPackagePickupCodeAction } from "@/lib/gatehouse/actions";
+import { Ecc, QrCode as QrCodeGenerator } from "@/lib/gatehouse/qrcode";
 
 interface Props {
   units: { id: string; code: string; display_name: string | null }[];
@@ -32,6 +34,7 @@ export function ResidentGatehouseSection({
 }: Props) {
   const [tab, setTab] = useState<"authorizations" | "requests" | "packages">("requests");
   const [viewingQrAuth, setViewingQrAuth] = useState<AuthorizationQrData | null>(null);
+  const [viewingPackage, setViewingPackage] = useState<Package | null>(null);
 
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const waitingPackages = packages.filter((p) => p.status === "received");
@@ -94,6 +97,7 @@ export function ResidentGatehouseSection({
                     <th>Unidade</th>
                     <th>Solicitado em</th>
                     <th>Observações</th>
+                    <th>Ações</th>
                     <th>Sua Decisão</th>
                   </tr>
                 </thead>
@@ -228,7 +232,12 @@ export function ResidentGatehouseSection({
                       <td>Unidade {pkg.unit?.code}</td>
                       <td>{pkg.carrier || "—"}</td>
                       <td>{formatDateTimeInTimezone(pkg.received_at, timeZone)}</td>
-                      <td>{pkg.notes || "—"}</td>
+                        <td>{pkg.notes || "—"}</td>
+                        <td>
+                          <Button type="button" variant="secondary" size="compact" onClick={() => setViewingPackage(pkg)}>
+                            <QrCode size={14} /> Ver QR de retirada
+                          </Button>
+                        </td>
                     </tr>
                   ))}
                 </tbody>
@@ -277,6 +286,60 @@ export function ResidentGatehouseSection({
         onClose={() => setViewingQrAuth(null)}
         authorization={viewingQrAuth}
       />
+      <PackagePickupQrModal
+        open={Boolean(viewingPackage)}
+        onClose={() => setViewingPackage(null)}
+        packageData={viewingPackage}
+        timeZone={timeZone}
+      />
+    </div>
+  );
+}
+
+function PackagePickupQrModal({ open, onClose, packageData, timeZone }: { open: boolean; onClose: () => void; packageData: Package | null; timeZone: string }) {
+  const [code, setCode] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isGenerating, startGenerating] = useTransition();
+  if (!open || !packageData) return null;
+  const qr = code ? QrCodeGenerator.encodeText(code, Ecc.MEDIUM).toDataUrl() : null;
+  const formattedExpiry = expiresAt ? formatDateTimeInTimezone(expiresAt, timeZone) : "";
+  const whatsappUrl = code ? `https://wa.me/?text=${encodeURIComponent(`*Código de retirada - CondoVia*\nEncomenda: *${packageData.description}*\nUnidade: *${packageData.unit?.code || "—"}*\nVálido até: *${formattedExpiry}*\n\nCódigo: ${code}`)}` : null;
+  const generate = () => startGenerating(async () => {
+    const result = await getPackagePickupCodeAction(packageData.id);
+    if ("error" in result) { setError(result.error ?? "Não foi possível gerar o código."); return; }
+    setError(null); setCode(result.code); setExpiresAt(result.expiresAt);
+  });
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="package-qr-title"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(15, 23, 42, 0.5)",
+        display: "grid",
+        placeItems: "center",
+        zIndex: 60,
+        padding: "16px",
+      }}
+    >
+      <div className="cv-panel" style={{ width: "min(100%, 460px)", maxHeight: "90vh", overflowY: "auto" }}>
+        <div className="cv-panel-heading">
+          <h2 id="package-qr-title"><QrCode size={20} /> QR de retirada</h2>
+          <Button variant="icon" type="button" aria-label="Fechar" onClick={onClose}><X size={18} /></Button>
+        </div>
+        <p className="cv-muted">O código vale por 7 dias e não é armazenado no banco.</p>
+        {error ? <p role="alert" className="cv-field-error">{error}</p> : null}
+        {qr ? <img src={qr} alt="QR Code do código de retirada" width={240} height={240} style={{ display: "block", margin: "16px auto" }} /> : null}
+        {expiresAt ? <p><strong>Validade:</strong> {formattedExpiry}</p> : null}
+        <div className="cv-form-actions">
+          {whatsappUrl ? <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><Button variant="primary"><Share2 size={15} /> Compartilhar pelo WhatsApp</Button></a> : null}
+          <Button type="button" variant="secondary" onClick={generate} disabled={isGenerating}><RefreshCw size={15} /> {isGenerating ? "Gerando..." : code ? "Gerar novo código" : "Gerar código"}</Button>
+          <Button type="button" variant="ghost" onClick={onClose}><Check size={15} /> Concluir</Button>
+        </div>
+      </div>
     </div>
   );
 }

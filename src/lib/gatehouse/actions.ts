@@ -10,6 +10,35 @@ import {
 } from "@/lib/gatehouse/timezone";
 import { extractPassToken } from "@/lib/gatehouse/pass-token";
 import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
+import { generateResidentPickupCode } from "@/lib/gatehouse/package-pickup";
+
+export async function getPackagePickupCodeAction(packageId: string) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  if (!packageId.trim()) return { error: "Encomenda inválida." };
+
+  const { data: packageData, error } = await supabase
+    .from("packages")
+    .select("id, status, unit_id, condominium_id")
+    .eq("id", packageId)
+    .maybeSingle();
+  if (error) return { error: "Não foi possível consultar a encomenda." };
+  if (!packageData) return { error: "Encomenda não encontrada ou sem permissão de acesso." };
+
+  const { data: isEligible, error: eligibilityError } = await supabase.rpc("is_unit_eligible_for_resident", {
+    p_unit_id: packageData.unit_id,
+    p_condominium_id: packageData.condominium_id,
+  });
+  if (eligibilityError || !isEligible) {
+    return { error: "Apenas moradores ou proprietários da unidade podem gerar o código de retirada." };
+  }
+
+  try {
+    return { success: true, ...generateResidentPickupCode(packageData.id, packageData.status, process.env.PACKAGE_PICKUP_SECRET) };
+  } catch (generationError) {
+    return { error: generationError instanceof Error ? generationError.message : "Não foi possível gerar o código." };
+  }
+}
 
 export async function createVisitorAction(prevState: unknown, formData: FormData) {
   const { supabase, user } = await requireUser();
