@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { QrCode as QrIcon, X, Check, Copy, Download, Share2, ExternalLink, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateVisitorPassTokenAction } from "@/lib/gatehouse/actions";
-import { QrCode, Ecc, buildAuthorizationPassUrl, buildWhatsAppShareUrl } from "@/lib/gatehouse/qrcode";
+import { QrCode, Ecc, buildAuthorizationPassUrl } from "@/lib/gatehouse/qrcode";
+import { qrPngBlob } from "@/lib/gatehouse/qr-image";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
 export interface AuthorizationQrData {
@@ -41,16 +42,29 @@ export function AuthorizationQrModal({ open, onClose, authorization }: Props) {
   const svgString = passUrl ? QrCode.encodeText(passUrl, Ecc.MEDIUM).toSvgString(4) : null;
   const svgDataUrl = svgString ? `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}` : null;
 
-  const whatsAppUrl = passUrl
-    ? buildWhatsAppShareUrl({
-        visitorName: authorization.visitorName,
-        condoName,
-        unitCode: authorization.unitCode,
-        validFrom: formattedFrom,
-        validUntil: formattedUntil,
-        passUrl,
-      })
-    : null;
+  const shareText = `Autorização de acesso - CondoVia\nVisitante: ${authorization.visitorName}\nUnidade: ${authorization.unitCode}\nCondomínio: ${condoName}\nVálido de ${formattedFrom} até ${formattedUntil}`;
+
+  // Sends the QR as a PNG when the browser can attach files. Otherwise saves the image and opens WhatsApp with the text.
+  const shareQr = async () => {
+    if (!passUrl) return;
+    const blob = await qrPngBlob(passUrl);
+    const file = new File([blob], "qrcode-acesso.png", { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Autorização de acesso", text: shareText });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "qrcode-acesso.png";
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n\nA imagem do QR foi baixada: anexe-a nesta conversa.`)}`, "_blank", "noopener,noreferrer");
+  };
 
   const handleGenerate = () => {
     startGenerating(async () => {
@@ -220,18 +234,11 @@ export function AuthorizationQrModal({ open, onClose, authorization }: Props) {
             justifyContent: "flex-end",
           }}
         >
-          {passUrl && whatsAppUrl ? (
+          {passUrl ? (
             <>
-              <a
-                href={whatsAppUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "none" }}
-              >
-                <Button type="button" variant="primary">
-                  <Share2 size={15} /> Enviar WhatsApp
-                </Button>
-              </a>
+              <Button type="button" variant="primary" onClick={() => void shareQr()}>
+                <Share2 size={15} /> Compartilhar QR
+              </Button>
 
               <Button type="button" variant="secondary" onClick={handleCopyMessage}>
                 {copied ? <Check size={15} /> : <Copy size={15} />}
