@@ -56,6 +56,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
   }, [accessPointId]);
   const [entryMessage, setEntryMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [isRegistering, startRegistering] = useTransition();
+  const [scanStatus, setScanStatus] = useState({ frames: 0, width: 0, height: 0, lastRead: "nenhuma leitura ainda" });
 
   const registerEntry = async (authorizationId: string, pointId: string) => {
     const formData = new FormData();
@@ -126,7 +127,14 @@ export function PassCheckScanner({ accessPoints }: Props) {
         timer = window.setInterval(async () => {
           if (!videoRef.current || videoRef.current.readyState < 2) return;
           try {
+            const { videoWidth, videoHeight } = videoRef.current;
             const value = await detectCode(videoRef.current);
+            setScanStatus((previous) => ({
+              frames: previous.frames + 1,
+              width: videoWidth,
+              height: videoHeight,
+              lastRead: value ? "QR lido" : "nenhum QR neste quadro",
+            }));
             if (value && value !== lastCodeRef.current) {
               lastCodeRef.current = value;
               checkPassRef.current(value, true);
@@ -181,6 +189,11 @@ export function PassCheckScanner({ accessPoints }: Props) {
             <p className="cv-muted" style={{ margin: "8px 0 0 0", fontSize: "13px" }}>
               {cameraState === "starting" ? "Iniciando a câmera..." : "Aponte a câmera para o QR Code do passe."}
             </p>
+            {cameraState === "active" ? (
+              <p className="cv-muted" style={{ margin: "4px 0 0 0", fontSize: "12px" }}>
+                Quadros analisados: {scanStatus.frames} · resolução: {scanStatus.width}×{scanStatus.height} · {scanStatus.lastRead}
+              </p>
+            ) : null}
           </>
         )}
       </section>
