@@ -11,6 +11,7 @@ import {
   Package as PackageIcon,
   History,
   DoorOpen,
+  ScanLine,
 } from "lucide-react";
 import { isGatehouseNavItemActive } from "./gatehouse-nav-state";
 
@@ -21,6 +22,7 @@ export function GatehouseNav() {
     { href: "/app/gatehouse", label: "Painel", icon: LayoutDashboard },
     { href: "/app/gatehouse/access", label: "Presença", icon: LogIn },
     { href: "/app/gatehouse/authorizations", label: "Autorizações", icon: KeyRound },
+    { href: "/app/gatehouse/pass-check", label: "Validar passe", icon: ScanLine },
     { href: "/app/gatehouse/packages", label: "Encomendas", icon: PackageIcon },
     { href: "/app/gatehouse/visitors", label: "Visitantes", icon: UserCheck },
     { href: "/app/gatehouse/providers", label: "Prestadores", icon: Briefcase },

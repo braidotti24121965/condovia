@@ -10,6 +10,7 @@ import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/form
 import { toLocalDateTimeInput } from "@/lib/gatehouse/timezone";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { AuthorizationQrModal, type AuthorizationQrData } from "@/components/gatehouse/authorization-qr-modal";
 import type { Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 
 interface Props {
@@ -18,9 +19,10 @@ interface Props {
   providers: ServiceProvider[];
   residentMode?: boolean;
   timeZone?: string;
+  condoName?: string;
 }
 
-export function AuthorizationForm({ units, visitors, providers, residentMode = false, timeZone = "America/Sao_Paulo" }: Props) {
+export function AuthorizationForm({ units, visitors, providers, residentMode = false, timeZone = "America/Sao_Paulo", condoName }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
   const [targetType, setTargetType] = useState<"visitor" | "provider">("visitor");
   const [visitorMode, setVisitorMode] = useState<"new" | "recent">("new");
   const [overlap, setOverlap] = useState<{ valid_from: string; valid_until: string } | null>(null);
+  const [createdQrAuth, setCreatedQrAuth] = useState<AuthorizationQrData | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,6 +43,14 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
       setOverlap(res.overlap);
     } else if (res?.error) {
       setError(res.error);
+    } else if (res?.authorization) {
+      setOpen(false);
+      setSuccess(null);
+      setCreatedQrAuth({
+        ...res.authorization,
+        condoName,
+        timeZone,
+      });
     } else {
       setSuccess("Autorização concedida com sucesso!");
       setTimeout(() => {
@@ -187,6 +198,12 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
           </div>
         </div>
       )}
+
+      <AuthorizationQrModal
+        open={Boolean(createdQrAuth)}
+        onClose={() => setCreatedQrAuth(null)}
+        authorization={createdQrAuth}
+      />
     </>
   );
 }

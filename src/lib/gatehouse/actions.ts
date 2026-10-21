@@ -1,8 +1,14 @@
 "use server";
 
+import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireUser, requireCurrentContext } from "@/lib/auth/context";
-import { parseDateTimeInTimezone } from "@/lib/gatehouse/timezone";
+import {
+  formatDateTimeInTimezone,
+  getAuthorizationOperationalStatus,
+  parseDateTimeInTimezone,
+} from "@/lib/gatehouse/timezone";
+import { extractPassToken } from "@/lib/gatehouse/pass-token";
 import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
 
 export async function createVisitorAction(prevState: unknown, formData: FormData) {
@@ -209,7 +215,7 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
     const full_name = String(formData.get("visitor_name") || "").trim();
     if (visitor_mode === "recent" && !target_id) return { error: "Selecione um visitante recente." };
     if (visitor_mode === "new" && full_name.length < 2) return { error: "Informe o nome do visitante." };
-    const { error } = await supabase.rpc("create_resident_visitor_authorization", {
+    const { data: authId, error } = await supabase.rpc("create_resident_visitor_authorization", {
       p_unit_id: unit_id,
       p_valid_from: validFromIso,
       p_valid_until: validUntilIso,
@@ -221,10 +227,27 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
       p_notes: notes,
     });
     if (error) return { error: error.message };
+
+    const { data: unitData } = await supabase.from("units").select("code").eq("id", unit_id).maybeSingle();
+    let displayName = full_name;
+    if (visitor_mode === "recent" && target_id) {
+      const { data: v } = await supabase.from("visitors").select("full_name").eq("id", target_id).maybeSingle();
+      if (v?.full_name) displayName = v.full_name;
+    }
+
     revalidatePath("/app/gatehouse");
     revalidatePath("/app/gatehouse/authorizations");
     revalidatePath("/app/my-units");
-    return { success: true };
+    return {
+      success: true,
+      authorization: {
+        id: authId as string,
+        visitorName: displayName || "Visitante",
+        unitCode: unitData?.code || "",
+        validFrom: validFromIso,
+        validUntil: validUntilIso,
+      },
+    };
   }
 
   const { data: account } = await supabase
@@ -256,15 +279,42 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
     payload.service_provider_id = target_id;
   }
 
-  const { error } = await supabase.from("access_authorizations").insert(payload);
+  const { data: inserted, error } = await supabase
+    .from("access_authorizations")
+    .insert(payload)
+    .select("id")
+    .single();
+
   if (error) {
+    if (error.code === "23514" && error.message.includes("access_authorizations_period_check")) {
+      return { error: "A data final deve ser posterior à data inicial." };
+    }
     return { error: error.message };
+  }
+
+  const { data: unitData } = await supabase.from("units").select("code").eq("id", unit_id).maybeSingle();
+  let displayName = "Autorizado";
+  if (target_type === "visitor" && target_id) {
+    const { data: v } = await supabase.from("visitors").select("full_name").eq("id", target_id).maybeSingle();
+    if (v?.full_name) displayName = v.full_name;
+  } else if (target_type === "provider" && target_id) {
+    const { data: sp } = await supabase.from("service_providers").select("full_name").eq("id", target_id).maybeSingle();
+    if (sp?.full_name) displayName = sp.full_name;
   }
 
   revalidatePath("/app/gatehouse");
   revalidatePath("/app/gatehouse/authorizations");
   revalidatePath("/app/my-units");
-  return { success: true };
+  return {
+    success: true,
+    authorization: {
+      id: inserted?.id as string,
+      visitorName: displayName,
+      unitCode: unitData?.code || "",
+      validFrom: validFromIso,
+      validUntil: validUntilIso,
+    },
+  };
 }
 
 export async function createAccessRequestAction(prevState: unknown, formData: FormData) {
@@ -480,4 +530,106 @@ export async function collectPackageAction(prevState: unknown, formData: FormDat
   revalidatePath("/app/gatehouse/packages");
   revalidatePath("/app/my-units");
   return { success: true };
+}
+
+/**
+ * Generates a new pass token for an approved authorization. Only the SHA-256
+ * hash is stored; the raw token is returned once so the QR can be shown.
+ * Any previously issued QR for this authorization stops working.
+ */
+export async function generateVisitorPassTokenAction(authorizationId: string) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." };
+
+  const token = randomBytes(32).toString("base64url");
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+
+  const { data, error } = await supabase
+    .from("access_authorizations")
+    .update({ pass_token_hash: tokenHash, updated_at: new Date().toISOString() })
+    .eq("id", authorizationId)
+    .eq("condominium_id", context.id)
+    .eq("status", "approved")
+    .select("id");
+
+  if (error || !data || data.length !== 1) {
+    return { error: "Não foi possível gerar o QR Code deste passe." };
+  }
+
+  revalidatePath("/app/gatehouse/authorizations");
+  return { token };
+}
+
+export type VisitorPassCheckResult =
+  | {
+      status: "found";
+      visitorName: string;
+      visitorType: string;
+      unitCode: string;
+      condominiumName: string;
+      validFrom: string;
+      validUntil: string;
+      operational: { code: string; label: string; tone: string };
+      authorizationId: string | null;
+    }
+  | { status: "invalid"; message: string };
+
+/**
+ * Looks up a visitor pass from a scanned QR payload or pasted link. Read-only:
+ * it does not register entry or exit.
+ */
+export async function checkVisitorPassAction(rawInput: string): Promise<VisitorPassCheckResult | { error: string }> {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." };
+
+  const token = extractPassToken(rawInput);
+  if (!token) {
+    return { status: "invalid", message: "Este código não é um passe do CondoVia." };
+  }
+
+  const { data, error } = await supabase.rpc("get_visitor_pass", { p_token: token });
+  if (error) {
+    return { error: "Não foi possível consultar o passe agora. Tente novamente." };
+  }
+
+  const pass = data?.[0];
+  if (!pass) {
+    return {
+      status: "invalid",
+      message: "Passe não encontrado, cancelado ou ainda não aprovado. Confirme com o morador.",
+    };
+  }
+
+  const { data: condo } = await supabase
+    .from("condominiums")
+    .select("timezone")
+    .eq("id", context.id)
+    .maybeSingle();
+  const timeZone = condo?.timezone || "America/Sao_Paulo";
+
+  // Resolved with the operator's session, so RLS limits it to their condominium.
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const { data: authorization } = await supabase
+    .from("access_authorizations")
+    .select("id")
+    .eq("pass_token_hash", tokenHash)
+    .eq("condominium_id", context.id)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  return {
+    status: "found",
+    authorizationId: authorization?.id ?? null,
+    visitorName: pass.visitor_name,
+    visitorType: pass.visitor_type,
+    unitCode: pass.unit_code,
+    condominiumName: pass.condominium_name,
+    validFrom: formatDateTimeInTimezone(pass.valid_from, timeZone),
+    validUntil: formatDateTimeInTimezone(pass.valid_until, timeZone),
+    operational: getAuthorizationOperationalStatus(pass.valid_from, pass.valid_until),
+  };
 }
