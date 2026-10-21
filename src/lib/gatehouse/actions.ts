@@ -9,6 +9,7 @@ import {
   parseDateTimeInTimezone,
 } from "@/lib/gatehouse/timezone";
 import { extractPassToken } from "@/lib/gatehouse/pass-token";
+import { extractDceKeyFromNotes, packageDescriptionFor } from "@/lib/gatehouse/package-label";
 import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
 import { generateResidentPickupCode, pickupRejectionMessage, verifyPickupCode } from "@/lib/gatehouse/package-pickup";
 
@@ -496,13 +497,34 @@ export async function receivePackageAction(prevState: unknown, formData: FormDat
   if (context.type !== "condominium") return { error: "Contexto inválido." };
 
   const unit_id = String(formData.get("unit_id") || "").trim();
-  const description = String(formData.get("description") || "").trim();
   const carrier = String(formData.get("carrier") || "").trim() || null;
+  const description = packageDescriptionFor(String(formData.get("description") || ""), carrier);
   const recipient_person_id = String(formData.get("recipient_person_id") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
+  const confirmDuplicate = formData.get("confirm_duplicate") === "true";
 
   if (!unit_id) return { error: "Selecione a unidade da encomenda." };
-  if (description.length < 2) return { error: "Descrição deve conter no mínimo 2 caracteres." };
+
+  // The same label (DC-e key) must not be received twice while the package is still waiting.
+  const dceKey = extractDceKeyFromNotes(notes);
+  if (dceKey && !confirmDuplicate) {
+    const { data: existing } = await supabase
+      .from("packages")
+      .select("description, received_at, unit:units(code)")
+      .eq("condominium_id", context.id)
+      .eq("status", "received")
+      .ilike("notes", `%Chave DC-e: ${dceKey}%`)
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      const unit = Array.isArray(existing.unit) ? existing.unit[0] : existing.unit;
+      const when = new Date(existing.received_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      return {
+        duplicate: true,
+        error: `Esta etiqueta já está registrada: "${existing.description}" para a unidade ${unit?.code ?? "—"}, recebida em ${when}.`,
+      };
+    }
+  }
 
   const { data: account } = await supabase
     .from("user_accounts")
