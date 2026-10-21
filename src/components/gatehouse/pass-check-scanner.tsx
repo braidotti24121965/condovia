@@ -7,6 +7,8 @@ import { Alert } from "@/components/ui/feedback";
 import { StatusBadge, type StatusBadgeVariant } from "@/components/ui/status-badge";
 import { ContentSelect } from "@/components/ui/form-controls";
 import { checkVisitorPassAction, registerEntryAction, type VisitorPassCheckResult } from "@/lib/gatehouse/actions";
+import { decodeQrFrame } from "@/lib/gatehouse/qr-frame";
+import { canAutoRegisterEntry } from "@/lib/gatehouse/entry-rules";
 
 type DetectedCode = { rawValue: string };
 type BarcodeDetectorLike = { detect: (source: CanvasImageSource) => Promise<DetectedCode[]> };
@@ -25,6 +27,30 @@ function getBarcodeDetector(): BarcodeDetectorConstructor | null {
   return (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector ?? null;
 }
 
+/**
+ * Returns a function that reads the QR Code in the current video frame.
+ * Uses the browser's BarcodeDetector when available, and otherwise decodes the
+ * frame in JavaScript, so the camera reader works in any modern browser.
+ */
+function createFrameDetector(): (video: HTMLVideoElement) => Promise<string | null> {
+  const Detector = getBarcodeDetector();
+  if (Detector) {
+    const detector = new Detector({ formats: ["qr_code"] });
+    return async (video) => (await detector.detect(video))[0]?.rawValue ?? null;
+  }
+
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  return async (video) => {
+    if (!context) return null;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    return decodeQrFrame(data, canvas.width, canvas.height);
+  };
+}
+
 interface Props {
   accessPoints: { id: string; name: string }[];
 }
@@ -37,34 +63,55 @@ export function PassCheckScanner({ accessPoints }: Props) {
   const [result, setResult] = useState<VisitorPassCheckResult | { error: string } | null>(null);
   const [isChecking, startChecking] = useTransition();
   const [accessPointId, setAccessPointId] = useState(accessPoints[0]?.id ?? "");
+  // The camera loop reads this ref, so it always sees the selected access point.
+  const accessPointIdRef = useRef(accessPointId);
+  useEffect(() => {
+    accessPointIdRef.current = accessPointId;
+  }, [accessPointId]);
   const [entryMessage, setEntryMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [isRegistering, startRegistering] = useTransition();
 
-  const checkPass = (rawValue: string) => {
+  const registerEntry = async (authorizationId: string, pointId: string) => {
+    const formData = new FormData();
+    formData.append("authorization_id", authorizationId);
+    formData.append("access_point_id", pointId);
+    const response = await registerEntryAction(null, formData);
+    if ("error" in response) {
+      return { tone: "error" as const, text: response.error ?? "Não foi possível registrar a entrada." };
+    }
+    return { tone: "success" as const, text: "Entrada registrada." };
+  };
+
+  // autoRegister is set only for camera reads, so the operator always confirms
+  // typed or pasted links through the explicit button.
+  const checkPass = (rawValue: string, autoRegister: boolean) => {
     startChecking(async () => {
       const response = await checkVisitorPassAction(rawValue);
       setEntryMessage(null);
       setResult(response);
+      if (autoRegister && "status" in response && canAutoRegisterEntry(response, accessPointIdRef.current)) {
+        const authorizationId = "authorizationId" in response ? response.authorizationId : null;
+        if (authorizationId) {
+          setEntryMessage(await registerEntry(authorizationId, accessPointIdRef.current));
+        }
+      }
     });
   };
 
+  // The camera loop calls the latest checkPass through this ref.
+  const checkPassRef = useRef(checkPass);
+  useEffect(() => {
+    checkPassRef.current = checkPass;
+  });
+
   const handleRegisterEntry = (authorizationId: string) => {
     startRegistering(async () => {
-      const formData = new FormData();
-      formData.append("authorization_id", authorizationId);
-      formData.append("access_point_id", accessPointId);
-      const response = await registerEntryAction(null, formData);
-      if ("error" in response) {
-        setEntryMessage({ tone: "error", text: response.error ?? "Não foi possível registrar a entrada." });
-        return;
-      }
-      setEntryMessage({ tone: "success", text: "Entrada registrada." });
+      setEntryMessage(await registerEntry(authorizationId, accessPointId));
     });
   };
 
   useEffect(() => {
-    const Detector = getBarcodeDetector();
-    if (!Detector || !navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState("unavailable");
       return;
     }
@@ -89,15 +136,14 @@ export function PassCheckScanner({ accessPoints }: Props) {
         await video.play();
         setCameraState("active");
 
-        const detector = new Detector({ formats: ["qr_code"] });
+        const detectCode = createFrameDetector();
         timer = window.setInterval(async () => {
           if (!videoRef.current || videoRef.current.readyState < 2) return;
           try {
-            const codes = await detector.detect(videoRef.current);
-            const value = codes[0]?.rawValue;
+            const value = await detectCode(videoRef.current);
             if (value && value !== lastCodeRef.current) {
               lastCodeRef.current = value;
-              checkPass(value);
+              checkPassRef.current(value, true);
             }
           } catch {
             // Frame could not be decoded; the next tick tries again.
@@ -121,7 +167,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
     event.preventDefault();
     if (!manualInput.trim()) return;
     lastCodeRef.current = null;
-    checkPass(manualInput);
+    checkPass(manualInput, false);
   };
 
   return (
