@@ -291,13 +291,12 @@ export function ResidentGatehouseSection({
         onClose={() => setViewingPackage(null)}
         packageData={viewingPackage}
         timeZone={timeZone}
-        condoName={condoName}
       />
     </div>
   );
 }
 
-function PackagePickupQrModal({ open, onClose, packageData, timeZone, condoName }: { open: boolean; onClose: () => void; packageData: Package | null; timeZone: string; condoName?: string }) {
+function PackagePickupQrModal({ open, onClose, packageData, timeZone }: { open: boolean; onClose: () => void; packageData: Package | null; timeZone: string }) {
   const [code, setCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -312,8 +311,21 @@ function PackagePickupQrModal({ open, onClose, packageData, timeZone, condoName 
     setError(null); setCode(result.code); setExpiresAt(result.expiresAt);
   });
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="package-qr-title" className="cv-modal-backdrop">
-      <div className="cv-panel cv-modal-panel">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="package-qr-title"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(15, 23, 42, 0.5)",
+        display: "grid",
+        placeItems: "center",
+        zIndex: 60,
+        padding: "16px",
+      }}
+    >
+      <div className="cv-panel" style={{ width: "min(100%, 460px)", maxHeight: "90vh", overflowY: "auto" }}>
         <div className="cv-panel-heading">
           <h2 id="package-qr-title"><QrCode size={20} /> QR de retirada</h2>
           <Button variant="icon" type="button" aria-label="Fechar" onClick={onClose}><X size={18} /></Button>
