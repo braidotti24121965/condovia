@@ -1,6 +1,7 @@
 type PassLookup = {
   status: string;
   authorizationId?: string | null;
+  alreadyInside?: boolean;
   operational?: { code: string };
 };
 
@@ -15,6 +16,7 @@ export function canAutoRegisterEntry(lookup: PassLookup, accessPointId: string):
     lookup.status === "found" &&
     !!lookup.authorizationId &&
     lookup.operational?.code === "active" &&
+    !lookup.alreadyInside &&
     accessPointId !== ""
   );
 }

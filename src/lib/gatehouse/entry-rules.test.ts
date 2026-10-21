@@ -21,6 +21,10 @@ describe("canAutoRegisterEntry", () => {
     expect(canAutoRegisterEntry({ ...activePass, operational: { code: "expired" } }, "point-1")).toBe(false);
   });
 
+  it("refuses a pass for a person who is already inside", () => {
+    expect(canAutoRegisterEntry({ ...activePass, alreadyInside: true }, "point-1")).toBe(false);
+  });
+
   it("refuses invalid lookups and passes without a located authorization", () => {
     expect(canAutoRegisterEntry({ status: "invalid" }, "point-1")).toBe(false);
     expect(canAutoRegisterEntry({ ...activePass, authorizationId: null }, "point-1")).toBe(false);
