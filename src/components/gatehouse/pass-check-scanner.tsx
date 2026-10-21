@@ -6,11 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { StatusBadge, type StatusBadgeVariant } from "@/components/ui/status-badge";
 import { ContentSelect } from "@/components/ui/form-controls";
+import { QrCameraReader, type ScanStatus } from "@/components/gatehouse/qr-camera-reader";
 import { checkVisitorPassAction, registerEntryAction, type VisitorPassCheckResult } from "@/lib/gatehouse/actions";
-import { decodeQrFrame } from "@/lib/gatehouse/qr-frame";
 import { canAutoRegisterEntry } from "@/lib/gatehouse/entry-rules";
-
-const SCAN_INTERVAL_MS = 500;
 
 const operationalVariant: Record<string, StatusBadgeVariant> = {
   active: "success",
@@ -18,35 +16,11 @@ const operationalVariant: Record<string, StatusBadgeVariant> = {
   expired: "danger",
 };
 
-/**
- * Returns a function that reads the QR Code in the current video frame.
- * The frame is decoded in JavaScript (jsQR) rather than with the browser's
- * BarcodeDetector, which reads phone screens unreliably and is missing in
- * some browsers. jsQR gives the same result in every browser.
- */
-function createFrameDetector(): (video: HTMLVideoElement) => Promise<string | null> {
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-  return async (video) => {
-    if (!context) return null;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
-    return decodeQrFrame(data, canvas.width, canvas.height);
-  };
-}
-
 interface Props {
   accessPoints: { id: string; name: string }[];
 }
 
 export function PassCheckScanner({ accessPoints }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  // Last code seen by the camera and when. A code is checked when it first appears or when it
-  // leaves the frame and comes back, so holding it still does not repeat the check.
-  const lastCodeRef = useRef<{ value: string | null; seenAt: number }>({ value: null, seenAt: 0 });
-  const [cameraState, setCameraState] = useState<"starting" | "active" | "unavailable">("starting");
   const [manualInput, setManualInput] = useState("");
   const [result, setResult] = useState<VisitorPassCheckResult | { error: string } | null>(null);
   const [isChecking, startChecking] = useTransition();
@@ -58,7 +32,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
   }, [accessPointId]);
   const [entryMessage, setEntryMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [isRegistering, startRegistering] = useTransition();
-  const [scanStatus, setScanStatus] = useState({ frames: 0, width: 0, height: 0, lastRead: "nenhuma leitura ainda" });
+  const [scanStatus, setScanStatus] = useState<ScanStatus>({ frames: 0, width: 0, height: 0, lastRead: "nenhuma leitura ainda" });
 
   const registerEntry = async (authorizationId: string, pointId: string) => {
     const formData = new FormData();
@@ -87,88 +61,15 @@ export function PassCheckScanner({ accessPoints }: Props) {
     });
   };
 
-  // The camera loop calls the latest checkPass through this ref.
-  const checkPassRef = useRef(checkPass);
-  useEffect(() => {
-    checkPassRef.current = checkPass;
-  });
-
   const handleRegisterEntry = (authorizationId: string) => {
     startRegistering(async () => {
       setEntryMessage(await registerEntry(authorizationId, accessPointId));
     });
   };
 
-  useEffect(() => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraState("unavailable");
-      return;
-    }
-
-    let stream: MediaStream | null = null;
-    let timer: number | null = null;
-    let cancelled = false;
-
-    const start = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-          audio: false,
-        });
-        if (cancelled) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
-        const video = videoRef.current;
-        if (!video) return;
-        video.srcObject = stream;
-        await video.play();
-        setCameraState("active");
-
-        const detectCode = createFrameDetector();
-        timer = window.setInterval(async () => {
-          if (!videoRef.current || videoRef.current.readyState < 2) return;
-          try {
-            const { videoWidth, videoHeight } = videoRef.current;
-            const value = await detectCode(videoRef.current);
-            setScanStatus((previous) => ({
-              frames: previous.frames + 1,
-              width: videoWidth,
-              height: videoHeight,
-              lastRead: value ? "QR lido" : "nenhum QR neste quadro",
-            }));
-            const now = Date.now();
-            if (value) {
-              const isSameCode = value === lastCodeRef.current.value;
-              const stillInFrame = now - lastCodeRef.current.seenAt <= SCAN_INTERVAL_MS * 2;
-              if (!isSameCode || !stillInFrame) checkPassRef.current(value, true);
-              lastCodeRef.current = { value, seenAt: now };
-            }
-          } catch (error) {
-            // Frame could not be decoded; the next tick tries again. Logged so a
-            // failing reader shows up in the browser console instead of silently.
-            console.warn("[pass-check] leitura da câmera falhou:", error);
-          }
-        }, SCAN_INTERVAL_MS);
-      } catch (error) {
-        console.warn("[pass-check] câmera indisponível:", error);
-        setCameraState("unavailable");
-      }
-    };
-
-    start();
-
-    return () => {
-      cancelled = true;
-      if (timer !== null) window.clearInterval(timer);
-      stream?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
-
   const handleManualSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!manualInput.trim()) return;
-    lastCodeRef.current = { value: null, seenAt: 0 };
     checkPass(manualInput, false);
   };
 
@@ -180,29 +81,14 @@ export function PassCheckScanner({ accessPoints }: Props) {
         <h2 id="pass-camera-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Camera size={18} /> Leitura pela câmera
         </h2>
-        {cameraState === "unavailable" ? (
-          <Alert tone="warning">
-            A leitura pela câmera não está disponível neste navegador. Cole o link do passe abaixo.
-          </Alert>
-        ) : (
-          <>
-            <video
-              ref={videoRef}
-              muted
-              playsInline
-              aria-label="Visualização da câmera para leitura do QR Code"
-              style={{ width: "100%", maxWidth: "420px", borderRadius: "12px", background: "var(--cv-brand-navy)" }}
-            />
-            <p className="cv-muted" style={{ margin: "8px 0 0 0", fontSize: "13px" }}>
-              {cameraState === "starting" ? "Iniciando a câmera..." : "Aponte a câmera para o QR Code do passe."}
-            </p>
-            {cameraState === "active" ? (
-              <p className="cv-muted" style={{ margin: "4px 0 0 0", fontSize: "12px" }}>
-                Quadros analisados: {scanStatus.frames} · resolução: {scanStatus.width}×{scanStatus.height} · {scanStatus.lastRead}
-              </p>
-            ) : null}
-          </>
-        )}
+        <QrCameraReader
+          continuous
+          onRead={(value) => checkPass(value, true)}
+          onStatus={(status) => setScanStatus((previous) => ({ ...status, frames: previous.frames + 1 }))}
+          prompt="Aponte a câmera para o QR Code do passe."
+          unavailableMessage="A leitura pela câmera não está disponível neste navegador. Cole o link do passe abaixo."
+        />
+        {scanStatus.width > 0 ? <p className="cv-muted" style={{ margin: "4px 0 0 0", fontSize: "12px" }}>Quadros analisados: {scanStatus.frames} · resolução: {scanStatus.width}×{scanStatus.height} · {scanStatus.lastRead}</p> : null}
       </section>
 
         <div style={{ display: "grid", gap: "16px", alignContent: "start" }}>
