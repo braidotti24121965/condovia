@@ -47,6 +47,8 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
   if (process.env.NODE_ENV === "development" && process.env.CONDOVIA_LOG_SUPABASE_CALLS === "1") {
     console.info("[condovia:login] Supabase sequential rounds", { rounds: 4, baselineRounds: 7 });
   }
+  // Same reason as signOut: start the new session without cached pages from a previous account.
+  revalidatePath("/", "layout");
   redirect(await getPostLoginDestination(platformAdmin === true));
 }
 
@@ -81,6 +83,8 @@ export async function signOut() {
   if (supabase) await supabase.auth.signOut();
   const cookieStore = await cookies();
   cookieStore.delete("condovia_context");
+  // Drops the browser's cached pages of the previous account, so the next login does not reuse them.
+  revalidatePath("/", "layout");
   redirect("/login");
 }
 
