@@ -2,7 +2,7 @@
 
 Leia este documento antes de qualquer alteração no módulo de portaria. Ele registra o que já foi decidido e o que não pode ser desfeito sem nova decisão. Atualize-o junto com cada PR relevante.
 
-Última atualização: 21/10/2026.
+Última atualização: 21/10/2026 (após as PRs #65 a #83).
 
 ## Ambientes e deploy
 
@@ -57,3 +57,29 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 - Mudanças que afetam o ambiente compartilhado (migrations, deploys, integração na `homolog`, dados de teste) só com autorização explícita.
 - Passo a passo: uma etapa aprovada por vez.
 - Dados de teste criados no homolog (visitante "Visitante Teste QR Homolog", "Portaria Teste QR", "Portaria Teste 2") podem ser mantidos ou removidos somente se a equipe pedir.
+
+## Estado atual (21/10/2026)
+
+Integrado na `homolog` nesta frente: PRs #65 a #78, #80, #81, #82, #83, e a #73 (códigos de retirada), a #74 (QR de retirada no morador) e a #76 (liberação na portaria).
+
+Abertas e **não integradas**:
+- PR #79: troca de conta na mesma aba (cache do layout). Corrige um erro real observado no homolog. Precisa de autorização para integrar.
+- PR #72: leitura do QR da etiqueta no recebimento (chave da DC-e). Depende de decisão do responsável.
+- PR #52: recuperação de senha em qualquer navegador. Não é desta frente.
+
+## Fluxo de trabalho para agentes (Codex e Claude)
+
+1. Ler este documento e `AGENTS.md` antes de qualquer alteração.
+2. Trabalhar em branch nova a partir de `origin/homolog`. Nunca na `main`.
+3. Validar localmente: `pnpm typecheck`, `pnpm lint`, `npx vitest run src/lib/gatehouse src/components/gatehouse`, `pnpm run build`.
+4. Abrir PR contra `homolog` e **parar aí**. Não integrar.
+5. A integração só acontece após autorização explícita do responsável. Depois da integração, o deploy de preview do domínio de homologação é verificado pelo status do commit.
+6. Nunca usar `--prod`. Nunca alterar produção.
+7. Mudanças no banco (migration, dados de teste) só com autorização explícita. Dados de teste do homolog estão listados nas pendências.
+
+## Dados de teste no homolog (podem ser limpos sob pedido)
+
+- Visitante "Visitante Teste QR Homolog" e "Priscilla da Costa Braidotti" (com entrada registrada).
+- Autorizações e encomendas da unidade G30 do "Condomínio Teste P8".
+- Pontos de acesso "Portaria Teste QR" (ativo) e "Portaria Teste 2" (inativo).
+- Morador de teste `morador_teste@kynovia.com.br` (ocupação não principal, com vínculo de membro).
