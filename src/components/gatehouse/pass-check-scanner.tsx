@@ -131,11 +131,14 @@ export function PassCheckScanner({ accessPoints }: Props) {
               lastCodeRef.current = value;
               checkPassRef.current(value, true);
             }
-          } catch {
-            // Frame could not be decoded; the next tick tries again.
+          } catch (error) {
+            // Frame could not be decoded; the next tick tries again. Logged so a
+            // failing reader shows up in the browser console instead of silently.
+            console.warn("[pass-check] leitura da câmera falhou:", error);
           }
         }, SCAN_INTERVAL_MS);
-      } catch {
+      } catch (error) {
+        console.warn("[pass-check] câmera indisponível:", error);
         setCameraState("unavailable");
       }
     };
