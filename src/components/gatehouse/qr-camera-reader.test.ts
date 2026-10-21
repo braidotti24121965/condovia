@@ -10,6 +10,11 @@ describe("shouldReadQrValue", () => {
     expect(shouldReadQrValue({ value: "pass", seenAt: 1000 }, "pass", 1250)).toBe(false);
   });
 
+  it("does not read the same QR again after an empty frame within the interval", () => {
+    // The empty frame does not mutate the previous reading state.
+    expect(shouldReadQrValue({ value: "pass", seenAt: 1000 }, "pass", 1250)).toBe(false);
+  });
+
   it("reads again after the QR leaves and returns", () => {
     expect(shouldReadQrValue({ value: null, seenAt: 0 }, "pass", 2000)).toBe(true);
   });

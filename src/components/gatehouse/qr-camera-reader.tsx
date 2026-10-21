@@ -94,8 +94,6 @@ export function QrCameraReader({ onRead, continuous = false, onStatus, prompt, u
             }
             lastCodeRef.current = { value: text, seenAt: now };
             if (!continuous && timer !== null) window.clearInterval(timer);
-          } else if (continuous) {
-            lastCodeRef.current = { value: null, seenAt: 0 };
           }
         }, SCAN_INTERVAL_MS);
       } catch (error) {
