@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { PackagePlus, X } from "lucide-react";
+import { Camera, PackagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { receivePackageAction } from "@/lib/gatehouse/actions";
+import { buildPackageLabelNote } from "@/lib/gatehouse/package-label";
+import { QrCameraReader } from "@/components/gatehouse/qr-camera-reader";
 
 interface Props {
   units: { id: string; code: string; display_name: string | null }[];
@@ -16,6 +18,9 @@ export function ReceivePackageButton({ units }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [labelRead, setLabelRead] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,6 +33,8 @@ export function ReceivePackageButton({ units }: Props) {
       setError(res.error);
     } else {
       setSuccess(true);
+      setNotes("");
+      setLabelRead(false);
       setTimeout(() => {
         setOpen(false);
         setSuccess(false);
@@ -92,9 +99,32 @@ export function ReceivePackageButton({ units }: Props) {
                 <input name="carrier" placeholder="Ex: Correios, Amazon, Loggi, Motoboy" />
               </label>
 
+              <div className="cv-field-wide" style={{ display: "grid", gap: "8px" }}>
+                <Button type="button" variant="secondary" onClick={() => setScanning((value) => !value)}>
+                  <Camera size={15} /> {scanning ? "Fechar leitura" : "Ler QR da etiqueta"}
+                </Button>
+                {scanning && (
+                  <QrCameraReader
+                    onRead={(text) => {
+                      setNotes(buildPackageLabelNote(text));
+                      setLabelRead(true);
+                      setScanning(false);
+                    }}
+                  />
+                )}
+                {labelRead && (
+                  <Alert tone="success">QR lido. Confira as observações e confirme o recebimento.</Alert>
+                )}
+              </div>
+
               <label className="cv-field-wide">
                 Observações de armazenamento
-                <input name="notes" placeholder="Ex: Deixado no escaninho 101" />
+                <input
+                  name="notes"
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  placeholder="Ex: Deixado no escaninho 101"
+                />
               </label>
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
