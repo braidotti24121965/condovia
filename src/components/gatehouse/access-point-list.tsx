@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -10,6 +11,7 @@ import type { AccessPoint } from "@/lib/gatehouse/types";
 import { accessPointTypeLabels } from "@/lib/gatehouse/labels";
 
 export function AccessPointList({ accessPoints }: { accessPoints: AccessPoint[] }) {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -17,7 +19,13 @@ export function AccessPointList({ accessPoints }: { accessPoints: AccessPoint[] 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setLoading(true); setError(null);
     const result = await updateAccessPointAction(null, new FormData(event.currentTarget));
-    setLoading(false); if (result?.error) setError(result.error); else setEditing(null);
+    setLoading(false);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+    setEditing(null);
+    router.refresh();
   };
 
   return <>

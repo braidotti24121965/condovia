@@ -218,7 +218,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
                   </label>
                 ) : (
                   <Alert tone="warning">
-                    Nenhum ponto de acesso cadastrado. Cadastre um em Pontos de acesso para registrar entradas.
+                    Nenhum ponto de acesso ativo. Ative ou cadastre um em Pontos de acesso para registrar entradas.
                   </Alert>
                 )}
                 <Button
