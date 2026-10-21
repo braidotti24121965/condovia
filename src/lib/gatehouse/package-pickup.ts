@@ -45,3 +45,20 @@ export function verifyPickupCode(code: string, secret: string, now: Date = new D
   if (Math.floor(now.getTime() / 1000) >= expiresAt) return { valid: false, reason: "expired" };
   return { valid: true, packageId };
 }
+
+export function generateResidentPickupCode(
+  packageId: string,
+  status: string,
+  secret: string | undefined,
+  now: Date = new Date()
+) {
+  if (status !== "received") {
+    throw new Error("Só é possível gerar código para encomendas recebidas.");
+  }
+  if (!secret) {
+    throw new Error("O segredo de retirada (PACKAGE_PICKUP_SECRET) não está configurado no servidor.");
+  }
+  const code = createPickupCode(packageId, secret, now);
+  const expiresAt = Number(code.split(".")[1]) * 1000;
+  return { code, expiresAt: new Date(expiresAt).toISOString() };
+}

@@ -10,6 +10,27 @@ import {
 } from "@/lib/gatehouse/timezone";
 import { extractPassToken } from "@/lib/gatehouse/pass-token";
 import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
+import { generateResidentPickupCode } from "@/lib/gatehouse/package-pickup";
+
+export async function getPackagePickupCodeAction(packageId: string) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  if (!packageId.trim()) return { error: "Encomenda inválida." };
+
+  const { data: packageData, error } = await supabase
+    .from("packages")
+    .select("id, status")
+    .eq("id", packageId)
+    .maybeSingle();
+  if (error) return { error: "Não foi possível consultar a encomenda." };
+  if (!packageData) return { error: "Encomenda não encontrada ou sem permissão de acesso." };
+
+  try {
+    return { success: true, ...generateResidentPickupCode(packageData.id, packageData.status, process.env.PACKAGE_PICKUP_SECRET) };
+  } catch (generationError) {
+    return { error: generationError instanceof Error ? generationError.message : "Não foi possível gerar o código." };
+  }
+}
 
 export async function createVisitorAction(prevState: unknown, formData: FormData) {
   const { supabase, user } = await requireUser();
