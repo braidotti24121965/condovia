@@ -43,7 +43,9 @@ interface Props {
 
 export function PassCheckScanner({ accessPoints }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const lastCodeRef = useRef<string | null>(null);
+  // Last code seen by the camera and when. A code is checked when it first appears or when it
+  // leaves the frame and comes back, so holding it still does not repeat the check.
+  const lastCodeRef = useRef<{ value: string | null; seenAt: number }>({ value: null, seenAt: 0 });
   const [cameraState, setCameraState] = useState<"starting" | "active" | "unavailable">("starting");
   const [manualInput, setManualInput] = useState("");
   const [result, setResult] = useState<VisitorPassCheckResult | { error: string } | null>(null);
@@ -135,9 +137,12 @@ export function PassCheckScanner({ accessPoints }: Props) {
               height: videoHeight,
               lastRead: value ? "QR lido" : "nenhum QR neste quadro",
             }));
-            if (value && value !== lastCodeRef.current) {
-              lastCodeRef.current = value;
-              checkPassRef.current(value, true);
+            const now = Date.now();
+            if (value) {
+              const isSameCode = value === lastCodeRef.current.value;
+              const stillInFrame = now - lastCodeRef.current.seenAt <= SCAN_INTERVAL_MS * 2;
+              if (!isSameCode || !stillInFrame) checkPassRef.current(value, true);
+              lastCodeRef.current = { value, seenAt: now };
             }
           } catch (error) {
             // Frame could not be decoded; the next tick tries again. Logged so a
@@ -163,7 +168,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
   const handleManualSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!manualInput.trim()) return;
-    lastCodeRef.current = null;
+    lastCodeRef.current = { value: null, seenAt: 0 };
     checkPass(manualInput, false);
   };
 
