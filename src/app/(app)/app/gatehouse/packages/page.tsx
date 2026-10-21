@@ -84,7 +84,7 @@ export default async function GatehousePackagesPage() {
                     <td>{formatDateTimeInTimezone(pkg.received_at, timeZone)}</td>
                     <td>{pkg.notes || "—"}</td>
                     <td>
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center", whiteSpace: "nowrap" }}>
                         <CollectPackageModal
                           packageId={pkg.id}
                           packageDescription={pkg.description}
