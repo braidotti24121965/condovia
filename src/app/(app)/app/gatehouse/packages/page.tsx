@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { ReceivePackageButton } from "@/components/gatehouse/receive-package-button";
 import { CollectPackageModal } from "@/components/gatehouse/collect-package-modal";
+import { PackageReleaseByCode } from "@/components/gatehouse/package-release-by-code";
 import { getPackages, getCondoUnits } from "@/lib/gatehouse/data";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 
@@ -47,6 +48,8 @@ export default async function GatehousePackagesPage() {
       <GatehouseNav />
 
       {/* Aguardando Retirada */}
+      <PackageReleaseByCode />
+
       <section className="cv-panel v2-panel gatehouse-list-panel">
         <div className="cv-panel-heading">
           <h2><Clock size={18} /> Aguardando Retirada ({waitingPackages.length})</h2>

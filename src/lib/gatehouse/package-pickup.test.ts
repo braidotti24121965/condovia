@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createPickupCode, verifyPickupCode } from "./package-pickup";
+import { createPickupCode, pickupRejectionMessage, verifyPickupCode } from "./package-pickup";
 
 const SECRET = "x".repeat(48);
 const OTHER_SECRET = "y".repeat(48);
@@ -45,5 +45,13 @@ describe("pickup codes", () => {
   it("does not create codes with a short secret or invalid package ID", () => {
     expect(() => createPickupCode(PACKAGE_ID, "curto", NOW)).toThrow();
     expect(() => createPickupCode("nao-e-uuid", SECRET, NOW)).toThrow();
+  });
+});
+
+describe("pickupRejectionMessage", () => {
+  it("explains each refusal in portuguese", () => {
+    expect(pickupRejectionMessage("expired")).toContain("já venceu");
+    expect(pickupRejectionMessage("bad_signature")).toContain("inválido");
+    expect(pickupRejectionMessage("malformed")).toContain("não é um código");
   });
 });

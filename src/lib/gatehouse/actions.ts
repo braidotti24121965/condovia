@@ -10,7 +10,7 @@ import {
 } from "@/lib/gatehouse/timezone";
 import { extractPassToken } from "@/lib/gatehouse/pass-token";
 import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
-import { generateResidentPickupCode } from "@/lib/gatehouse/package-pickup";
+import { generateResidentPickupCode, pickupRejectionMessage, verifyPickupCode } from "@/lib/gatehouse/package-pickup";
 
 export async function getPackagePickupCodeAction(packageId: string) {
   const { supabase, user } = await requireUser();
@@ -661,4 +661,68 @@ export async function checkVisitorPassAction(rawInput: string): Promise<VisitorP
     validUntil: formatDateTimeInTimezone(pass.valid_until, timeZone),
     operational: getAuthorizationOperationalStatus(pass.valid_from, pass.valid_until),
   };
+}
+
+/**
+ * Operator-side check of a resident's pickup code. Verifies the signature and
+ * expiry, and that the package still belongs to this condominium and is waiting.
+ * Does not change anything.
+ */
+async function checkPickupCodeForOperator(rawCode: string) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." } as const;
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." } as const;
+
+  const secret = process.env.PACKAGE_PICKUP_SECRET;
+  if (!secret) return { error: "Segredo de retirada não configurado no servidor." } as const;
+
+  const check = verifyPickupCode(rawCode, secret);
+  if (!check.valid) return { error: pickupRejectionMessage(check.reason) } as const;
+
+  const { data: packageData, error } = await supabase
+    .from("packages")
+    .select("id, status, condominium_id, description, unit:units(code)")
+    .eq("id", check.packageId)
+    .maybeSingle();
+  if (error) return { error: "Não foi possível consultar a encomenda." } as const;
+  if (!packageData || packageData.condominium_id !== context.id) {
+    return { error: "Encomenda não encontrada neste condomínio." } as const;
+  }
+  if (packageData.status !== "received") {
+    return { error: "Esta encomenda já foi retirada." } as const;
+  }
+
+  const unit = Array.isArray(packageData.unit) ? packageData.unit[0] : packageData.unit;
+  return {
+    success: true as const,
+    packageId: packageData.id,
+    description: packageData.description,
+    unitCode: unit?.code ?? "—",
+  };
+}
+
+export async function checkPackagePickupCodeAction(rawCode: string) {
+  return checkPickupCodeForOperator(rawCode.trim());
+}
+
+export async function releasePackageByCodeAction(rawCode: string) {
+  const checked = await checkPickupCodeForOperator(rawCode.trim());
+  if (!("success" in checked)) return checked;
+
+  const { supabase } = await requireUser();
+  if (!supabase) return { error: "Não autenticado." };
+
+  const { error } = await supabase.rpc("collect_package", {
+    p_package_id: checked.packageId,
+    p_collector_name: null,
+    p_collector_document: null,
+    p_notes: "Retirada com código de retirada do morador",
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/app/gatehouse");
+  revalidatePath("/app/gatehouse/packages");
+  revalidatePath("/app/my-units");
+  return { success: true, description: checked.description, unitCode: checked.unitCode };
 }
