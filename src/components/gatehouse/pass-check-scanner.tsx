@@ -216,20 +216,29 @@ export function PassCheckScanner({ accessPoints }: Props) {
                       ))}
                     </ContentSelect>
                   </label>
-                ) : null}
+                ) : (
+                  <Alert tone="warning">
+                    Nenhum ponto de acesso cadastrado. Cadastre um em Pontos de acesso para registrar entradas.
+                  </Alert>
+                )}
                 <Button
                   type="button"
                   variant="primary"
                   disabled={isRegistering || !accessPointId || entryMessage?.tone === "success"}
                   onClick={() => handleRegisterEntry(result.authorizationId as string)}
                 >
-                  <DoorOpen size={15} /> {isRegistering ? "Registrando..." : "Registrar entrada"}
+                  <DoorOpen size={15} />{" "}
+                  {entryMessage?.tone === "success"
+                    ? "Entrada registrada"
+                    : isRegistering
+                    ? "Registrando..."
+                    : "Registrar entrada"}
                 </Button>
               </div>
             ) : (
               <Alert tone="warning">Entrada indisponível: não foi possível localizar a autorização deste passe.</Alert>
             )}
-            {entryMessage ? <Alert tone={entryMessage.tone}>{entryMessage.text}</Alert> : null}
+            {entryMessage?.tone === "error" ? <Alert tone="error">{entryMessage.text}</Alert> : null}
           </div>
         ) : null}
       </section>

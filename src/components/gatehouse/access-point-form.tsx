@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -8,6 +9,7 @@ import { Alert } from "@/components/ui/feedback";
 import { createAccessPointAction } from "@/lib/gatehouse/actions";
 
 export function AccessPointForm() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,8 +20,12 @@ export function AccessPointForm() {
     setError(null);
     const result = await createAccessPointAction(null, new FormData(event.currentTarget));
     setLoading(false);
-    if (result?.error) setError(result.error);
-    else setOpen(false);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+    setOpen(false);
+    router.refresh();
   };
 
   return (
