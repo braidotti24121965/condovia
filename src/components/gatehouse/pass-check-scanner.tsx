@@ -7,7 +7,7 @@ import { Alert } from "@/components/ui/feedback";
 import { StatusBadge, type StatusBadgeVariant } from "@/components/ui/status-badge";
 import { ContentSelect } from "@/components/ui/form-controls";
 import { QrCameraReader, type ScanStatus } from "@/components/gatehouse/qr-camera-reader";
-import { checkVisitorPassAction, registerEntryAction, type VisitorPassCheckResult } from "@/lib/gatehouse/actions";
+import { checkVisitorPassAction, registerEntryAction, registerPassExitAction, type VisitorPassCheckResult } from "@/lib/gatehouse/actions";
 import { canAutoRegisterEntry } from "@/lib/gatehouse/entry-rules";
 
 const operationalVariant: Record<string, StatusBadgeVariant> = {
@@ -45,6 +45,17 @@ export function PassCheckScanner({ accessPoints }: Props) {
     return { tone: "success" as const, text: "Entrada registrada." };
   };
 
+  const registerExit = async (authorizationId: string, pointId: string) => {
+    const formData = new FormData();
+    formData.append("authorization_id", authorizationId);
+    formData.append("access_point_id", pointId);
+    const response = await registerPassExitAction(null, formData);
+    if ("error" in response) {
+      return { tone: "error" as const, text: response.error ?? "Não foi possível registrar a saída." };
+    }
+    return { tone: "success" as const, text: "Saída registrada." };
+  };
+
   // autoRegister is set only for camera reads, so the operator always confirms
   // typed or pasted links through the explicit button.
   const checkPass = (rawValue: string, autoRegister: boolean) => {
@@ -52,7 +63,12 @@ export function PassCheckScanner({ accessPoints }: Props) {
       const response = await checkVisitorPassAction(rawValue);
       setEntryMessage(null);
       setResult(response);
-      if (autoRegister && "status" in response && canAutoRegisterEntry(response, accessPointIdRef.current)) {
+      if (autoRegister && "status" in response && response.status === "found" && response.alreadyInside) {
+        const authorizationId = response.authorizationId;
+        if (authorizationId) {
+          setEntryMessage(await registerExit(authorizationId, accessPointIdRef.current));
+        }
+      } else if (autoRegister && "status" in response && canAutoRegisterEntry(response, accessPointIdRef.current)) {
         const authorizationId = "authorizationId" in response ? response.authorizationId : null;
         if (authorizationId) {
           setEntryMessage(await registerEntry(authorizationId, accessPointIdRef.current));
@@ -64,6 +80,12 @@ export function PassCheckScanner({ accessPoints }: Props) {
   const handleRegisterEntry = (authorizationId: string) => {
     startRegistering(async () => {
       setEntryMessage(await registerEntry(authorizationId, accessPointId));
+    });
+  };
+
+  const handleRegisterExit = (authorizationId: string) => {
+    startRegistering(async () => {
+      setEntryMessage(await registerExit(authorizationId, accessPointId));
     });
   };
 
@@ -165,20 +187,20 @@ export function PassCheckScanner({ accessPoints }: Props) {
                   <Button
                     type="button"
                     variant="primary"
-                    disabled={isRegistering || !accessPointId || result.alreadyInside || entryMessage?.tone === "success"}
-                    onClick={() => handleRegisterEntry(result.authorizationId as string)}
+                    disabled={isRegistering || !accessPointId || entryMessage?.tone === "success"}
+                    onClick={() => result.alreadyInside ? handleRegisterExit(result.authorizationId as string) : handleRegisterEntry(result.authorizationId as string)}
                   >
                     <DoorOpen size={15} />{" "}
                     {entryMessage?.tone === "success"
-                      ? "Entrada registrada"
+                      ? result.alreadyInside ? "Saída registrada" : "Entrada registrada"
                       : result.alreadyInside
-                      ? "Já está dentro"
+                      ? isRegistering ? "Registrando..." : "Registrar saída"
                       : isRegistering
                       ? "Registrando..."
                       : "Registrar entrada"}
                   </Button>
                   {result.alreadyInside && entryMessage?.tone !== "success" ? (
-                    <Alert tone="info">Esta pessoa já consta dentro do condomínio. Registre a saída em Presença para liberar uma nova entrada.</Alert>
+                    <Alert tone="info">Esta pessoa já consta dentro do condomínio. A saída pode ser registrada mesmo se o passe estiver vencido.</Alert>
                   ) : null}
                 </div>
               ) : (
