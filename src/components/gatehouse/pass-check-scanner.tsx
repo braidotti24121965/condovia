@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/feedback";
 import { StatusBadge, type StatusBadgeVariant } from "@/components/ui/status-badge";
 import { ContentSelect } from "@/components/ui/form-controls";
 import { checkVisitorPassAction, registerEntryAction, type VisitorPassCheckResult } from "@/lib/gatehouse/actions";
+import { decodeQrFrame } from "@/lib/gatehouse/qr-frame";
 
 type DetectedCode = { rawValue: string };
 type BarcodeDetectorLike = { detect: (source: CanvasImageSource) => Promise<DetectedCode[]> };
@@ -23,6 +24,30 @@ const operationalVariant: Record<string, StatusBadgeVariant> = {
 function getBarcodeDetector(): BarcodeDetectorConstructor | null {
   if (typeof window === "undefined") return null;
   return (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector ?? null;
+}
+
+/**
+ * Returns a function that reads the QR Code in the current video frame.
+ * Uses the browser's BarcodeDetector when available, and otherwise decodes the
+ * frame in JavaScript, so the camera reader works in any modern browser.
+ */
+function createFrameDetector(): (video: HTMLVideoElement) => Promise<string | null> {
+  const Detector = getBarcodeDetector();
+  if (Detector) {
+    const detector = new Detector({ formats: ["qr_code"] });
+    return async (video) => (await detector.detect(video))[0]?.rawValue ?? null;
+  }
+
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  return async (video) => {
+    if (!context) return null;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    return decodeQrFrame(data, canvas.width, canvas.height);
+  };
 }
 
 interface Props {
@@ -63,8 +88,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
   };
 
   useEffect(() => {
-    const Detector = getBarcodeDetector();
-    if (!Detector || !navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState("unavailable");
       return;
     }
@@ -89,12 +113,11 @@ export function PassCheckScanner({ accessPoints }: Props) {
         await video.play();
         setCameraState("active");
 
-        const detector = new Detector({ formats: ["qr_code"] });
+        const detectCode = createFrameDetector();
         timer = window.setInterval(async () => {
           if (!videoRef.current || videoRef.current.readyState < 2) return;
           try {
-            const codes = await detector.detect(videoRef.current);
-            const value = codes[0]?.rawValue;
+            const value = await detectCode(videoRef.current);
             if (value && value !== lastCodeRef.current) {
               lastCodeRef.current = value;
               checkPass(value);
