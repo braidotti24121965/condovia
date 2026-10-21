@@ -602,6 +602,7 @@ export type VisitorPassCheckResult =
       validUntil: string;
       operational: { code: string; label: string; tone: string };
       authorizationId: string | null;
+      alreadyInside: boolean;
     }
   | { status: "invalid"; message: string };
 
@@ -650,9 +651,17 @@ export async function checkVisitorPassAction(rawInput: string): Promise<VisitorP
     .eq("status", "approved")
     .maybeSingle();
 
+  // A pass is "inside" when the presence list has an open entry for its authorization.
+  let alreadyInside = false;
+  if (authorization?.id) {
+    const { data: presence } = await supabase.rpc("get_gatehouse_presence", { p_condominium_id: context.id });
+    alreadyInside = (presence ?? []).some((row: { authorization_id: string | null }) => row.authorization_id === authorization.id);
+  }
+
   return {
     status: "found",
     authorizationId: authorization?.id ?? null,
+    alreadyInside,
     visitorName: pass.visitor_name,
     visitorType: pass.visitor_type,
     unitCode: pass.unit_code,

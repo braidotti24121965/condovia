@@ -277,16 +277,21 @@ export function PassCheckScanner({ accessPoints }: Props) {
                 <Button
                   type="button"
                   variant="primary"
-                  disabled={isRegistering || !accessPointId || entryMessage?.tone === "success"}
+                  disabled={isRegistering || !accessPointId || result.alreadyInside || entryMessage?.tone === "success"}
                   onClick={() => handleRegisterEntry(result.authorizationId as string)}
                 >
                   <DoorOpen size={15} />{" "}
                   {entryMessage?.tone === "success"
                     ? "Entrada registrada"
+                    : result.alreadyInside
+                    ? "Já está dentro"
                     : isRegistering
                     ? "Registrando..."
                     : "Registrar entrada"}
                 </Button>
+                {result.alreadyInside && entryMessage?.tone !== "success" ? (
+                  <Alert tone="info">Esta pessoa já consta dentro do condomínio. Registre a saída em Presença para liberar uma nova entrada.</Alert>
+                ) : null}
               </div>
             ) : (
               <Alert tone="warning">Entrada indisponível: não foi possível localizar a autorização deste passe.</Alert>
