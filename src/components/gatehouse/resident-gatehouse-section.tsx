@@ -333,8 +333,8 @@ function PackagePickupQrModal({ open, onClose, packageData, timeZone }: { open: 
         <p className="cv-muted">O código vale por 7 dias e não é armazenado no banco.</p>
         {error ? <p role="alert" className="cv-field-error">{error}</p> : null}
         {qr ? <img src={qr} alt="QR Code do código de retirada" width={240} height={240} style={{ display: "block", margin: "16px auto" }} /> : null}
-        {expiresAt ? <p><strong>Validade:</strong> {formattedExpiry}</p> : null}
-        <div className="cv-form-actions">
+        {expiresAt ? <p style={{ margin: "16px 0 0 0" }}><strong>Validade:</strong> {formattedExpiry}</p> : null}
+        <div className="cv-form-actions" style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "20px", justifyContent: "flex-end" }}>
           {whatsappUrl ? <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><Button variant="primary"><Share2 size={15} /> Compartilhar pelo WhatsApp</Button></a> : null}
           <Button type="button" variant="secondary" onClick={generate} disabled={isGenerating}><RefreshCw size={15} /> {isGenerating ? "Gerando..." : code ? "Gerar novo código" : "Gerar código"}</Button>
           <Button type="button" variant="ghost" onClick={onClose}><Check size={15} /> Concluir</Button>

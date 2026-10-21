@@ -62,3 +62,10 @@ export function generateResidentPickupCode(
   const expiresAt = Number(code.split(".")[1]) * 1000;
   return { code, expiresAt: new Date(expiresAt).toISOString() };
 }
+
+/** Message shown to the doorman when a pickup code is refused. */
+export function pickupRejectionMessage(reason: "malformed" | "bad_signature" | "expired"): string {
+  if (reason === "expired") return "Este código de retirada já venceu. Peça ao morador para gerar um novo.";
+  if (reason === "bad_signature") return "Código de retirada inválido.";
+  return "Este código não é um código de retirada do CondoVia.";
+}
