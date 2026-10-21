@@ -2,7 +2,7 @@
 
 Leia este documento antes de qualquer alteração no módulo de portaria. Ele registra o que já foi decidido e o que não pode ser desfeito sem nova decisão. Atualize-o junto com cada PR relevante.
 
-Última atualização: 21/10/2026 (após as PRs #65 a #83).
+Última atualização: 21/10/2026 (após a PR #79).
 
 ## Ambientes e deploy
 
@@ -60,12 +60,13 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 
 ## Estado atual (21/10/2026)
 
-Integrado na `homolog` nesta frente: PRs #65 a #78, #80, #81, #82, #83, e a #73 (códigos de retirada), a #74 (QR de retirada no morador) e a #76 (liberação na portaria).
+Integrado na `homolog` nesta frente: PRs #65 a #71, #73 a #78, #79 a #84.
 
 Abertas e **não integradas**:
-- PR #79: troca de conta na mesma aba (cache do layout). Corrige um erro real observado no homolog. Precisa de autorização para integrar.
-- PR #72: leitura do QR da etiqueta no recebimento (chave da DC-e). Depende de decisão do responsável.
+- PR #72: leitura do QR da etiqueta no recebimento (chave da DC-e). Revisada pelo Codex: falta validar a leitura real de uma etiqueta antes da integração.
 - PR #52: recuperação de senha em qualquer navegador. Não é desta frente.
+
+Validado no homolog: troca de conta na mesma aba (PR #79), leitura do passe com entrada automática, bloqueio de visitante já dentro, compartilhamento do QR como imagem, liberação de encomenda com código de retirada.
 
 ## Fluxo de trabalho para agentes (Codex e Claude)
 
