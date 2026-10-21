@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canAutoRegisterEntry } from "./entry-rules";
+import { canAutoRegisterEntry, passEventCooldownRemaining } from "./entry-rules";
 
 const activePass = {
   status: "found",
@@ -28,5 +28,21 @@ describe("canAutoRegisterEntry", () => {
   it("refuses invalid lookups and passes without a located authorization", () => {
     expect(canAutoRegisterEntry({ status: "invalid" }, "point-1")).toBe(false);
     expect(canAutoRegisterEntry({ ...activePass, authorizationId: null }, "point-1")).toBe(false);
+  });
+});
+
+describe("passEventCooldownRemaining", () => {
+  const NOW = new Date("2026-10-21T12:00:00Z");
+
+  it("allows a pass that has no previous event", () => {
+    expect(passEventCooldownRemaining(null, NOW)).toBe(0);
+  });
+
+  it("blocks an event right after the last one, the accidental double read", () => {
+    expect(passEventCooldownRemaining("2026-10-21T11:59:50Z", NOW)).toBe(110);
+  });
+
+  it("allows the next event once the cooldown has passed", () => {
+    expect(passEventCooldownRemaining("2026-10-21T11:57:00Z", NOW)).toBe(0);
   });
 });
