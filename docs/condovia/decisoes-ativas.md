@@ -43,13 +43,12 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 - Recebimento: o botão "Ler QR da etiqueta" preenche as observações com `Chave DC-e: <44 dígitos>` (quando o QR for o da DC-e) ou com `Código da etiqueta: <texto>`. O recebimento só é salvo com o clique em "Confirmar Recebimento". Sem migration.
 - Retirada: decidido que o morador recebe um **código de retirada assinado** (ID da encomenda + validade de 7 dias, HMAC-SHA256 com `PACKAGE_PICKUP_SECRET`). Nada é guardado no banco. Gerar novo código **não** invalida o anterior; ambos valem até o prazo ou até a retirada (a encomenda deixa de estar `received`).
 - Regra de código: `src/lib/gatehouse/package-pickup.ts`, com testes.
-- A área do morador mostra o QR de retirada (PR #74, em revisão).
-- A **liberação na portaria** pelo código ainda não está implementada.
+- A área do morador mostra o QR de retirada e permite compartilhar a imagem do QR (PRs #74 e #77, integradas). Só moradores e proprietários vigentes da unidade geram o código.
+- A **liberação na portaria** pelo código está implementada (PR #76): conferência de assinatura, prazo e status, e confirmação do porteiro antes de registrar a retirada.
 
 ## Pendências conhecidas
 
-- PR #74 (QR de retirada no morador): classes `cv-modal-backdrop`/`cv-modal-panel` inexistentes no CSS; remover `condoName` sem uso; avaliar restringir a geração do código aos moradores da unidade.
-- Liberação de encomenda na portaria com o código (verificar assinatura, prazo e status `received`, depois marcar como retirada com forma de prova "código de retirada").
+- Forma de prova da retirada: hoje o registro usa a observação "Retirada com código de retirada do morador". Campo próprio para a forma de prova exige migration e não foi decidido.
 - Padronizar o leitor de QR do passe e o da etiqueta em um componente único (`qr-camera-reader` já existe e é reutilizável).
 
 ## Preferências da equipe
@@ -60,13 +59,13 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 
 ## Estado atual (21/10/2026)
 
-Integrado na `homolog` nesta frente: PRs #65 a #71, #73 a #78, #79 a #84.
+Integrado na `homolog` nesta frente: PRs #65 a #87, além das de documentação #75 e #84 e #85. A partir da PR #72, o recebimento de encomenda lê a chave da DC-e da etiqueta, avisa duplicidade e permite confirmar o recebimento mesmo assim.
 
 Abertas e **não integradas**:
-- PR #72: leitura do QR da etiqueta no recebimento (chave da DC-e). Revisada pelo Codex: falta validar a leitura real de uma etiqueta antes da integração.
 - PR #52: recuperação de senha em qualquer navegador. Não é desta frente.
+- PR #88: este documento. Só documentação.
 
-Validado no homolog: troca de conta na mesma aba (PR #79), leitura do passe com entrada automática, bloqueio de visitante já dentro, compartilhamento do QR como imagem, liberação de encomenda com código de retirada.
+Validado no homolog: troca de conta na mesma aba, leitura do passe com entrada automática, bloqueio de visitante já dentro, compartilhamento do QR como imagem, liberação de encomenda com código de retirada, leitura da etiqueta da J&T com aviso de duplicidade, exclusão de encomenda aguardando retirada.
 
 ## Fluxo de trabalho para agentes (Codex e Claude)
 
@@ -87,7 +86,6 @@ Validado no homolog: troca de conta na mesma aba (PR #79), leitura do passe com 
 ## Atualização da tarde (21/10/2026)
 
 Integrado desde a última versão deste documento:
-- PR #72: leitura da etiqueta de encomenda (chave da DC-e). Recebimento avisa duplicidade pela chave e só recebe de novo com confirmação do porteiro. Transportadora em lista. Descrição opcional.
 - PR #79: troca de conta na mesma aba sem reaproveitar páginas da conta anterior. Validado.
 - PR #80: leitura repetida do passe volta a consultar quando o QR sai do quadro e volta.
 - PR #81: passe de pessoa já dentro mostra "Já está dentro" e não tenta nova entrada.
