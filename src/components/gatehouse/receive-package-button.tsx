@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { receivePackageAction } from "@/lib/gatehouse/actions";
-import { buildPackageLabelNote } from "@/lib/gatehouse/package-label";
+import { buildPackageLabelNote, packageCarrierOptions } from "@/lib/gatehouse/package-label";
 import { QrCameraReader } from "@/components/gatehouse/qr-camera-reader";
 
 interface Props {
@@ -22,15 +22,20 @@ export function ReceivePackageButton({ units }: Props) {
   const [scanning, setScanning] = useState(false);
   const [labelRead, setLabelRead] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Set when the label was already received. The porteiro can confirm to receive it again.
+  const [duplicate, setDuplicate] = useState(false);
+  const [lastFormData, setLastFormData] = useState<FormData | null>(null);
+
+  const submitForm = async (fd: FormData) => {
     setLoading(true);
     setError(null);
-    const fd = new FormData(e.currentTarget);
+    setDuplicate(false);
+    setLastFormData(fd);
     const res = await receivePackageAction(null, fd);
     setLoading(false);
     if (res?.error) {
       setError(res.error);
+      setDuplicate(Boolean(res.duplicate));
     } else {
       setSuccess(true);
       setNotes("");
@@ -40,6 +45,19 @@ export function ReceivePackageButton({ units }: Props) {
         setSuccess(false);
       }, 1000);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    void submitForm(new FormData(e.currentTarget));
+  };
+
+  const receiveAnyway = () => {
+    if (!lastFormData) return;
+    const fd = new FormData();
+    lastFormData.forEach((value, key) => fd.append(key, value));
+    fd.set("confirm_duplicate", "true");
+    void submitForm(fd);
   };
 
   return (
@@ -75,7 +93,13 @@ export function ReceivePackageButton({ units }: Props) {
               </Button>
             </div>
 
-            {error && <div style={{ marginBottom: "16px" }}><Alert tone="error">{error}</Alert></div>}
+            {error && <div style={{ marginBottom: "16px" }}><Alert tone={duplicate ? "warning" : "error"}>{error}</Alert></div>}
+            {duplicate ? (
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginBottom: "16px" }}>
+                <Button type="button" variant="secondary" onClick={() => setDuplicate(false)}>Cancelar</Button>
+                <Button type="button" variant="primary" onClick={receiveAnyway} disabled={loading}>Receber mesmo assim</Button>
+              </div>
+            ) : null}
             {success && <div style={{ marginBottom: "16px" }}><Alert tone="success">Encomenda registrada com sucesso!</Alert></div>}
 
             <form onSubmit={handleSubmit} className="cv-form">
@@ -91,12 +115,17 @@ export function ReceivePackageButton({ units }: Props) {
 
               <label className="cv-field-wide">
                 Descrição da encomenda *
-                <input name="description" required minLength={2} placeholder="Ex: Caixa média Mercado Livre" />
+                <input name="description" placeholder="Opcional. Ex: Caixa média Mercado Livre" />
               </label>
 
               <label className="cv-field-wide">
                 Transportadora / Entregador
-                <input name="carrier" placeholder="Ex: Correios, Amazon, Loggi, Motoboy" />
+                <select name="carrier" defaultValue="">
+                  <option value="">Não informada</option>
+                  {packageCarrierOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
               </label>
 
               <div className="cv-field-wide" style={{ display: "grid", gap: "8px" }}>

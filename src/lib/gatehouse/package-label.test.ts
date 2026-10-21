@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPackageLabelNote, extractDceKey } from "./package-label";
+import { buildPackageLabelNote, extractDceKey, extractDceKeyFromNotes, packageDescriptionFor } from "./package-label";
 
 const KEY = "35261002351877001396990020086551841109797520";
 const DCE_URL = `https://www.fazenda.pr.gov.br/dce/qrcode?chDCe=${KEY}&tpAmb=1`;
@@ -23,5 +23,30 @@ describe("buildPackageLabelNote", () => {
 
   it("stores other label text as the label code, trimmed", () => {
     expect(buildPackageLabelNote("  SOD 352-19 990  ")).toBe("Código da etiqueta: SOD 352-19 990");
+  });
+});
+
+describe("extractDceKeyFromNotes", () => {
+  it("reads the key from the observations saved by the form", () => {
+    expect(extractDceKeyFromNotes(`Chave DC-e: ${KEY}`)).toBe(KEY);
+  });
+
+  it("returns null when there is no key", () => {
+    expect(extractDceKeyFromNotes("Código da etiqueta: SOD 352-19 990")).toBeNull();
+    expect(extractDceKeyFromNotes(null)).toBeNull();
+  });
+});
+
+describe("packageDescriptionFor", () => {
+  it("keeps the typed description", () => {
+    expect(packageDescriptionFor("Caixa média", "Correios")).toBe("Caixa média");
+  });
+
+  it("uses the carrier when the description is empty", () => {
+    expect(packageDescriptionFor("  ", "J&T Express")).toBe("Encomenda J&T Express");
+  });
+
+  it("uses a generic label when both are empty", () => {
+    expect(packageDescriptionFor("", null)).toBe("Encomenda");
   });
 });
