@@ -10,10 +10,6 @@ import { checkVisitorPassAction, registerEntryAction, type VisitorPassCheckResul
 import { decodeQrFrame } from "@/lib/gatehouse/qr-frame";
 import { canAutoRegisterEntry } from "@/lib/gatehouse/entry-rules";
 
-type DetectedCode = { rawValue: string };
-type BarcodeDetectorLike = { detect: (source: CanvasImageSource) => Promise<DetectedCode[]> };
-type BarcodeDetectorConstructor = new (options: { formats: string[] }) => BarcodeDetectorLike;
-
 const SCAN_INTERVAL_MS = 500;
 
 const operationalVariant: Record<string, StatusBadgeVariant> = {
@@ -22,23 +18,13 @@ const operationalVariant: Record<string, StatusBadgeVariant> = {
   expired: "danger",
 };
 
-function getBarcodeDetector(): BarcodeDetectorConstructor | null {
-  if (typeof window === "undefined") return null;
-  return (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector ?? null;
-}
-
 /**
  * Returns a function that reads the QR Code in the current video frame.
- * Uses the browser's BarcodeDetector when available, and otherwise decodes the
- * frame in JavaScript, so the camera reader works in any modern browser.
+ * The frame is decoded in JavaScript (jsQR) rather than with the browser's
+ * BarcodeDetector, which reads phone screens unreliably and is missing in
+ * some browsers. jsQR gives the same result in every browser.
  */
 function createFrameDetector(): (video: HTMLVideoElement) => Promise<string | null> {
-  const Detector = getBarcodeDetector();
-  if (Detector) {
-    const detector = new Detector({ formats: ["qr_code"] });
-    return async (video) => (await detector.detect(video))[0]?.rawValue ?? null;
-  }
-
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });
   return async (video) => {
