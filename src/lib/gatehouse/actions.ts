@@ -490,6 +490,32 @@ export async function registerExitAction(prevState: unknown, formData: FormData)
   return { success: true };
 }
 
+export async function registerPassExitAction(prevState: unknown, formData: FormData) {
+  const { supabase } = await requireUser();
+  if (!supabase) return { error: "Não autenticado." };
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." };
+
+  const authorization_id = String(formData.get("authorization_id") || "").trim();
+  const access_point_id = String(formData.get("access_point_id") || "").trim();
+  const notes = String(formData.get("notes") || "").trim() || null;
+  if (!authorization_id) return { error: "Selecione a autorização." };
+  if (!access_point_id) return { error: "Selecione o ponto de acesso de saída." };
+
+  const { error } = await supabase.rpc("register_access_exit", {
+    p_condominium_id: context.id,
+    p_authorization_id: authorization_id,
+    p_access_point_id: access_point_id,
+    p_notes: notes,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/app/gatehouse");
+  revalidatePath("/app/gatehouse/access");
+  revalidatePath("/app/gatehouse/history");
+  return { success: true };
+}
+
 export async function receivePackageAction(prevState: unknown, formData: FormData) {
   const { supabase, user } = await requireUser();
   if (!supabase || !user) return { error: "Não autenticado." };
