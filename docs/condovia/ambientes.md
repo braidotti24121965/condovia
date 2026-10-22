@@ -37,18 +37,6 @@ Em cada projeto Supabase, **Authentication → URL Configuration** deve conter:
 
 `supabase/config.toml` reflete a configuração de Auth registrada no MVP-0 (`site_url` `condovia-five.vercel.app` e `external_url` do projeto de produção). Não executar `supabase config push` com esse arquivo sem antes revisar esses valores contra o painel do projeto de destino, pois isso sobrescreve a configuração de Auth remota.
 
-## Modelo de e-mail de recuperação de senha
-
-O link de recuperação deve usar `/auth/confirm` com `token_hash`, que funciona em qualquer navegador ou dispositivo. O fluxo antigo (`/auth/callback` com `code`, PKCE) só funciona se o link for aberto no mesmo navegador em que a recuperação foi solicitada.
-
-Em cada projeto Supabase, **Authentication → Emails → Reset Password**, o link do modelo deve ser:
-
-```
-{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password
-```
-
-A **Site URL** de cada projeto precisa ser o domínio do próprio ambiente (produção: `https://condovia.kynovia.com.br`; homologação: `https://homolog-condovia.kynovia.com.br`).
-
 ## Fluxo de publicação
 
 1. Trabalhar em branch e abrir PR para `main`.
