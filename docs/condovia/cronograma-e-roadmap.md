@@ -38,6 +38,8 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 | Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Pendente, testes ainda não definidos |
 | Migrations conciliadas e aplicadas em produção | 15% | Concluído (19/10: histórico P8 reconciliado, schema conferido por fingerprint, 24 migrations aplicadas) |
 
+Situação em 22/10/2026: o código da manutenção está na `main`, e as tabelas, o bucket privado `maintenance-documents` e o job diário `condovia-maintenance-daily` existem na homologação e na produção. O job roda diariamente às 10:00 UTC e está com execuções bem-sucedidas. Falta a homologação funcional, cujo roteiro depende de definição do responsável, e atribuir os usuários do conselho, sem os quais as aprovações acima do limite ficam travadas.
+
 ## Evolução da portaria após 19/10/2026 (checklist)
 
 Entregas da portaria feitas depois da data de referência acima. Os itens são marcados como concluídos somente quando estão integrados à `homolog` e validados pelo responsável. Nada disso está em produção.
@@ -52,9 +54,9 @@ Entregas da portaria feitas depois da data de referência acima. Os itens são m
 | Completar cadastro antigo (visitante e prestador) pela tela de portaria | Concluído na homologação | PR #94 |
 | Confirmação do porteiro com foto e dados antes de registrar entrada ou saída, sem registro automático pela leitura | Concluído na homologação; teste aprovado pelo responsável | PR #94 |
 | Bloqueio de entrada de veículo sem placa cadastrada no ponto de acesso | Concluído na homologação | PR #94 |
-| Teste visual em celular e desktop das telas novas da portaria | Pendente | — |
+| Teste visual em celular e desktop das telas novas da portaria | Encerrado pelo responsável sem teste visual adicional | — |
 | Aplicação das migrations da portaria em produção, pelo procedimento de produção | Pendente | — |
-| Definição de retenção e base legal das fotos e dados de documento (LGPD) | Pendente, depende de decisão do responsável | — |
+| Retenção de foto e documento por 90 dias após o fim da última autorização | Decidido em 22/10/2026; rotina de exclusão ainda não implementada | Ver decisoes-ativas.md |
 | Remoção dos dados de teste da homologação (visitante de teste com eventos protegidos pelo trigger de auditoria) | Pendente, depende de decisão sobre o trigger | — |
 
 Percentual da evolução da portaria: a definir pelo responsável. Esta seção não altera os percentuais das fases acima.
@@ -63,7 +65,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 
 | Fase | Situação | Próximo critério | % |
 |---|---|---|---|
-| P9 — Finance | Rascunho técnico (PR #48; migrations P9.1, P9.2 e P9.4 aplicadas só na homologação) | Definição funcional e revisão do PR #48 | 0% (não contabilizado até entrar na `main`) |
+| P9 — Financeiro | Congelado pelo responsável em 22/10/2026, sem data para retomar. Menu e páginas ocultos em todos os ambientes (PR #98) | Nova decisão de fase | 0% |
 | P10 — Communication & Governance | A planejar | Definição funcional | 0% |
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
@@ -74,6 +76,17 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 
 - MVP (MVP-0 a P7): **100%**.
 - Roadmap pós-MVP (P8 a P13, pesos iguais): **14%** (P8 em 85%).
+
+## Próximos ajustes (em ordem de prioridade)
+
+1. **Recuperação de senha em produção:** repetir o teste no projeto `condovia` com o gestor de teste. Atualizar o PR #52 com a `main` atual, corrigir o link que cai na raiz do site e validar na homologação antes de mesclar.
+2. **Rotina de retenção de 90 dias** para foto e documento. Exige migration e autorização explícita antes de aplicar em homologação ou produção.
+3. **Completar os cadastros existentes** de visitantes e prestadores que vão receber autorização. Operacional.
+4. **Homologação funcional do P8:** definir o roteiro com o responsável, executar e atribuir os usuários do conselho.
+5. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a aparecer.
+6. **Merges pendentes:** PR #96 (histórico de entregas) e PR #100 (retenção e encerramento de testes), ambos contra a `homolog`.
+7. **Conferir o DNS** do DKIM: só deve restar o registro `titan1._domainkey` correto, após o TTL de 4 horas.
+8. **Limpeza de branches** já mesclados.
 
 ## Pendências transversais
 
