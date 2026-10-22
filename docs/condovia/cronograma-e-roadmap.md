@@ -27,7 +27,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 
 ## Fase em andamento
 
-### P8 — Manutenção: 85%
+### P8 — Manutenção: 100%
 
 | Item | Peso | Situação |
 |---|---:|---|
@@ -35,10 +35,10 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 | Testes técnicos (lint, typecheck, build, unitários, pgTAP via PGlite) | 10% | Concluído |
 | Publicação e migrations em homologação | 10% | Concluído (19/10: migrations conferidas na homologação) |
 | Correções de homologação integradas à `main` (PR #43) | 10% | Concluído (19/10, `5b89a78`; testado em produção) |
-| Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Pendente, testes ainda não definidos |
+| Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Concluído (22/10/2026, aceito pelo responsável em 23/10; alçada do Conselho fora do escopo por decisão do responsável) |
 | Migrations conciliadas e aplicadas em produção | 15% | Concluído (19/10: histórico P8 reconciliado, schema conferido por fingerprint, 24 migrations aplicadas) |
 
-Situação em 23/10/2026: o código da manutenção está na `main`, e as tabelas, o bucket privado e o job diário existem na homologação e na produção. Homologação funcional feita em 22/10 no condomínio de teste, com aprovação de: solicitação, OS a partir da solicitação, atribuição, execução, registro técnico, validação, documento com download temporário, plano preventivo sem duplicar o ciclo, alerta de contrato vencendo, aprovação acima do limite pela alçada do Gestor e isolamento entre condomínios. Defeito encontrado (OS a partir de solicitação sem complemento) corrigido pela PR #107 e validado. Pendente: a alçada do Conselho, que só se testa com uma alçada de teto menor.
+Situação em 23/10/2026: o código da manutenção está na `main`, e as tabelas, o bucket privado e o job diário existem na homologação e na produção. Homologação funcional feita em 22/10 no condomínio de teste, com aprovação de: solicitação, OS a partir da solicitação, atribuição, execução, registro técnico, validação, documento com download temporário, plano preventivo sem duplicar o ciclo, alerta de contrato vencendo, aprovação acima do limite pela alçada do Gestor e isolamento entre condomínios. Defeito encontrado (OS a partir de solicitação sem complemento) corrigido pela PR #107 e validado. Homologação aceita pelo responsável em 23/10/2026. A alçada do Conselho ficou fora do escopo por decisão do responsável e não será testada.
 
 ## Evolução da portaria após 19/10/2026 (checklist)
 
@@ -80,8 +80,6 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 ## Próximos ajustes (em ordem de prioridade)
 
 1. **Recuperação de senha:** aguarda a resposta da HostGator sobre o login SMTP. Depois, validar na homologação e só então avaliar a PR #52 (hoje revertida na produção pela PR #103).
-2. **Conselho na manutenção:** definir se vamos testar com uma alçada de teto menor.
-3. **Completar cadastros antigos** de visitantes e prestadores que vão receber autorização. Operacional.
 4. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a acontecer.
 5. **Merges pendentes:** conferir as PRs de documentação ainda abertas.
 6. **DNS do DKIM:** conferir se só sobrou o registro `titan1._domainkey` correto, após o TTL.
