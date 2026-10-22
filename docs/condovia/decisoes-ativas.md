@@ -10,6 +10,14 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 - Base do tratamento: o responsável informa que o consentimento dos moradores já foi obtido, e que este sistema substitui um sistema já em operação no condomínio. A base legal formal deve ser confirmada com o jurídico do cliente antes de o sistema ser usado em outros condomínios.
 - Ainda não implementado: a rotina que apaga foto e documento após 90 dias. Ela exige migration e acesso ao storage. Fica como próxima entrega da portaria, com aprovação explícita antes de qualquer aplicação em homolog ou produção.
 
+## Operação em produção (22/10/2026)
+
+- Cadastros de teste foram removidos da produção pelo responsável. Cadastros reais (inclusive de familiares) não devem ser usados para teste em produção. Testes usam a homologação.
+- Movimentações de entrada e saída são protegidas por trigger de auditoria. Não desligar o trigger em produção por script de agente. Qualquer exclusão desse tipo é decisão do responsável, feita diretamente no painel, com backup prévio.
+- Cadastros de visitante recorrente (marcados pelo morador) não entram na regra de retenção de 90 dias.
+- A rotina de retenção roda diariamente (banco às 06:00 UTC e remoção de arquivos às 07:00 UTC, via Vercel Cron). As variáveis `CRON_SECRET` e `SUPABASE_SERVICE_ROLE_KEY` precisam existir em Production e Preview.
+- Antes de mesclar na `main`, a mudança precisa ser validada na homologação. A PR #52 foi mesclada na produção por engano e revertida pela PR #103; ela só volta após validação.
+
 ## Financeiro (P9): congelado
 
 - Decisão do responsável (22/10/2026): o módulo Financeiro fica congelado, sem data para retomar. Não entra em PR, merge nem migration para produção.

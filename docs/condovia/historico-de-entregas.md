@@ -21,6 +21,14 @@
 | PR #93 — intervalo mínimo entre movimentos do mesmo passe (120 s) | Integrado à homologação | 21/10/2026 |
 | PR #94 — cadastro com foto, documento e placa; confirmação do porteiro; políticas do bucket `gatehouse-photos` | Integrado à homologação; migrations 20261022100000, 20261022110000 e 20261022120000 aplicadas na homologação | 22/10/2026 |
 | PR #95 — intervalo mínimo entre movimentos do mesmo passe reduzido para 30 s | Integrado à homologação; teste do porteiro aprovado pelo responsável | 22/10/2026 |
+| PR #97 — evolução da portaria no cronograma | Integrado à homologação | 22/10/2026 |
+| PR #98 — congelamento do módulo Financeiro (P9), oculto em todos os ambientes | Integrado à homologação | 22/10/2026 |
+| PR #99 — promoção da portaria para produção (migrations aplicadas com backup prévio) | Integrado à produção | 22/10/2026 |
+| PR #52 — recuperação de senha (mesclada na produção por engano) | Revertida na produção pela PR #103; reabrir só após validação na homologação | 22/10/2026 |
+| PR #103 — reversão da PR #52 na produção | Integrado à produção | 22/10/2026 |
+| PR #100 e PR #101 — documentação de retenção e cronograma | Integrados à homologação | 22/10/2026 |
+| PR #102 — rotina de retenção de 90 dias (foto, documento e placas) | Integrado à homologação e à produção (PR #104) | 22/10/2026 |
+| PR #104 — promoção da retenção para produção, com migration aplicada e backup prévio | Integrado à produção | 22/10/2026 |
 
 ## Regra para o histórico
 
