@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { ProviderForm } from "@/components/gatehouse/provider-form";
+import { CompleteRegistrationButton } from "@/components/gatehouse/complete-registration-button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getServiceProviders } from "@/lib/gatehouse/data";
@@ -74,6 +75,7 @@ export default async function ProvidersPage({
                   <th>Documento</th>
                   <th>Telefone</th>
                   <th>Status</th>
+                  <th>Cadastro</th>
                 </tr>
               </thead>
               <tbody>
@@ -88,6 +90,13 @@ export default async function ProvidersPage({
                       <StatusBadge variant={p.status === "active" ? "success" : "neutral"}>
                         {p.status === "active" ? "Ativo" : "Inativo"}
                       </StatusBadge>
+                    </td>
+                    <td>
+                      {p.photo_path ? (
+                        <StatusBadge variant="success">Completo</StatusBadge>
+                      ) : (
+                        <CompleteRegistrationButton kind="provider" person={p} />
+                      )}
                     </td>
                   </tr>
                 ))}

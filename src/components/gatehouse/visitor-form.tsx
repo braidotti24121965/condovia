@@ -7,18 +7,21 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { createVisitorAction } from "@/lib/gatehouse/actions";
 import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
+import { PhotoCapture } from "@/components/gatehouse/photo-capture";
 
 export function VisitorForm() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [photo, setPhoto] = useState<Blob | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     const fd = new FormData(e.currentTarget);
+    if (photo) fd.set("photo", photo, "foto.jpg");
     const res = await createVisitorAction(null, fd);
     setLoading(false);
     if (res?.error) {
@@ -91,6 +94,27 @@ export function VisitorForm() {
                 </label>
               </div>
 
+              <div className="cv-field-wide" style={{ display: "grid", gap: "8px" }}>
+                <span>Foto do visitante *</span>
+                <PhotoCapture onCapture={setPhoto} disabled={loading} />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <label>
+                  Placa do veículo
+                  <input name="vehicle_plate" placeholder="ABC1D23" maxLength={8} autoComplete="off" />
+                </label>
+                <label>
+                  Modelo e cor
+                  <input name="vehicle_model" placeholder="Ex: Onix prata" />
+                </label>
+              </div>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <input type="checkbox" name="is_recurring" />
+                Visitante recorrente (o morador define quando marcar)
+              </label>
+
               <label className="cv-field-wide">
                 Telefone / WhatsApp
                 <input name="phone" inputMode="tel" placeholder="Ex: (11) 98765-4321" onChange={(e) => { e.currentTarget.value = formatBrazilianPhone(e.currentTarget.value); }} />
@@ -103,7 +127,7 @@ export function VisitorForm() {
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
-                <SubmitButton type="submit" disabled={loading}>
+                <SubmitButton type="submit" disabled={loading || !photo}>
                   {loading ? "Cadastrando..." : "Salvar Visitante"}
                 </SubmitButton>
               </div>

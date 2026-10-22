@@ -33,7 +33,7 @@ export default async function PassCheckPage() {
 
       <GatehouseNav />
 
-      <PassCheckScanner accessPoints={accessPoints.map((point) => ({ id: point.id, name: point.name }))} />
+      <PassCheckScanner accessPoints={accessPoints.map((point) => ({ id: point.id, name: point.name, type: point.type }))} />
     </div>
   );
 }

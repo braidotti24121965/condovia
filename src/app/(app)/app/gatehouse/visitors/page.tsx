@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { VisitorForm } from "@/components/gatehouse/visitor-form";
+import { CompleteRegistrationButton } from "@/components/gatehouse/complete-registration-button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getVisitors } from "@/lib/gatehouse/data";
@@ -73,6 +74,7 @@ export default async function VisitorsPage({
                   <th>Telefone</th>
                   <th>Observações</th>
                   <th>Status</th>
+                  <th>Cadastro</th>
                 </tr>
               </thead>
               <tbody>
@@ -86,6 +88,13 @@ export default async function VisitorsPage({
                       <StatusBadge variant={v.status === "active" ? "success" : "neutral"}>
                         {v.status === "active" ? "Ativo" : "Inativo"}
                       </StatusBadge>
+                    </td>
+                    <td>
+                      {v.photo_path ? (
+                        <StatusBadge variant="success">Completo</StatusBadge>
+                      ) : (
+                        <CompleteRegistrationButton kind="visitor" person={v} />
+                      )}
                     </td>
                   </tr>
                 ))}

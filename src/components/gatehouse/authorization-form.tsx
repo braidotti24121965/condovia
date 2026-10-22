@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { createAuthorizationAction } from "@/lib/gatehouse/actions";
-import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 import { toLocalDateTimeInput } from "@/lib/gatehouse/timezone";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -28,7 +27,6 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [targetType, setTargetType] = useState<"visitor" | "provider">("visitor");
-  const [visitorMode, setVisitorMode] = useState<"new" | "recent">("new");
   const [overlap, setOverlap] = useState<{ valid_from: string; valid_until: string } | null>(null);
   const [createdQrAuth, setCreatedQrAuth] = useState<AuthorizationQrData | null>(null);
 
@@ -125,24 +123,10 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
 
               {residentMode ? (
                 <>
-                  <label className="cv-field-wide">
-                    Visitante
-                    <select name="visitor_mode" value={visitorMode} onChange={(e) => setVisitorMode(e.target.value as "new" | "recent")}>
-                      <option value="new">Novo visitante</option>
-                      <option value="recent">Visitantes recentes</option>
-                    </select>
-                  </label>
-                  {visitorMode === "new" ? (
-                    <div className="cv-form-grid">
-                      <label className="cv-field-wide">Nome *<input name="visitor_name" required /></label>
-                      <label>Tipo de documento<select name="document_type" defaultValue=""><option value="">Não informado</option><option value="cpf">CPF</option><option value="rg">RG</option><option value="cnh">CNH</option><option value="passport">Passaporte</option><option value="other">Outro</option></select></label>
-                      <label>Documento<input name="document_number" inputMode="numeric" onChange={(e) => { e.currentTarget.value = formatBrazilianCpf(e.currentTarget.value); }} /></label>
-                      <label>Telefone<input name="phone" inputMode="tel" onChange={(e) => { e.currentTarget.value = formatBrazilianPhone(e.currentTarget.value); }} /></label>
-                    </div>
-                  ) : visitors.length ? (
-                    <label className="cv-field-wide">Visitante recente *<select name="target_id" required defaultValue=""><option value="" disabled>Selecione...</option>{visitors.map((v) => <option key={v.id} value={v.id}>{v.full_name}</option>)}</select></label>
+                  {visitors.length ? (
+                    <label className="cv-field-wide">Visitante cadastrado *<select name="target_id" required defaultValue=""><option value="" disabled>Selecione...</option>{visitors.map((v) => <option key={v.id} value={v.id}>{v.full_name}</option>)}</select></label>
                   ) : (
-                    <Alert tone="info">Nenhum visitante recente. Cadastre um novo visitante para continuar.</Alert>
+                    <Alert tone="info">Nenhum visitante cadastrado com foto e documento. Cadastre o visitante antes de autorizar.</Alert>
                   )}
                 </>
               ) : targetType === "visitor" ? (

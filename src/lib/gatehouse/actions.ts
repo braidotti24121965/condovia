@@ -1,6 +1,6 @@
 "use server";
 
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireUser, requireCurrentContext } from "@/lib/auth/context";
 import {
@@ -12,7 +12,16 @@ import { extractPassToken } from "@/lib/gatehouse/pass-token";
 import { extractDceKeyFromNotes, packageDescriptionFor } from "@/lib/gatehouse/package-label";
 import { passEventCooldownRemaining } from "@/lib/gatehouse/entry-rules";
 import { normalizeVisitorDocumentNumber } from "@/lib/gatehouse/visitor-document";
+import {
+  isIdentityDocumentType,
+  isValidPlate,
+  normalizePlate,
+  validateIdentityDocument,
+} from "@/lib/gatehouse/identity-document";
 import { generateResidentPickupCode, pickupRejectionMessage, verifyPickupCode } from "@/lib/gatehouse/package-pickup";
+
+const GATEHOUSE_PHOTO_BUCKET = "gatehouse-photos";
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
 export async function getPackagePickupCodeAction(packageId: string) {
   const { supabase, user } = await requireUser();
@@ -49,13 +58,36 @@ export async function createVisitorAction(prevState: unknown, formData: FormData
   if (context.type !== "condominium") return { error: "Contexto inválido." };
 
   const full_name = String(formData.get("full_name") || "").trim();
-  const document_type = String(formData.get("document_type") || "").trim() || null;
-  const document_number = normalizeVisitorDocumentNumber(document_type, String(formData.get("document_number") || ""));
+  const documentTypeInput = String(formData.get("document_type") || "").trim();
   const phone = String(formData.get("phone") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
+  const is_recurring = formData.get("is_recurring") === "on";
+  const plateInput = String(formData.get("vehicle_plate") || "").trim();
+  const vehicleModel = String(formData.get("vehicle_model") || "").trim() || null;
+  const vehicleColor = String(formData.get("vehicle_color") || "").trim() || null;
+  const photo = formData.get("photo");
 
   if (full_name.length < 2) {
     return { error: "Nome deve conter no mínimo 2 caracteres." };
+  }
+  if (!isIdentityDocumentType(documentTypeInput)) {
+    return { error: "Informe o tipo de documento: CPF, RG, CNH ou passaporte." };
+  }
+  const document_type = documentTypeInput;
+  const documentError = validateIdentityDocument(document_type, String(formData.get("document_number") || ""));
+  if (documentError) return { error: documentError };
+  const document_number = normalizeVisitorDocumentNumber(document_type, String(formData.get("document_number") || ""));
+
+  if (!(photo instanceof Blob) || photo.size === 0) {
+    return { error: "Tire a foto do visitante pela câmera antes de salvar." };
+  }
+  if (photo.type !== "image/jpeg" || photo.size > MAX_PHOTO_BYTES) {
+    return { error: "A foto deve ser uma imagem JPEG de até 2 MB." };
+  }
+
+  const plate = plateInput ? normalizePlate(plateInput) : null;
+  if (plate && !isValidPlate(plate)) {
+    return { error: "Placa inválida. Use o formato ABC1D23 ou ABC1234." };
   }
 
   const { data: account } = await supabase
@@ -64,27 +96,176 @@ export async function createVisitorAction(prevState: unknown, formData: FormData
     .eq("auth_user_id", user.id)
     .single();
 
+  const visitorId = randomUUID();
+  const photoPath = `${context.id}/visitors/${visitorId}.jpg`;
+  const { error: uploadError } = await supabase.storage
+    .from(GATEHOUSE_PHOTO_BUCKET)
+    .upload(photoPath, photo, { contentType: "image/jpeg", upsert: false });
+  if (uploadError) {
+    return { error: "Não foi possível salvar a foto. Tente novamente." };
+  }
+
   const { error } = await supabase.from("visitors").insert({
+    id: visitorId,
     condominium_id: context.id,
     full_name,
     document_type,
     document_number,
     phone,
     notes,
+    photo_path: photoPath,
+    is_recurring,
     created_by: account?.id,
     updated_by: account?.id,
   });
 
   if (error) {
+    await supabase.storage.from(GATEHOUSE_PHOTO_BUCKET).remove([photoPath]);
     if (error.code === "23505" && error.message.includes("visitors_document_duplicate")) {
       return { error: `Já existe um visitante cadastrado com este ${document_type === "cpf" ? "CPF" : "documento"}.` };
     }
     return { error: error.message };
   }
 
+  if (plate) {
+    const { error: vehicleError } = await supabase.from("person_vehicles").insert({
+      condominium_id: context.id,
+      visitor_id: visitorId,
+      plate,
+      model: vehicleModel,
+      color: vehicleColor,
+      created_by: account?.id,
+      updated_by: account?.id,
+    });
+    if (vehicleError) {
+      return { error: `Visitante salvo, mas o veículo não foi registrado: ${vehicleError.message}` };
+    }
+  }
+
   revalidatePath("/app/gatehouse");
   revalidatePath("/app/gatehouse/visitors");
   return { success: true };
+}
+
+type RegistrationTarget = {
+  table: "visitors" | "service_providers";
+  ownerColumn: "visitor_id" | "service_provider_id";
+  label: string;
+};
+
+const VISITOR_TARGET: RegistrationTarget = { table: "visitors", ownerColumn: "visitor_id", label: "visitante" };
+const PROVIDER_TARGET: RegistrationTarget = {
+  table: "service_providers",
+  ownerColumn: "service_provider_id",
+  label: "prestador",
+};
+
+async function completeRegistration(formData: FormData, target: RegistrationTarget) {
+  const { supabase, user } = await requireUser();
+  if (!supabase || !user) return { error: "Não autenticado." };
+  const context = await requireCurrentContext();
+  if (context.type !== "condominium") return { error: "Contexto inválido." };
+
+  const personId = String(formData.get("person_id") || "").trim();
+  const documentTypeInput = String(formData.get("document_type") || "").trim();
+  const photo = formData.get("photo");
+  const is_recurring = formData.get("is_recurring") === "on";
+  const plateInput = String(formData.get("vehicle_plate") || "").trim();
+  const vehicleModel = String(formData.get("vehicle_model") || "").trim() || null;
+  const vehicleColor = String(formData.get("vehicle_color") || "").trim() || null;
+
+  if (!personId) return { error: `Cadastro do ${target.label} não informado.` };
+  if (!isIdentityDocumentType(documentTypeInput)) {
+    return { error: "Informe o tipo de documento: CPF, RG, CNH ou passaporte." };
+  }
+  const document_type = documentTypeInput;
+  const documentError = validateIdentityDocument(document_type, String(formData.get("document_number") || ""));
+  if (documentError) return { error: documentError };
+  const document_number = normalizeVisitorDocumentNumber(document_type, String(formData.get("document_number") || ""));
+
+  if (!(photo instanceof Blob) || photo.size === 0) {
+    return { error: "Tire a foto pela câmera antes de salvar." };
+  }
+  if (photo.type !== "image/jpeg" || photo.size > MAX_PHOTO_BYTES) {
+    return { error: "A foto deve ser uma imagem JPEG de até 2 MB." };
+  }
+
+  const plate = plateInput ? normalizePlate(plateInput) : null;
+  if (plate && !isValidPlate(plate)) {
+    return { error: "Placa inválida. Use o formato ABC1D23 ou ABC1234." };
+  }
+
+  const { data: person } = await supabase
+    .from(target.table)
+    .select("id")
+    .eq("id", personId)
+    .eq("condominium_id", context.id)
+    .maybeSingle();
+  if (!person) return { error: `Cadastro do ${target.label} não encontrado nesta portaria.` };
+
+  const { data: account } = await supabase
+    .from("user_accounts")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  // A new object name each time: photos are written once and never overwritten.
+  const photoPath = `${context.id}/${target.table === "visitors" ? "visitors" : "providers"}/${personId}-${randomUUID()}.jpg`;
+  const { error: uploadError } = await supabase.storage
+    .from(GATEHOUSE_PHOTO_BUCKET)
+    .upload(photoPath, photo, { contentType: "image/jpeg", upsert: false });
+  if (uploadError) {
+    return { error: "Não foi possível salvar a foto. Tente novamente." };
+  }
+
+  const { error } = await supabase
+    .from(target.table)
+    .update({
+      photo_path: photoPath,
+      document_type,
+      document_number,
+      is_recurring,
+      updated_by: account?.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", personId)
+    .eq("condominium_id", context.id);
+
+  if (error) {
+    await supabase.storage.from(GATEHOUSE_PHOTO_BUCKET).remove([photoPath]);
+    if (error.code === "23505" && error.message.includes("document_duplicate")) {
+      return { error: `Já existe um cadastro com este ${document_type === "cpf" ? "CPF" : "documento"}.` };
+    }
+    return { error: error.message };
+  }
+
+  if (plate) {
+    const { error: vehicleError } = await supabase.from("person_vehicles").insert({
+      condominium_id: context.id,
+      [target.ownerColumn]: personId,
+      plate,
+      model: vehicleModel,
+      color: vehicleColor,
+      created_by: account?.id,
+      updated_by: account?.id,
+    });
+    if (vehicleError) {
+      return { error: `Cadastro salvo, mas o veículo não foi registrado: ${vehicleError.message}` };
+    }
+  }
+
+  revalidatePath("/app/gatehouse");
+  revalidatePath("/app/gatehouse/visitors");
+  revalidatePath("/app/gatehouse/providers");
+  return { success: true };
+}
+
+export async function completeVisitorRegistrationAction(prevState: unknown, formData: FormData) {
+  return completeRegistration(formData, VISITOR_TARGET);
+}
+
+export async function completeProviderRegistrationAction(prevState: unknown, formData: FormData) {
+  return completeRegistration(formData, PROVIDER_TARGET);
 }
 
 export async function createAccessPointAction(prevState: unknown, formData: FormData) {
@@ -224,6 +405,25 @@ export async function createAuthorizationAction(prevState: unknown, formData: Fo
 
   const validFromIso = fromDate.toISOString();
   const validUntilIso = untilDate.toISOString();
+
+  // Inline visitors have no photo or identity check, so they cannot be authorized.
+  if (visitor_mode === "new") {
+    return { error: "Cadastre o visitante com foto e documento antes de autorizar a visita." };
+  }
+
+  if (target_id) {
+    const table = target_type === "visitor" ? "visitors" : "service_providers";
+    const { data: target } = await supabase
+      .from(table)
+      .select("photo_path, document_type, document_number")
+      .eq("id", target_id)
+      .eq("condominium_id", context.id)
+      .maybeSingle();
+    if (!target) return { error: "Cadastro não encontrado nesta portaria." };
+    if (!target.photo_path || !target.document_type || !target.document_number) {
+      return { error: "Cadastro incompleto: é preciso foto e documento de identidade antes da autorização." };
+    }
+  }
 
   const overlapTarget = visitor_mode === "recent" || !visitor_mode ? target_id : "";
   if (overlapTarget && !formData.get("allow_overlap")) {
@@ -663,9 +863,19 @@ export async function generateVisitorPassTokenAction(authorizationId: string) {
   return { token };
 }
 
+export type PassIdentity = {
+  personName: string;
+  personType: string;
+  documentType: string;
+  documentMasked: string;
+  photoUrl: string | null;
+  plates: string[];
+};
+
 export type VisitorPassCheckResult =
   | {
       status: "found";
+      identity: PassIdentity | null;
       visitorName: string;
       visitorType: string;
       unitCode: string;
@@ -723,6 +933,31 @@ export async function checkVisitorPassAction(rawInput: string): Promise<VisitorP
     .eq("status", "approved")
     .maybeSingle();
 
+  // Identity for the operator to compare with the person in front of them.
+  // The photo is served through a signed URL that expires after 5 minutes.
+  let identity: PassIdentity | null = null;
+  if (authorization?.id) {
+    const { data: identityRows } = await supabase.rpc("get_pass_identity", { p_authorization_id: authorization.id });
+    const row = identityRows?.[0];
+    if (row) {
+      let photoUrl: string | null = null;
+      if (row.photo_path) {
+        const { data: signed } = await supabase.storage
+          .from(GATEHOUSE_PHOTO_BUCKET)
+          .createSignedUrl(row.photo_path, 300);
+        photoUrl = signed?.signedUrl ?? null;
+      }
+      identity = {
+        personName: row.person_name,
+        personType: row.person_type,
+        documentType: row.document_type ?? "",
+        documentMasked: row.document_masked ?? "",
+        photoUrl,
+        plates: row.plates ?? [],
+      };
+    }
+  }
+
   // A pass is "inside" when the presence list has an open entry for its authorization.
   let alreadyInside = false;
   if (authorization?.id) {
@@ -732,6 +967,7 @@ export async function checkVisitorPassAction(rawInput: string): Promise<VisitorP
 
   return {
     status: "found",
+    identity,
     authorizationId: authorization?.id ?? null,
     alreadyInside,
     visitorName: pass.visitor_name,

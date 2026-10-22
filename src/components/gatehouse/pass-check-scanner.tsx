@@ -8,7 +8,6 @@ import { StatusBadge, type StatusBadgeVariant } from "@/components/ui/status-bad
 import { ContentSelect } from "@/components/ui/form-controls";
 import { QrCameraReader, type ScanStatus } from "@/components/gatehouse/qr-camera-reader";
 import { checkVisitorPassAction, registerEntryAction, registerPassExitAction, type VisitorPassCheckResult } from "@/lib/gatehouse/actions";
-import { canAutoRegisterEntry } from "@/lib/gatehouse/entry-rules";
 
 const operationalVariant: Record<string, StatusBadgeVariant> = {
   active: "success",
@@ -17,7 +16,7 @@ const operationalVariant: Record<string, StatusBadgeVariant> = {
 };
 
 interface Props {
-  accessPoints: { id: string; name: string }[];
+  accessPoints: { id: string; name: string; type: string }[];
 }
 
 export function PassCheckScanner({ accessPoints }: Props) {
@@ -25,8 +24,11 @@ export function PassCheckScanner({ accessPoints }: Props) {
   const [result, setResult] = useState<VisitorPassCheckResult | { error: string } | null>(null);
   const [isChecking, startChecking] = useTransition();
   const [accessPointId, setAccessPointId] = useState(accessPoints[0]?.id ?? "");
+  // The operator must confirm, looking at the photo, that the person in front of them is the pass holder.
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
   // The camera loop reads this ref, so it always sees the selected access point.
   const accessPointIdRef = useRef(accessPointId);
+  const selectedPointType = accessPoints.find((point) => point.id === accessPointId)?.type ?? "";
   useEffect(() => {
     accessPointIdRef.current = accessPointId;
   }, [accessPointId]);
@@ -56,24 +58,14 @@ export function PassCheckScanner({ accessPoints }: Props) {
     return { tone: "success" as const, text: "Saída registrada." };
   };
 
-  // autoRegister is set only for camera reads, so the operator always confirms
-  // typed or pasted links through the explicit button.
-  const checkPass = (rawValue: string, autoRegister: boolean) => {
+  // Every read, camera or typed, only shows the registration. The operator
+  // compares the photo and document on screen and confirms with a button.
+  const checkPass = (rawValue: string) => {
     startChecking(async () => {
       const response = await checkVisitorPassAction(rawValue);
       setEntryMessage(null);
+      setIdentityConfirmed(false);
       setResult(response);
-      if (autoRegister && "status" in response && response.status === "found" && response.alreadyInside) {
-        const authorizationId = response.authorizationId;
-        if (authorizationId) {
-          setEntryMessage(await registerExit(authorizationId, accessPointIdRef.current));
-        }
-      } else if (autoRegister && "status" in response && canAutoRegisterEntry(response, accessPointIdRef.current)) {
-        const authorizationId = "authorizationId" in response ? response.authorizationId : null;
-        if (authorizationId) {
-          setEntryMessage(await registerEntry(authorizationId, accessPointIdRef.current));
-        }
-      }
     });
   };
 
@@ -92,7 +84,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
   const handleManualSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!manualInput.trim()) return;
-    checkPass(manualInput, false);
+    checkPass(manualInput);
   };
 
   return (
@@ -105,7 +97,7 @@ export function PassCheckScanner({ accessPoints }: Props) {
         </h2>
         <QrCameraReader
           continuous
-          onRead={(value) => checkPass(value, true)}
+          onRead={(value) => checkPass(value)}
           onStatus={(status) => setScanStatus((previous) => ({ ...status, frames: previous.frames + 1 }))}
           prompt="Aponte a câmera para o QR Code do passe."
           unavailableMessage="A leitura pela câmera não está disponível neste navegador. Cole o link do passe abaixo."
@@ -162,6 +154,29 @@ export function PassCheckScanner({ accessPoints }: Props) {
                 <dd style={{ margin: 0 }}>{result.validUntil}</dd>
               </dl>
 
+              {result.identity ? (
+                <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: "16px", alignItems: "start" }}>
+                  {result.identity.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={result.identity.photoUrl}
+                      alt={`Foto de ${result.identity.personName}`}
+                      style={{ width: "140px", height: "140px", objectFit: "cover", borderRadius: "12px" }}
+                    />
+                  ) : (
+                    <Alert tone="warning">Sem foto cadastrada.</Alert>
+                  )}
+                  <dl style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "6px 12px", margin: 0, fontSize: "14px" }}>
+                    <dt className="cv-muted">Documento</dt>
+                    <dd style={{ margin: 0 }}>{result.identity.documentType.toUpperCase()} {result.identity.documentMasked}</dd>
+                    <dt className="cv-muted">Placa</dt>
+                    <dd style={{ margin: 0 }}>{result.identity.plates.length ? result.identity.plates.join(", ") : "Nenhuma cadastrada"}</dd>
+                  </dl>
+                </div>
+              ) : (
+                <Alert tone="error">Identidade indisponível para o seu perfil. A entrada não pode ser registrada.</Alert>
+              )}
+
               {result.authorizationId ? (
                 <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", flexWrap: "wrap" }}>
                   {accessPoints.length > 0 ? (
@@ -184,10 +199,29 @@ export function PassCheckScanner({ accessPoints }: Props) {
                       Nenhum ponto de acesso ativo. Ative ou cadastre um em Pontos de acesso para registrar entradas.
                     </Alert>
                   )}
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
+                    <input
+                      type="checkbox"
+                      checked={identityConfirmed}
+                      onChange={(event) => setIdentityConfirmed(event.target.checked)}
+                      disabled={!result.identity || isRegistering}
+                    />
+                    Confirmo que a pessoa confere com a foto e o documento
+                  </label>
+                  {selectedPointType === "vehicle" && result.identity && result.identity.plates.length === 0 ? (
+                    <Alert tone="warning">Sem placa cadastrada: entrada de veículo bloqueada neste ponto.</Alert>
+                  ) : null}
                   <Button
                     type="button"
                     variant="primary"
-                    disabled={isRegistering || !accessPointId || entryMessage?.tone === "success"}
+                    disabled={
+                      isRegistering ||
+                      !accessPointId ||
+                      !identityConfirmed ||
+                      !result.identity ||
+                      (selectedPointType === "vehicle" && result.identity.plates.length === 0 && !result.alreadyInside) ||
+                      entryMessage?.tone === "success"
+                    }
                     onClick={() => result.alreadyInside ? handleRegisterExit(result.authorizationId as string) : handleRegisterEntry(result.authorizationId as string)}
                   >
                     <DoorOpen size={15} />{" "}
