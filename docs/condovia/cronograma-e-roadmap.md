@@ -38,6 +38,27 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 | Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Pendente, testes ainda não definidos |
 | Migrations conciliadas e aplicadas em produção | 15% | Concluído (19/10: histórico P8 reconciliado, schema conferido por fingerprint, 24 migrations aplicadas) |
 
+## Evolução da portaria após 19/10/2026 (checklist)
+
+Entregas da portaria feitas depois da data de referência acima. Os itens são marcados como concluídos somente quando estão integrados à `homolog` e validados pelo responsável. Nada disso está em produção.
+
+| Item | Situação | Referência |
+|---|---|---|
+| Passe de visitante por QR, lido pela câmera e validado pelo servidor (token com hash, sem dados pessoais no QR) | Concluído na homologação | PR #80 e anteriores |
+| Expiração automática: passes vencidos registram saída automaticamente a cada 10 minutos | Concluído na homologação (migration aplicada e verificada) | PR #92 |
+| Trava de intervalo mínimo entre movimentos do mesmo passe | Concluído na homologação; teste aprovado com intervalo de 30 segundos | PR #93, PR #95 |
+| Cadastro de visitante e prestador com foto pela câmera, documento válido (CPF, RG, CNH ou passaporte) e placa de veículo | Concluído na homologação | PR #94 |
+| Autorização recusada para cadastro incompleto e para visitante criado na hora | Concluído na homologação | PR #94 |
+| Completar cadastro antigo (visitante e prestador) pela tela de portaria | Concluído na homologação | PR #94 |
+| Confirmação do porteiro com foto e dados antes de registrar entrada ou saída, sem registro automático pela leitura | Concluído na homologação; teste aprovado pelo responsável | PR #94 |
+| Bloqueio de entrada de veículo sem placa cadastrada no ponto de acesso | Concluído na homologação | PR #94 |
+| Teste visual em celular e desktop das telas novas da portaria | Pendente | — |
+| Aplicação das migrations da portaria em produção, pelo procedimento de produção | Pendente | — |
+| Definição de retenção e base legal das fotos e dados de documento (LGPD) | Pendente, depende de decisão do responsável | — |
+| Remoção dos dados de teste da homologação (visitante de teste com eventos protegidos pelo trigger de auditoria) | Pendente, depende de decisão sobre o trigger | — |
+
+Percentual da evolução da portaria: a definir pelo responsável. Esta seção não altera os percentuais das fases acima.
+
 ## Fases futuras
 
 | Fase | Situação | Próximo critério | % |
@@ -64,6 +85,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 - Observabilidade centralizada, rate limit/concurrency, retenção e índices (backlog do P7).
 - Backup e restauração cobrindo Auth, Storage e configurações, não só o schema `public`.
 - Revisão das funções legadas `SECURITY DEFINER`.
+- Portaria: aplicar em produção as migrations de QR, expiração, cadastro com foto e identidade do porteiro, e fazer o teste visual das telas novas.
 
 ## Próxima fase futura: controle de acesso inteligente
 
