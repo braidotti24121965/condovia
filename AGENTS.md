@@ -13,3 +13,7 @@ Estas regras fazem parte do design system e se aplicam a toda tela nova ou alter
 - Alterações devem reutilizar componentes e regras compartilhados. Não introduzir outro design system nem modificar lógica de negócio para ajustar apresentação.
 
 Referência: `docs/condovia-padronizacao-largura-campos.md`.
+
+## Contexto ativo
+
+Antes de alterar o módulo de portaria, leia `docs/condovia/decisoes-ativas.md`.

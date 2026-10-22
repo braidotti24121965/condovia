@@ -100,7 +100,7 @@ export async function saveReceivable(form: FormData) {
   const amount = Number(text(form, "amount"));
   const amountCents = Math.round(amount * 100);
   if (description.length < 2 || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || !/^\d{4}-\d{2}-\d{2}$/.test(competenceDate) || !Number.isFinite(amount) || amountCents <= 0 || dueDate < competenceDate) redirect(financeUrl(view, period, { error: "Confira descrição, datas e valor da receita." }));
-  const { error } = await supabase.from("condominium_receivables").insert({ condominium_id: context.id, category_id: text(form, "category_id") || null, description, competence_date: competenceDate, due_date: dueDate, amount_cents: amountCents, notes: text(form, "notes") || null });
+  const { error } = await supabase.from("condominium_receivables").insert({ condominium_id: context.id, category_id: text(form, "category_id") || null, unit_id: text(form, "unit_id") || null, payer_person_id: text(form, "payer_person_id") || null, description, competence_date: competenceDate, due_date: dueDate, amount_cents: amountCents, notes: text(form, "notes") || null });
   if (error) redirect(financeUrl(view, period, { error: error.message.includes("due") ? "O vencimento deve ser igual ou posterior à competência." : "Não foi possível salvar a receita." }));
   const { data: condominium } = await supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle();
   revalidatePath("/app/condominium/finance");
@@ -131,7 +131,7 @@ export async function registerFinancePayment(_previousState: FinanceActionState,
   const { error } = await supabase.rpc("register_finance_payment", { p_kind: kind, p_entry_id: id, p_amount_cents: amountCents, p_paid_on: paidOn, p_method: method, p_notes: text(form, "notes") || null });
   if (error) return financeError(error.message.includes("excede") ? "O pagamento excede o saldo da conta." : "Não foi possível registrar o pagamento.");
   revalidatePath("/app/condominium/finance");
-  return financeSuccess("Pagamento registrado.");
+  return financeSuccess(kind === "receivable" ? "Recebimento registrado." : "Pagamento registrado.");
 }
 
 export async function reverseFinancePayment(_previousState: FinanceActionState, form: FormData): Promise<FinanceActionState> {
@@ -143,7 +143,7 @@ export async function reverseFinancePayment(_previousState: FinanceActionState, 
   const { error } = await supabase.rpc("reverse_finance_payment", { p_payment_id: id, p_reason: reason });
   if (error) return financeError("Não foi possível estornar o pagamento.");
   revalidatePath("/app/condominium/finance");
-  return financeSuccess("Pagamento estornado.");
+  return financeSuccess(kind === "receivable" ? "Recebimento estornado." : "Pagamento estornado.");
 }
 
 export async function updatePayable(_previousState: FinanceActionState, form: FormData): Promise<FinanceActionState> {
@@ -155,6 +155,17 @@ export async function updatePayable(_previousState: FinanceActionState, form: Fo
   if (error) return financeError("Não foi possível editar a conta. Contas com pagamentos não podem ser editadas.");
   revalidatePath("/app/condominium/finance");
   return financeSuccess("Conta atualizada.");
+}
+
+export async function updateReceivable(_previousState: FinanceActionState, form: FormData): Promise<FinanceActionState> {
+  requireFinanceEnabled();
+  const { supabase, context } = await requireCondominiumPermission("finance.receivables.manage");
+  const id = text(form, "id"); const description = text(form, "description"); const competenceDate = text(form, "competence_date"); const dueDate = text(form, "due_date"); const amount = Number(text(form, "amount")); const amountCents = Math.round(amount * 100);
+  if (!id || description.length < 2 || !/^\d{4}-\d{2}-\d{2}$/.test(competenceDate) || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || dueDate < competenceDate || !Number.isFinite(amount) || amountCents <= 0) return financeError("Confira os dados da receita.");
+  const { error } = await supabase.from("condominium_receivables").update({ description, category_id: text(form, "category_id") || null, unit_id: text(form, "unit_id") || null, payer_person_id: text(form, "payer_person_id") || null, competence_date: competenceDate, due_date: dueDate, amount_cents: amountCents, notes: text(form, "notes") || null, updated_at: new Date().toISOString() }).eq("id", id).eq("condominium_id", context.id).eq("status", "open");
+  if (error) return financeError("Não foi possível editar a receita. Contas com pagamentos não podem ser editadas.");
+  revalidatePath("/app/condominium/finance");
+  return financeSuccess("Receita atualizada.");
 }
 
 export async function saveBill(form: FormData) {

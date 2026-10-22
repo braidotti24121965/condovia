@@ -4,6 +4,7 @@ import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 import { EmptyState } from "@/components/ui/feedback";
 import { GatehouseNav } from "@/components/gatehouse/gatehouse-nav";
 import { AuthorizationForm } from "@/components/gatehouse/authorization-form";
+import { AuthorizationQrButton } from "@/components/gatehouse/authorization-qr-button";
 import { ProviderDisplay } from "@/components/gatehouse/provider-display";
 import { RequestDecisionButtons } from "@/components/gatehouse/request-decision-button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -29,10 +30,11 @@ export default async function AuthorizationsPage() {
     getCondoUnits(context.id),
     getVisitors(context.id),
     getServiceProviders(context.id),
-    supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle(),
+    supabase.from("condominiums").select("name, timezone").eq("id", context.id).maybeSingle(),
   ]);
 
   const timeZone = condo?.timezone || "America/Sao_Paulo";
+  const condoName = condo?.name || context.name;
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
   return (
@@ -51,7 +53,7 @@ export default async function AuthorizationsPage() {
           <h1>Autorizações e Solicitações</h1>
           <p>Consulte autorizações prévias dos moradores e decida solicitações pendentes.</p>
         </div>
-        <AuthorizationForm units={units} visitors={visitors} providers={providers} timeZone={timeZone} />
+        <AuthorizationForm units={units} visitors={visitors} providers={providers} timeZone={timeZone} condoName={condoName} />
       </section>
 
       <GatehouseNav />
@@ -126,6 +128,7 @@ export default async function AuthorizationsPage() {
                   <th>Validade início</th>
                   <th>Validade fim</th>
                   <th>Status</th>
+                  <th>QR Code</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,6 +148,19 @@ export default async function AuthorizationsPage() {
                         <StatusBadge variant={!isDbApproved ? "neutral" : opStatus.tone === "inactive" ? "neutral" : opStatus.tone === "info" ? "info" : "warning"}>
                           {!isDbApproved ? a.status : opStatus.label}
                         </StatusBadge>
+                      </td>
+                      <td>
+                        <AuthorizationQrButton
+                          authorization={{
+                            id: a.id,
+                            visitorName: name || "Visitante",
+                            unitCode: a.unit?.code || "",
+                            condoName,
+                            validFrom: a.valid_from,
+                            validUntil: a.valid_until,
+                            timeZone,
+                          }}
+                        />
                       </td>
                     </tr>
                   );

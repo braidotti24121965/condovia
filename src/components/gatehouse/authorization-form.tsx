@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/feedback";
 import { createAuthorizationAction } from "@/lib/gatehouse/actions";
-import { formatBrazilianCpf, formatBrazilianPhone } from "@/lib/condominium/format";
 import { toLocalDateTimeInput } from "@/lib/gatehouse/timezone";
 import { formatDateTimeInTimezone } from "@/lib/gatehouse/timezone";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { AuthorizationQrModal, type AuthorizationQrData } from "@/components/gatehouse/authorization-qr-modal";
 import type { Visitor, ServiceProvider } from "@/lib/gatehouse/types";
 
 interface Props {
@@ -18,16 +18,17 @@ interface Props {
   providers: ServiceProvider[];
   residentMode?: boolean;
   timeZone?: string;
+  condoName?: string;
 }
 
-export function AuthorizationForm({ units, visitors, providers, residentMode = false, timeZone = "America/Sao_Paulo" }: Props) {
+export function AuthorizationForm({ units, visitors, providers, residentMode = false, timeZone = "America/Sao_Paulo", condoName }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [targetType, setTargetType] = useState<"visitor" | "provider">("visitor");
-  const [visitorMode, setVisitorMode] = useState<"new" | "recent">("new");
   const [overlap, setOverlap] = useState<{ valid_from: string; valid_until: string } | null>(null);
+  const [createdQrAuth, setCreatedQrAuth] = useState<AuthorizationQrData | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,6 +41,14 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
       setOverlap(res.overlap);
     } else if (res?.error) {
       setError(res.error);
+    } else if (res?.authorization) {
+      setOpen(false);
+      setSuccess(null);
+      setCreatedQrAuth({
+        ...res.authorization,
+        condoName,
+        timeZone,
+      });
     } else {
       setSuccess("Autorização concedida com sucesso!");
       setTimeout(() => {
@@ -114,24 +123,10 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
 
               {residentMode ? (
                 <>
-                  <label className="cv-field-wide">
-                    Visitante
-                    <select name="visitor_mode" value={visitorMode} onChange={(e) => setVisitorMode(e.target.value as "new" | "recent")}>
-                      <option value="new">Novo visitante</option>
-                      <option value="recent">Visitantes recentes</option>
-                    </select>
-                  </label>
-                  {visitorMode === "new" ? (
-                    <div className="cv-form-grid">
-                      <label className="cv-field-wide">Nome *<input name="visitor_name" required /></label>
-                      <label>Tipo de documento<select name="document_type" defaultValue=""><option value="">Não informado</option><option value="cpf">CPF</option><option value="rg">RG</option><option value="cnh">CNH</option><option value="passport">Passaporte</option><option value="other">Outro</option></select></label>
-                      <label>Documento<input name="document_number" inputMode="numeric" onChange={(e) => { e.currentTarget.value = formatBrazilianCpf(e.currentTarget.value); }} /></label>
-                      <label>Telefone<input name="phone" inputMode="tel" onChange={(e) => { e.currentTarget.value = formatBrazilianPhone(e.currentTarget.value); }} /></label>
-                    </div>
-                  ) : visitors.length ? (
-                    <label className="cv-field-wide">Visitante recente *<select name="target_id" required defaultValue=""><option value="" disabled>Selecione...</option>{visitors.map((v) => <option key={v.id} value={v.id}>{v.full_name}</option>)}</select></label>
+                  {visitors.length ? (
+                    <label className="cv-field-wide">Visitante cadastrado *<select name="target_id" required defaultValue=""><option value="" disabled>Selecione...</option>{visitors.map((v) => <option key={v.id} value={v.id}>{v.full_name}</option>)}</select></label>
                   ) : (
-                    <Alert tone="info">Nenhum visitante recente. Cadastre um novo visitante para continuar.</Alert>
+                    <Alert tone="info">Nenhum visitante cadastrado com foto e documento. Cadastre o visitante antes de autorizar.</Alert>
                   )}
                 </>
               ) : targetType === "visitor" ? (
@@ -187,6 +182,12 @@ export function AuthorizationForm({ units, visitors, providers, residentMode = f
           </div>
         </div>
       )}
+
+      <AuthorizationQrModal
+        open={Boolean(createdQrAuth)}
+        onClose={() => setCreatedQrAuth(null)}
+        authorization={createdQrAuth}
+      />
     </>
   );
 }

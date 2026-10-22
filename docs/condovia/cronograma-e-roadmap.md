@@ -69,4 +69,6 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 
 Levantar equipamentos faciais e leitores de placas, fabricantes, modelos, firmware e APIs; definir integração segura, autorização de moradores e veículos, eventos, LGPD, piloto e contingência. Não iniciar integração nesta fase.
 
+Levantamento inicial dos equipamentos e pendências por modelo: [equipamentos-controle-acesso.md](equipamentos-controle-acesso.md).
+
 Responsáveis e datas futuras sem aprovação permanecem como **A planejar**.

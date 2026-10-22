@@ -9,6 +9,8 @@ export interface Visitor {
   phone: string | null;
   notes: string | null;
   status: 'active' | 'inactive';
+  photo_path: string | null;
+  is_recurring: boolean;
   created_at: string;
 }
 
@@ -23,6 +25,8 @@ export interface ServiceProvider {
   service_type: string | null;
   notes: string | null;
   status: 'active' | 'inactive';
+  photo_path: string | null;
+  is_recurring: boolean;
   created_at: string;
 }
 
