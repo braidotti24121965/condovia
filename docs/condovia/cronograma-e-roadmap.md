@@ -38,7 +38,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 | Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Pendente, testes ainda não definidos |
 | Migrations conciliadas e aplicadas em produção | 15% | Concluído (19/10: histórico P8 reconciliado, schema conferido por fingerprint, 24 migrations aplicadas) |
 
-Situação em 22/10/2026: o código da manutenção está na `main`, e as tabelas, o bucket privado `maintenance-documents` e o job diário `condovia-maintenance-daily` existem na homologação e na produção. O job roda diariamente às 10:00 UTC e está com execuções bem-sucedidas. Resultado da homologação funcional em 22/10/2026 (condomínio de teste): aprovados solicitação, OS a partir da solicitação, atribuição, execução, registro técnico, validação, documento com download temporário, plano preventivo sem duplicar o ciclo, alerta de contrato vencendo e aprovação acima do limite pela alçada do Gestor. Pendentes: isolamento entre condomínios (exige um segundo condomínio) e a alçada do Conselho (só se testa com uma alçada de teto menor). Defeito aberto: criar a OS a partir de uma solicitação sem descrição complementar falha com mensagem genérica, porque a descrição da OS fica vazia; a correção esperada é herdar a descrição da solicitação.
+Situação em 23/10/2026: o código da manutenção está na `main`, e as tabelas, o bucket privado e o job diário existem na homologação e na produção. Homologação funcional feita em 22/10 no condomínio de teste, com aprovação de: solicitação, OS a partir da solicitação, atribuição, execução, registro técnico, validação, documento com download temporário, plano preventivo sem duplicar o ciclo, alerta de contrato vencendo, aprovação acima do limite pela alçada do Gestor e isolamento entre condomínios. Defeito encontrado (OS a partir de solicitação sem complemento) corrigido pela PR #107 e validado. Pendente: a alçada do Conselho, que só se testa com uma alçada de teto menor.
 
 ## Evolução da portaria após 19/10/2026 (checklist)
 
@@ -55,7 +55,7 @@ Entregas da portaria feitas depois da data de referência acima. Os itens são m
 | Confirmação do porteiro com foto e dados antes de registrar entrada ou saída, sem registro automático pela leitura | Concluído na homologação; teste aprovado pelo responsável | PR #94 |
 | Bloqueio de entrada de veículo sem placa cadastrada no ponto de acesso | Concluído na homologação | PR #94 |
 | Teste visual em celular e desktop das telas novas da portaria | Encerrado pelo responsável sem teste visual adicional | — |
-| Aplicação das migrations da portaria em produção, pelo procedimento de produção | Pendente | — |
+| Aplicação das migrations da portaria em produção | Concluído em 22/10/2026 (com backup prévio e conferência) | PR #99 |
 | Retenção de foto e documento por 90 dias após o fim da última autorização | Decidido em 22/10/2026; rotina de exclusão ainda não implementada | Ver decisoes-ativas.md |
 | Remoção dos dados de teste da homologação (visitante de teste com eventos protegidos pelo trigger de auditoria) | Pendente, depende de decisão sobre o trigger | — |
 
@@ -79,14 +79,13 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 
 ## Próximos ajustes (em ordem de prioridade)
 
-1. **Recuperação de senha em produção:** repetir o teste no projeto `condovia` com o gestor de teste. Atualizar o PR #52 com a `main` atual, corrigir o link que cai na raiz do site e validar na homologação antes de mesclar.
-2. **Rotina de retenção de 90 dias** para foto e documento. Exige migration e autorização explícita antes de aplicar em homologação ou produção.
-3. **Completar os cadastros existentes** de visitantes e prestadores que vão receber autorização. Operacional.
-4. **Homologação funcional do P8:** definir o roteiro com o responsável, executar e atribuir os usuários do conselho.
-5. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a aparecer.
-6. **Merges pendentes:** PR #96 (histórico de entregas) e PR #100 (retenção e encerramento de testes), ambos contra a `homolog`.
-7. **Conferir o DNS** do DKIM: só deve restar o registro `titan1._domainkey` correto, após o TTL de 4 horas.
-8. **Limpeza de branches** já mesclados.
+1. **Recuperação de senha:** aguarda a resposta da HostGator sobre o login SMTP. Depois, validar na homologação e só então avaliar a PR #52 (hoje revertida na produção pela PR #103).
+2. **Conselho na manutenção:** definir se vamos testar com uma alçada de teto menor.
+3. **Completar cadastros antigos** de visitantes e prestadores que vão receber autorização. Operacional.
+4. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a acontecer.
+5. **Merges pendentes:** conferir as PRs de documentação ainda abertas.
+6. **DNS do DKIM:** conferir se só sobrou o registro `titan1._domainkey` correto, após o TTL.
+7. **Limpeza:** contas de teste do conselho e da gestora na homologação, se for necessário.
 
 ## Pendências transversais
 
