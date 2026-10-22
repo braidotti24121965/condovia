@@ -4,6 +4,12 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 
 Última atualização: 21/10/2026 (após a PR #89).
 
+## Financeiro (P9): congelado
+
+- Decisão do responsável (22/10/2026): o módulo Financeiro fica congelado, sem data para retomar. Não entra em PR, merge nem migration para produção.
+- Na código, `isFinanceEnabled` retorna `false` em todos os ambientes. Menu, páginas, rota de API e ações ficam ocultos, independentemente de `FINANCE_ENABLED`.
+- As migrations do P9 continuam apenas na homologação, sem reversão planejada. Retomar exige nova decisão de fase, revisão funcional do PR #48 e plano de reversão para cada migration.
+
 ## Ambientes e deploy
 
 - Homologação: `https://homolog-condovia.kynovia.com.br`, ligada à branch `homolog`. Banco: projeto Supabase `condovia-homolog` (`kgvbmisocqmsxcibpumq`).
