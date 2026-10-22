@@ -4,6 +4,12 @@ Leia este documento antes de qualquer alteração no módulo de portaria. Ele re
 
 Última atualização: 21/10/2026 (após a PR #89).
 
+## Retenção de fotos e documentos da portaria (LGPD)
+
+- Decisão do responsável (22/10/2026): manter foto e documento de visitantes e prestadores por **90 dias** depois do fim da última autorização.
+- Base do tratamento: o responsável informa que o consentimento dos moradores já foi obtido, e que este sistema substitui um sistema já em operação no condomínio. A base legal formal deve ser confirmada com o jurídico do cliente antes de o sistema ser usado em outros condomínios.
+- Ainda não implementado: a rotina que apaga foto e documento após 90 dias. Ela exige migration e acesso ao storage. Fica como próxima entrega da portaria, com aprovação explícita antes de qualquer aplicação em homolog ou produção.
+
 ## Financeiro (P9): congelado
 
 - Decisão do responsável (22/10/2026): o módulo Financeiro fica congelado, sem data para retomar. Não entra em PR, merge nem migration para produção.
