@@ -3,6 +3,7 @@
 import { orderTransitionError } from "./order-errors";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { workOrderDescription } from "./work-order-description";
 import { requireCondominiumPermission } from "@/lib/condominium/access";
 import { requireCurrentContext, requireUser } from "@/lib/auth/context";
 
@@ -87,11 +88,21 @@ export async function createMaintenanceWorkOrderAction(form: FormData) {
   const { supabase } = await requireUser();
   await requireCurrentContext();
   if (!supabase) return;
+  const requestId = nullable(value(form, "maintenance_request_id"));
+  let description = value(form, "description");
+  if (requestId && !description) {
+    const { data: request } = await supabase
+      .from("maintenance_requests")
+      .select("title, description")
+      .eq("id", requestId)
+      .maybeSingle();
+    description = workOrderDescription("", request);
+  }
   const { error } = await supabase.rpc("create_maintenance_work_order", {
-    p_maintenance_request_id: nullable(value(form, "maintenance_request_id")),
+    p_maintenance_request_id: requestId,
     p_structure_id: nullable(value(form, "structure_id")),
     p_equipment_id: nullable(value(form, "equipment_id")),
-    p_description: value(form, "description"),
+    p_description: description,
     p_priority: nullable(value(form, "priority")),
     p_responsible_user_account_id: nullable(value(form, "responsible_user_account_id")),
     p_service_provider_id: nullable(value(form, "service_provider_id")),
