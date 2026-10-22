@@ -6,10 +6,10 @@ const BATCH_SIZE = 200;
 
 /**
  * Removes photo files queued by purge_expired_person_registrations() from private storage.
- * Called by a scheduled job with the shared secret in the Authorization header.
+ * Called by Vercel Cron (vercel.json), which sends Authorization: Bearer <CRON_SECRET>.
  */
-export async function POST(request: Request) {
-  const secret = process.env.GATEHOUSE_PURGE_SECRET;
+export async function GET(request: Request) {
+  const secret = process.env.CRON_SECRET;
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
