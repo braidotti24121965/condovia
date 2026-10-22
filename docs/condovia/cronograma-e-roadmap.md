@@ -38,11 +38,34 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 | Homologação funcional formal (Storage real, `pg_cron`, fluxos completos) | 15% | Pendente, testes ainda não definidos |
 | Migrations conciliadas e aplicadas em produção | 15% | Concluído (19/10: histórico P8 reconciliado, schema conferido por fingerprint, 24 migrations aplicadas) |
 
+Situação em 22/10/2026: o código da manutenção está na `main`, e as tabelas, o bucket privado `maintenance-documents` e o job diário `condovia-maintenance-daily` existem na homologação e na produção. O job roda diariamente às 10:00 UTC e está com execuções bem-sucedidas. Falta a homologação funcional, cujo roteiro depende de definição do responsável, e atribuir os usuários do conselho, sem os quais as aprovações acima do limite ficam travadas.
+
+## Evolução da portaria após 19/10/2026 (checklist)
+
+Entregas da portaria feitas depois da data de referência acima. Os itens são marcados como concluídos somente quando estão integrados à `homolog` e validados pelo responsável. Nada disso está em produção.
+
+| Item | Situação | Referência |
+|---|---|---|
+| Passe de visitante por QR, lido pela câmera e validado pelo servidor (token com hash, sem dados pessoais no QR) | Concluído na homologação | PR #80 e anteriores |
+| Expiração automática: passes vencidos registram saída automaticamente a cada 10 minutos | Concluído na homologação (migration aplicada e verificada) | PR #92 |
+| Trava de intervalo mínimo entre movimentos do mesmo passe | Concluído na homologação; teste aprovado com intervalo de 30 segundos | PR #93, PR #95 |
+| Cadastro de visitante e prestador com foto pela câmera, documento válido (CPF, RG, CNH ou passaporte) e placa de veículo | Concluído na homologação | PR #94 |
+| Autorização recusada para cadastro incompleto e para visitante criado na hora | Concluído na homologação | PR #94 |
+| Completar cadastro antigo (visitante e prestador) pela tela de portaria | Concluído na homologação | PR #94 |
+| Confirmação do porteiro com foto e dados antes de registrar entrada ou saída, sem registro automático pela leitura | Concluído na homologação; teste aprovado pelo responsável | PR #94 |
+| Bloqueio de entrada de veículo sem placa cadastrada no ponto de acesso | Concluído na homologação | PR #94 |
+| Teste visual em celular e desktop das telas novas da portaria | Encerrado pelo responsável sem teste visual adicional | — |
+| Aplicação das migrations da portaria em produção, pelo procedimento de produção | Pendente | — |
+| Retenção de foto e documento por 90 dias após o fim da última autorização | Decidido em 22/10/2026; rotina de exclusão ainda não implementada | Ver decisoes-ativas.md |
+| Remoção dos dados de teste da homologação (visitante de teste com eventos protegidos pelo trigger de auditoria) | Pendente, depende de decisão sobre o trigger | — |
+
+Percentual da evolução da portaria: a definir pelo responsável. Esta seção não altera os percentuais das fases acima.
+
 ## Fases futuras
 
 | Fase | Situação | Próximo critério | % |
 |---|---|---|---|
-| P9 — Finance | Rascunho técnico (PR #48; migrations P9.1, P9.2 e P9.4 aplicadas só na homologação) | Definição funcional e revisão do PR #48 | 0% (não contabilizado até entrar na `main`) |
+| P9 — Financeiro | Congelado pelo responsável em 22/10/2026, sem data para retomar. Menu e páginas ocultos em todos os ambientes (PR #98) | Nova decisão de fase | 0% |
 | P10 — Communication & Governance | A planejar | Definição funcional | 0% |
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
@@ -54,6 +77,17 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 - MVP (MVP-0 a P7): **100%**.
 - Roadmap pós-MVP (P8 a P13, pesos iguais): **14%** (P8 em 85%).
 
+## Próximos ajustes (em ordem de prioridade)
+
+1. **Recuperação de senha em produção:** repetir o teste no projeto `condovia` com o gestor de teste. Atualizar o PR #52 com a `main` atual, corrigir o link que cai na raiz do site e validar na homologação antes de mesclar.
+2. **Rotina de retenção de 90 dias** para foto e documento. Exige migration e autorização explícita antes de aplicar em homologação ou produção.
+3. **Completar os cadastros existentes** de visitantes e prestadores que vão receber autorização. Operacional.
+4. **Homologação funcional do P8:** definir o roteiro com o responsável, executar e atribuir os usuários do conselho.
+5. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a aparecer.
+6. **Merges pendentes:** PR #96 (histórico de entregas) e PR #100 (retenção e encerramento de testes), ambos contra a `homolog`.
+7. **Conferir o DNS** do DKIM: só deve restar o registro `titan1._domainkey` correto, após o TTL de 4 horas.
+8. **Limpeza de branches** já mesclados.
+
 ## Pendências transversais
 
 - P8: homologação funcional formal (upload real ao Storage, tarefa diária `pg_cron`, fluxos completos de OS).
@@ -64,6 +98,7 @@ O percentual das fases futuras não indica esforço restante: elas ainda não t�
 - Observabilidade centralizada, rate limit/concurrency, retenção e índices (backlog do P7).
 - Backup e restauração cobrindo Auth, Storage e configurações, não só o schema `public`.
 - Revisão das funções legadas `SECURITY DEFINER`.
+- Portaria: aplicar em produção as migrations de QR, expiração, cadastro com foto e identidade do porteiro, e fazer o teste visual das telas novas.
 
 ## Próxima fase futura: controle de acesso inteligente
 

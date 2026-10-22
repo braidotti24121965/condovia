@@ -17,6 +17,10 @@
 | Janela de homologação — histórico ajustado e migrations de importação aplicadas | Concluída com backup | 19/10/2026 |
 | PR #46 — filtros e listagens de pessoas, moradores e proprietários | Integrado à homologação | 19/10/2026 |
 | PR #43 — consolidação da homologação 10–19/10 | Integrado à main e testado em produção | 19/10/2026 |
+| PR #92 — saída automática de passe de visitante | Integrado à homologação | 21/10/2026 |
+| PR #93 — intervalo mínimo entre movimentos do mesmo passe (120 s) | Integrado à homologação | 21/10/2026 |
+| PR #94 — cadastro com foto, documento e placa; confirmação do porteiro; políticas do bucket `gatehouse-photos` | Integrado à homologação; migrations 20261022100000, 20261022110000 e 20261022120000 aplicadas na homologação | 22/10/2026 |
+| PR #95 — intervalo mínimo entre movimentos do mesmo passe reduzido para 30 s | Integrado à homologação; teste do porteiro aprovado pelo responsável | 22/10/2026 |
 
 ## Regra para o histórico
 
