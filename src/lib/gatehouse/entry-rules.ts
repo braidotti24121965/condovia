@@ -22,7 +22,7 @@ export function canAutoRegisterEntry(lookup: PassLookup, accessPointId: string):
 }
 
 /** Minimum time between two entry/exit records of the same pass, so one reading is never recorded twice. */
-export const PASS_EVENT_COOLDOWN_SECONDS = 120;
+export const PASS_EVENT_COOLDOWN_SECONDS = 30;
 
 /** Seconds still to wait before the same pass can record another event; 0 means it can. */
 export function passEventCooldownRemaining(lastOccurredAt: string | null, now: Date = new Date()): number {

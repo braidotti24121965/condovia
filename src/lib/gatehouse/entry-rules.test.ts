@@ -39,7 +39,7 @@ describe("passEventCooldownRemaining", () => {
   });
 
   it("blocks an event right after the last one, the accidental double read", () => {
-    expect(passEventCooldownRemaining("2026-10-21T11:59:50Z", NOW)).toBe(110);
+    expect(passEventCooldownRemaining("2026-10-21T11:59:50Z", NOW)).toBe(20);
   });
 
   it("allows the next event once the cooldown has passed", () => {
