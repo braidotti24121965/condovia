@@ -163,6 +163,50 @@ export async function saveResultsAction(form: FormData) {
   redirect(`${BASE}/${assemblyId}?results=1`);
 }
 
+/** Salva a ata: rascunho, publicação ou correção de ata já publicada (a administração pode corrigir depois). */
+export async function saveMinutesAction(form: FormData) {
+  const { supabase, user, context } = await requireCondominiumPermission("assemblies.manage");
+  const assemblyId = value(form, "assembly_id");
+  const body = String(form.get("body") ?? "").trim();
+  const publish = value(form, "intent") === "publish";
+
+  if (body.length > 10000) failDetail(assemblyId, "A ata tem no máximo 10.000 caracteres.");
+
+  const { data: assembly } = await supabase
+    .from("assemblies")
+    .select("id")
+    .eq("id", assemblyId)
+    .eq("condominium_id", context.id)
+    .maybeSingle();
+  if (!assembly) redirect(`${BASE}?error=${encodeURIComponent("Assembleia não encontrada.")}`);
+
+  const { data: existing } = await supabase
+    .from("assembly_minutes")
+    .select("status,published_at")
+    .eq("assembly_id", assemblyId)
+    .maybeSingle();
+  const { data: account } = await supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).maybeSingle();
+
+  // Ata já publicada continua publicada ao ser corrigida; publicar não trava a edição.
+  const isPublished = existing?.status === "published" || publish;
+  const { error } = await supabase.from("assembly_minutes").upsert(
+    {
+      assembly_id: assemblyId,
+      condominium_id: context.id,
+      body,
+      status: isPublished ? "published" : "draft",
+      published_at: isPublished ? existing?.published_at ?? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+      updated_by: account?.id ?? null,
+    },
+    { onConflict: "assembly_id" },
+  );
+  if (error) failDetail(assemblyId, friendlyDatabaseError(error.message));
+
+  revalidatePath(`${BASE}/${assemblyId}`);
+  redirect(`${BASE}/${assemblyId}?minutes=${isPublished ? "published" : "draft"}`);
+}
+
 async function condominiumTimezone(supabase: SupabaseClient, condominiumId: string) {
   const { data } = await supabase.from("condominiums").select("timezone").eq("id", condominiumId).maybeSingle();
   return data?.timezone || "America/Sao_Paulo";
