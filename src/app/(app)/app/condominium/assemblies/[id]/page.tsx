@@ -77,7 +77,7 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
               <label>
                 <input type="checkbox" name="person_id" value={voter.personId} defaultChecked={roll.presentPersonIds.has(voter.personId)} disabled={!editable} />
                 <span>{voter.name}</span>
-                <span className="cv-form-hint">{voter.unitIds.length === 1 ? "1 lote" : `${voter.unitIds.length} lotes`}</span>
+                <span className="cv-form-hint">{voter.unitCodes.length === 1 ? `Lote ${voter.unitCodes[0]}` : `Lotes ${voter.unitCodes.join(", ")}`}</span>
               </label>
             </li>)}
           </ul>

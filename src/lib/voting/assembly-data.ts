@@ -5,7 +5,7 @@ export type VotingRoll = {
   /** Lotes em dia registrados para a assembleia. */
   eligibleUnitIds: Set<string>;
   /** Associados com direito a voto, considerando só os lotes em dia. */
-  voters: (Voter & { name: string })[];
+  voters: (Voter & { name: string; unitCodes: string[] })[];
   /** Associados presentes que também estão na lista de votantes. */
   presentPersonIds: Set<string>;
 };
@@ -42,8 +42,18 @@ export async function loadVotingRoll(supabase: SupabaseClient, condominiumId: st
     : { data: [] as { id: string; full_name: string }[] };
   const names = new Map((people ?? []).map((person) => [person.id, person.full_name]));
 
+  const unitIds = voters.flatMap((voter) => voter.unitIds);
+  const { data: units } = unitIds.length
+    ? await supabase.from("units").select("id,code").in("id", unitIds)
+    : { data: [] as { id: string; code: string }[] };
+  const codes = new Map((units ?? []).map((unit) => [unit.id, unit.code]));
+
   const votersWithNames = voters
-    .map((voter) => ({ ...voter, name: names.get(voter.personId) ?? "Associado" }))
+    .map((voter) => ({
+      ...voter,
+      name: names.get(voter.personId) ?? "Associado",
+      unitCodes: voter.unitIds.map((unitId) => codes.get(unitId) ?? "").filter(Boolean).sort(),
+    }))
     .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
   const voterIds = new Set(personIds);
