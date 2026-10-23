@@ -962,3 +962,5 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-check-list input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
 .cv-check-list label > span:first-of-type { text-align: left; }
 .cv-check-list label > span:last-child { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
+
+@media (max-width: 767px) { .cv-table-wrap--has-cards { display: none; } .cv-person-cards { display: grid; gap: 8px; } }
