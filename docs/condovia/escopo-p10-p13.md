@@ -18,12 +18,12 @@ Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P
 
 **Fora do escopo:** chat entre moradores, WhatsApp e envio em massa por canais externos.
 
-**Pendências:** testes de votação em produção, com um condomínio de teste e dados identificados. Atas de reunião ainda não iniciadas.
+**Pendências:** atas de reunião, ainda não iniciadas.
 
 **Situação em 23/10/2026**
 - Comunicados: concluídos e validados em produção. Entregues: tabelas e políticas de acesso (migration `communications`, aplicada em produção em 23/10), telas de publicação e leitura, filtro por unidade ou estrutura, confirmação de leitura, link no menu do morador (PR #113, PR #116 e PR #117).
 - Teste em produção em 23/10: o síndico publicou um comunicado para um bloco de teste, e o morador vinculado à unidade viu o comunicado no menu. Os dados de teste foram removidos depois.
-- Votações: regras de quórum e aprovação do estatuto e registro de lotes em dia, presença e totais (PR #114). Em produção desde 23/10 (PR #121), com testes de produção ainda pendentes.
+- Votações: regras de quórum e aprovação do estatuto e registro de lotes em dia, presença e totais (PR #114). Em produção desde 23/10 (PR #121), com teste completo em produção feito em 23/10.
 - Atas de reunião: não iniciadas.
 - Percentual do P10: a definir, porque o critério de percentual do cronograma ainda não cobre fases parciais.
 

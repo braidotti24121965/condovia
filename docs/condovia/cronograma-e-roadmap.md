@@ -66,7 +66,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 | Fase | Situação | Próximo critério | % |
 |---|---|---|---|
 | P9 — Financeiro | Congelado pelo responsável em 22/10/2026, sem data para retomar. Menu e páginas ocultos em todos os ambientes (PR #98) | Nova decisão de fase | 0% |
-| P10 — Communication & Governance | Em andamento. Comunicados concluídos e validados em produção em 23/10 (leitura, publicação, filtro por unidade e menu do morador). Votações em produção desde 23/10 (PR #121), com quórum e aprovação conforme o estatuto (art. 11); testes de votação em produção pendentes. Atas não iniciadas | Testes de votação em produção e atas | a definir |
+| P10 — Communication & Governance | Em andamento. Comunicados concluídos e validados em produção em 23/10 (leitura, publicação, filtro por unidade e menu do morador). Votações em produção desde 23/10 (PR #121), com quórum e aprovação conforme o estatuto (art. 11). Teste completo em produção em 23/10 (lote de teste, presença, totais e resultado), com os dados de teste removidos. Atas não iniciadas | Atas de reunião | a definir |
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
 | P13 — Advanced Integration | A planejar | Dependências externas | 0% |
@@ -79,8 +79,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 
 ## Próximos ajustes (em ordem de prioridade)
 
-1. **Testes de votação em produção:** definir o condomínio e os lotes do teste, com dados identificados como teste, e registrar o resultado aqui.
-2. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a acontecer.
+1. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a acontecer.
 3. **DNS do DKIM:** conferir se só sobrou o registro `titan1._domainkey` correto, após o TTL.
 4. **Limpeza:** contas de teste do conselho e da gestora na homologação, se for necessário.
 
