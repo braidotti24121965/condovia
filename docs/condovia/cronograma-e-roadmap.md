@@ -66,7 +66,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 | Fase | Situação | Próximo critério | % |
 |---|---|---|---|
 | P9 — Financeiro | Congelado pelo responsável em 22/10/2026, sem data para retomar. Menu e páginas ocultos em todos os ambientes (PR #98) | Nova decisão de fase | 0% |
-| P10 — Communication & Governance | Em andamento. Comunicados concluídos e validados em produção em 23/10 (leitura, publicação, filtro por unidade e menu do morador). Votações em produção desde 23/10 (PR #121), com quórum e aprovação conforme o estatuto (art. 11). Teste completo em produção em 23/10 (lote de teste, presença, totais e resultado), com os dados de teste removidos. Atas não iniciadas | Atas de reunião | a definir |
+| P10 — Communication & Governance | Em andamento. Comunicados concluídos e validados em produção em 23/10 (leitura, publicação, filtro por unidade e menu do morador). Votações em produção desde 23/10 (PR #121), com quórum e aprovação conforme o estatuto (art. 11). Teste completo em produção em 23/10 (lote de teste, presença, totais e resultado), com os dados de teste removidos. Atas de assembleia em produção desde 23/10: rascunho, publicação e correção pela administração; moradores só leem as publicadas. Visão do morador validada em produção. Atas de reuniões que não são assembleias ficam para depois | Atas de reuniões avulsas | a definir |
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
 | P13 — Advanced Integration | A planejar | Dependências externas | 0% |

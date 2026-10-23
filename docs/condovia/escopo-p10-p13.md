@@ -24,7 +24,8 @@ Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P
 - Comunicados: concluídos e validados em produção. Entregues: tabelas e políticas de acesso (migration `communications`, aplicada em produção em 23/10), telas de publicação e leitura, filtro por unidade ou estrutura, confirmação de leitura, link no menu do morador (PR #113, PR #116 e PR #117).
 - Teste em produção em 23/10: o síndico publicou um comunicado para um bloco de teste, e o morador vinculado à unidade viu o comunicado no menu. Os dados de teste foram removidos depois.
 - Votações: regras de quórum e aprovação do estatuto e registro de lotes em dia, presença e totais (PR #114). Em produção desde 23/10 (PR #121), com teste completo em produção feito em 23/10.
-- Atas de reunião: não iniciadas.
+- Atas de assembleia: concluídas e em produção desde 23/10 (migration `assembly_minutes`). Rascunho, publicação e correção pela administração; moradores só leem as publicadas.
+- Atas de reuniões que não são assembleias: ficam para depois, por decisão do responsável.
 - Percentual do P10: a definir, porque o critério de percentual do cronograma ainda não cobre fases parciais.
 
 ## P11 — Compliance condominial
