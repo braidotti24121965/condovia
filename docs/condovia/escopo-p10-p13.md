@@ -1,6 +1,6 @@
 # Proposta de escopo — P10 a P13
 
-Status: proposta para aprovação do responsável, em 23/10/2026. Nenhuma fase foi iniciada. Os itens "fora do escopo" protegem decisões já tomadas (financeiro congelado, integração de equipamentos só no piloto).
+Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P10 está em andamento (ver situação abaixo); P11 a P13 não foram iniciadas. Os itens "fora do escopo" protegem decisões já tomadas (financeiro congelado, integração de equipamentos só no piloto).
 
 ## P10 — Comunicação e governança
 
@@ -19,6 +19,13 @@ Status: proposta para aprovação do responsável, em 23/10/2026. Nenhuma fase f
 **Fora do escopo:** chat entre moradores, WhatsApp e envio em massa por canais externos.
 
 **Pendência:** valor do quórum mínimo (administradora).
+
+**Situação em 23/10/2026**
+- Comunicados: concluídos e validados em produção. Entregues: tabelas e políticas de acesso (migration `communications`, aplicada em produção em 23/10), telas de publicação e leitura, filtro por unidade ou estrutura, confirmação de leitura, link no menu do morador (PR #113, PR #116 e PR #117).
+- Teste em produção em 23/10: o síndico publicou um comunicado para um bloco de teste, e o morador vinculado à unidade viu o comunicado no menu. Os dados de teste foram removidos depois.
+- Votações: regras de quórum e aprovação do estatuto e registro de lotes em dia, presença e totais (PR #114), em homologação. Ainda não estão em produção.
+- Atas de reunião: não iniciadas.
+- Percentual do P10: a definir, porque o critério de percentual do cronograma ainda não cobre fases parciais.
 
 ## P11 — Compliance condominial
 
