@@ -12,9 +12,9 @@ import type { NotificationItem } from "@/lib/notifications/notification-types";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false, occurrencesAllowed = false, importsAllowed = false, financeAllowed = false) {
+export function resolveNavigation(context: AuthorizedContext, dashboardAllowed = false, reservationsAllowed = false, occurrencesAllowed = false, importsAllowed = false, financeAllowed = false, communicationsAllowed = false) {
   if (context.type === "platform") return { resident: false, primary: [{ label: "Plataforma", href: "/app/platform" }], showCondominiumSection: false };
-  if (context.type === "condominium" && !dashboardAllowed) return { resident: true, primary: [{ label: "Meu perfil", href: "/app/profile" }, { label: "Minhas Unidades", href: "/app/my-units" }, ...(reservationsAllowed ? [{ label: "Reservas", href: "/app/reservations" }] : []), ...(occurrencesAllowed ? [{ label: "Ocorrências", href: "/app/occurrences" }] : [])], showCondominiumSection: false };
+  if (context.type === "condominium" && !dashboardAllowed) return { resident: true, primary: [{ label: "Meu perfil", href: "/app/profile" }, { label: "Minhas Unidades", href: "/app/my-units" }, ...(communicationsAllowed ? [{ label: "Comunicados", href: "/app/condominium/communications" }] : []), ...(reservationsAllowed ? [{ label: "Reservas", href: "/app/reservations" }] : []), ...(occurrencesAllowed ? [{ label: "Ocorrências", href: "/app/occurrences" }] : [])], showCondominiumSection: false };
   return { resident: false, primary: [{ label: "Painel", href: "/app/dashboard" }, { label: "Meu perfil", href: "/app/profile" }, ...(occurrencesAllowed ? [{ label: "Ocorrências", href: "/app/occurrences" }] : []), ...(importsAllowed ? [{ label: "Importação", href: "/app/condominium/imports" }] : [])], showCondominiumSection: context.type === "condominium", finance: financeAllowed };
 }
 
@@ -57,8 +57,8 @@ export function AppShell({ children, context, personName, userEmail, notificatio
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
   const navClass = (href: string) => `nav-item ${pathname === href || pathname?.startsWith(`${href}/`) ? "nav-active" : ""}`;
-  const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations, condominiumNavigation.occurrences, condominiumNavigation.imports, condominiumNavigation.finance);
-  const nav = navigation.primary.map((item) => ({ ...item, Icon: item.label === "Meu perfil" ? UserRound : LayoutDashboard }));
+  const navigation = resolveNavigation(context, condominiumNavigation.dashboard, condominiumNavigation.reservations, condominiumNavigation.occurrences, condominiumNavigation.imports, condominiumNavigation.finance, condominiumNavigation.communications);
+  const nav = navigation.primary.map((item) => ({ ...item, Icon: item.label === "Meu perfil" ? UserRound : item.label === "Comunicados" ? Megaphone : LayoutDashboard }));
   return <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
     <input ref={drawerToggleRef} className="drawer-toggle" type="checkbox" id="drawer-toggle" aria-hidden="true" />
     <button type="button" className="drawer-backdrop" onClick={closeDrawer} aria-label="Fechar menu" />
