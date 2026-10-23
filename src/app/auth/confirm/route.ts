@@ -12,12 +12,19 @@ export async function GET(request: NextRequest) {
   const requestedPath = url.searchParams.get("next") ?? "/app";
   const nextPath = requestedPath.startsWith("/") && !requestedPath.startsWith("//") ? requestedPath : "/app";
 
-  if (!tokenHash || !type || !OTP_TYPES.includes(type)) return NextResponse.redirect(new URL("/login?error=auth", url.origin));
+  if (!tokenHash || !type || !OTP_TYPES.includes(type)) {
+    console.error("[auth] confirm rejected: missing token_hash or unsupported type", type);
+    return NextResponse.redirect(new URL("/login?error=auth", url.origin));
+  }
 
   const supabase = await createClient();
   if (!supabase) return NextResponse.redirect(new URL("/login?error=auth", url.origin));
   const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-  if (error) return NextResponse.redirect(new URL("/login?error=auth", url.origin));
+  if (error) {
+    // Registra só o motivo da falha; o token nunca vai para o log.
+    console.error("[auth] confirm failed", type, error.message);
+    return NextResponse.redirect(new URL("/login?error=auth", url.origin));
+  }
 
   const response = NextResponse.redirect(new URL(nextPath, url.origin));
   response.headers.set("Cache-Control", "no-store");
