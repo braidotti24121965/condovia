@@ -26,8 +26,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     hasPermission("occurrences.read", context.id),
     hasPermission("dashboard.read", context.id),
     hasPermission("imports.read", context.id),
+    hasPermission("communications.read", context.id),
     financeEnabled ? hasPermission("finance.payables.read", context.id) : Promise.resolve({ data: false }),
-  ]).then(([overview, structures, maintenance, maintenanceRequestsRead, maintenanceRequestsCreate, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports, finance]) => ({
+  ]).then(([overview, structures, maintenance, maintenanceRequestsRead, maintenanceRequestsCreate, units, people, residents, ownerships, gatehouse, reservations, occurrenceCreate, occurrenceRead, dashboard, imports, communications, finance]) => ({
     overview: overview.data === true,
     structures: structures.data === true,
     maintenanceFoundation: maintenance.data === true,
@@ -41,6 +42,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     occurrences: occurrenceCreate.data === true || occurrenceRead.data === true,
     dashboard: dashboard.data === true,
     imports: imports.data === true,
+    communications: communications.data === true,
     finance: finance.data === true,
   })) : undefined;
   const { data: account } = await supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).maybeSingle();
