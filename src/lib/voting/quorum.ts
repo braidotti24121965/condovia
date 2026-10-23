@@ -1,10 +1,15 @@
 /**
- * Quórum e aprovação das assembleias da associação, conforme o artigo 11 do estatuto social.
+ * Quórum e aprovação das assembleias da associação, conforme o estatuto social.
  *
- * - Alteração do estatuto e destituição de membros: 2/3 dos presentes. Primeira convocação
- *   exige maioria absoluta dos associados; segunda convocação exige pelo menos 1/3 dos associados.
- * - Alienação de imóveis e dissolução: 2/3 dos presentes, com a presença da totalidade dos associados.
- * - Demais assuntos: maioria simples dos presentes.
+ * - Quórum conta associados (pessoas), conforme o artigo 3º.
+ * - Cada lote ou unidade vale um voto (artigo 14). A aprovação conta votos.
+ *
+ * - Alteração do estatuto e destituição de membros (artigo 11, parágrafo quinto):
+ *   aprovação por 2/3 dos votos presentes. Primeira convocação exige maioria absoluta dos associados
+ *   presentes; segunda convocação exige pelo menos 1/3 dos associados.
+ * - Alienação de imóveis e dissolução (artigo 11, parágrafo sexto): aprovação por 2/3 dos votos presentes,
+ *   com a presença da totalidade dos associados.
+ * - Demais assuntos (artigo 11, parágrafo sétimo): maioria simples dos votos presentes.
  */
 
 export type VotingMatter = "statute_change" | "member_removal" | "property_sale" | "dissolution" | "other";
@@ -13,9 +18,14 @@ export type Convocation = "first" | "second";
 export type VoteCount = {
   matter: VotingMatter;
   convocation: Convocation;
+  /** Associados (pessoas) com direito a voto. */
   totalAssociates: number;
-  present: number;
-  inFavor: number;
+  /** Associados (pessoas) presentes. */
+  presentAssociates: number;
+  /** Votos presentes: um por lote ou unidade representados. */
+  presentVotes: number;
+  /** Votos favoráveis. */
+  votesInFavor: number;
 };
 
 export type VoteResult = {
@@ -24,47 +34,41 @@ export type VoteResult = {
   reason: string;
 };
 
-/** Two thirds of the present voters: inFavor / present >= 2/3, without rounding. */
+/** Two thirds of the present votes, without rounding. */
 const hasTwoThirds = (inFavor: number, present: number) => inFavor * 3 >= present * 2;
 
-/** Simple majority of the present voters: inFavor is more than half. */
+/** Simple majority of the present votes. */
 const hasSimpleMajority = (inFavor: number, present: number) => inFavor * 2 > present;
 
 export function evaluateVote(count: VoteCount): VoteResult {
-  const { matter, convocation, totalAssociates, present, inFavor } = count;
+  const { matter, convocation, totalAssociates, presentAssociates, presentVotes, votesInFavor } = count;
 
-  if (present < 0 || inFavor < 0 || inFavor > present || present > totalAssociates) {
-    return { quorumMet: false, approved: false, reason: "Contagem de votos inválida." };
+  if (
+    presentAssociates < 0 ||
+    presentAssociates > totalAssociates ||
+    presentVotes < 0 ||
+    votesInFavor < 0 ||
+    votesInFavor > presentVotes
+  ) {
+    return { quorumMet: false, approved: false, reason: "Contagem inválida." };
   }
 
   if (matter === "statute_change" || matter === "member_removal") {
-    if (convocation === "first" && present * 2 <= totalAssociates) {
+    if (convocation === "first" && presentAssociates * 2 <= totalAssociates) {
       return { quorumMet: false, approved: false, reason: "Primeira convocação exige a maioria absoluta dos associados presentes." };
     }
-    if (convocation === "second" && present * 3 < totalAssociates) {
+    if (convocation === "second" && presentAssociates * 3 < totalAssociates) {
       return { quorumMet: false, approved: false, reason: "Segunda convocação exige pelo menos 1/3 dos associados." };
     }
-    return {
-      quorumMet: true,
-      approved: hasTwoThirds(inFavor, present),
-      reason: "Aprovação exige 2/3 dos presentes.",
-    };
+    return { quorumMet: true, approved: hasTwoThirds(votesInFavor, presentVotes), reason: "Aprovação exige 2/3 dos votos presentes." };
   }
 
   if (matter === "property_sale" || matter === "dissolution") {
-    if (present !== totalAssociates) {
+    if (presentAssociates !== totalAssociates) {
       return { quorumMet: false, approved: false, reason: "Esta matéria exige a presença da totalidade dos associados." };
     }
-    return {
-      quorumMet: true,
-      approved: hasTwoThirds(inFavor, present),
-      reason: "Aprovação exige 2/3 dos presentes.",
-    };
+    return { quorumMet: true, approved: hasTwoThirds(votesInFavor, presentVotes), reason: "Aprovação exige 2/3 dos votos presentes." };
   }
 
-  return {
-    quorumMet: true,
-    approved: hasSimpleMajority(inFavor, present),
-    reason: "Aprovação por maioria simples dos presentes.",
-  };
+  return { quorumMet: true, approved: hasSimpleMajority(votesInFavor, presentVotes), reason: "Aprovação por maioria simples dos votos presentes." };
 }
