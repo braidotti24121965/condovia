@@ -70,7 +70,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
 | P13 — Advanced Integration | A planejar | Dependências externas | 0% |
-| Controle de acesso inteligente | A planejar | Levantamento de equipamentos, APIs e LGPD | 0% |
+| Controle de acesso inteligente | Em andamento, sem integração com equipamento real. Concluído na homologação e em produção: levantamento documental (PR #120 e anteriores), contrato de integração, desenho interno, validação e classificação de eventos com simulador (PR #140), interface de adaptador com simulação (PR #141) e migration de equipamentos, aplicada em produção em 23/10 (PR #143). Pendente: documentação dos fabricantes, pedidos já preparados, e decisões internas (morador no registro de acesso, tipo de evento para tentativas negadas) | Documentação do fabricante e decisões internas | a definir |
 
 ## Consolidado
 
