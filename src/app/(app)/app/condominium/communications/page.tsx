@@ -5,6 +5,23 @@ import { markCommunicationReadAction, publishCommunicationAction } from "@/lib/c
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/** Structures where a person currently lives (occupancy) or owns a unit (ownership). */
+async function residentStructureIds(supabase: SupabaseClient, condominiumId: string, personId: string | null) {
+  const structures = new Set<string>();
+  if (!personId) return structures;
+  const today = new Date().toISOString().slice(0, 10);
+  const [{ data: occupancies }, { data: ownerships }] = await Promise.all([
+    supabase.from("unit_occupancies").select("unit_id").eq("condominium_id", condominiumId).eq("person_id", personId).or(`ends_at.is.null,ends_at.gte.${today}`),
+    supabase.from("unit_ownerships").select("unit_id").eq("condominium_id", condominiumId).eq("person_id", personId).or(`ends_at.is.null,ends_at.gte.${today}`),
+  ]);
+  const unitIds = [...(occupancies ?? []), ...(ownerships ?? [])].map((row) => row.unit_id);
+  if (unitIds.length === 0) return structures;
+  const { data: units } = await supabase.from("units").select("structure_id").in("id", unitIds);
+  for (const unit of units ?? []) if (unit.structure_id) structures.add(unit.structure_id);
+  return structures;
+}
 
 export const metadata = { title: "Comunicados" };
 
@@ -24,8 +41,15 @@ export default async function CommunicationsPage({
       .eq("status", "published")
       .order("published_at", { ascending: false }),
     supabase.from("condominium_structures").select("id, name").eq("condominium_id", context.id).eq("status", "active").order("name"),
-    supabase.from("user_accounts").select("id").eq("auth_user_id", user.id).maybeSingle(),
+    supabase.from("user_accounts").select("id, person_id").eq("auth_user_id", user.id).maybeSingle(),
   ]);
+
+  // Managers see every communication. Residents see the ones for the whole condominium
+  // and for the structures where they live or own a unit.
+  const visibleStructures = canPublish === true ? null : await residentStructureIds(supabase, context.id, account?.person_id ?? null);
+  const visibleCommunications = (communications ?? []).filter(
+    (item) => visibleStructures === null || item.structure_id === null || visibleStructures.has(item.structure_id),
+  );
 
   const { data: reads } = account
     ? await supabase.from("communication_reads").select("communication_id").eq("user_account_id", account.id)
@@ -93,11 +117,11 @@ export default async function CommunicationsPage({
             <h2>Comunicados publicados</h2>
           </div>
         </div>
-        {(communications ?? []).length === 0 ? (
+        {visibleCommunications.length === 0 ? (
           <EmptyState title="Nenhum comunicado" description="Os comunicados publicados aparecerão aqui." />
         ) : (
           <div style={{ display: "grid", gap: "12px" }}>
-            {(communications ?? []).map((item) => {
+            {visibleCommunications.map((item) => {
               const isRead = readIds.has(item.id);
               const scope = item.structure_id ? (item.condominium_structures as { name?: string } | null)?.name ?? "Estrutura" : "Todo o condomínio";
               return (
