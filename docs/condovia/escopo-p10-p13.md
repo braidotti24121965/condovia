@@ -1,6 +1,6 @@
 # Proposta de escopo — P10 a P13
 
-Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P10 está em andamento (ver situação abaixo); P11 a P13 não foram iniciadas. Os itens "fora do escopo" protegem decisões já tomadas (financeiro congelado, integração de equipamentos só no piloto).
+Status: atualizada em 23/10/2026. O P10 está concluído, por decisão do responsável; as atas de reuniões avulsas viram uma fase separada, a ser planejada depois. P11 a P13 seguem como indicado abaixo. Os itens "fora do escopo" protegem decisões já tomadas (financeiro congelado, integração de equipamentos só no piloto).
 
 ## P10 — Comunicação e governança
 
@@ -9,7 +9,7 @@ Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P
 **Decisões registradas**
 - Comunicados saem somente pelo aplicativo, sem e-mail.
 - Síndico e gestor podem publicar comunicados.
-- Votações exigem quórum mínimo. O valor será informado pela administradora do condomínio e ficará configurável.
+- Votações seguem as regras de quórum e aprovação do estatuto (art. 11), com contagem de associados por pessoa e de votos por lote ou unidade (art. 14). Essas regras estão implementadas (PR #114) e em produção desde 23/10.
 
 **Dentro do escopo**
 - Comunicados para moradores, com destinatários por unidade ou estrutura, leitura e confirmação.
@@ -18,13 +18,14 @@ Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P
 
 **Fora do escopo:** chat entre moradores, WhatsApp e envio em massa por canais externos.
 
-**Pendência:** valor do quórum mínimo (administradora).
+**Pendências:** atas de reunião, ainda não iniciadas.
 
 **Situação em 23/10/2026**
 - Comunicados: concluídos e validados em produção. Entregues: tabelas e políticas de acesso (migration `communications`, aplicada em produção em 23/10), telas de publicação e leitura, filtro por unidade ou estrutura, confirmação de leitura, link no menu do morador (PR #113, PR #116 e PR #117).
 - Teste em produção em 23/10: o síndico publicou um comunicado para um bloco de teste, e o morador vinculado à unidade viu o comunicado no menu. Os dados de teste foram removidos depois.
-- Votações: regras de quórum e aprovação do estatuto e registro de lotes em dia, presença e totais (PR #114), em homologação. Ainda não estão em produção.
-- Atas de reunião: não iniciadas.
+- Votações: regras de quórum e aprovação do estatuto e registro de lotes em dia, presença e totais (PR #114). Em produção desde 23/10 (PR #121), com teste completo em produção feito em 23/10.
+- Atas de assembleia: concluídas e em produção desde 23/10 (migration `assembly_minutes`). Rascunho, publicação e correção pela administração; moradores só leem as publicadas.
+- Atas de reuniões que não são assembleias: passam para a fase separada "Atas de reuniões avulsas", a ser planejada depois, por decisão do responsável.
 - Percentual do P10: a definir, porque o critério de percentual do cronograma ainda não cobre fases parciais.
 
 ## P11 — Compliance condominial
