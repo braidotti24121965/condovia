@@ -63,7 +63,8 @@ export default async function AccessPresencePage() {
             description="Quando uma entrada for registrada na portaria, o registro ativo aparecerá aqui com opção de baixa de saída imediata."
           />
         ) : (
-          <div className="cv-table-wrap">
+          <>
+          <div className="cv-table-wrap cv-table-wrap--has-cards">
             <table className="cv-table">
               <thead>
                 <tr>
@@ -105,6 +106,28 @@ export default async function AccessPresencePage() {
               </tbody>
             </table>
           </div>
+          <div className="cv-person-cards">
+            {presenceList.map((p) => (
+              <div className="cv-person-card" key={`card-${p.target_id}`}>
+                <span>
+                  <strong>{p.full_name}</strong>
+                  <StatusBadge variant="info">
+                    {p.target_kind === "visitor" ? "Visitante" : "Prestador"}
+                  </StatusBadge>
+                </span>
+                {p.company_name && <small className="cv-muted">{p.company_name}</small>}
+                <small>{p.document_number ? `${p.document_type?.toUpperCase() || "DOC"}: ${p.document_number}` : "Documento não informado"}</small>
+                <small>Unidade {p.unit_code} · {p.access_point_name} · entrada {formatTimeInTimezone(p.entered_at, timeZone)}</small>
+                <QuickExitButton
+                  targetKind={p.target_kind}
+                  targetId={p.target_id}
+                  accessPointId={p.access_point_id || defaultAccessPointId}
+                  targetName={p.full_name}
+                />
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </section>
     </div>
