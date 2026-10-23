@@ -30,22 +30,25 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
   const [roll, { data: canManage }, { data: result }, { data: minutes }] = await Promise.all([
     loadVotingRoll(supabase, context.id, id, today),
     hasPermission("assemblies.manage", context.id),
-    supabase.from("assembly_results").select("present_associates,present_votes,votes_in_favor,votes_against,votes_abstain").eq("assembly_id", id).maybeSingle(),
+    supabase.from("assembly_results").select("present_associates,present_votes,votes_in_favor,votes_against,votes_abstain,quorum_met,approved").eq("assembly_id", id).maybeSingle(),
     supabase.from("assembly_minutes").select("body,status,published_at").eq("assembly_id", id).maybeSingle(),
   ]);
   const editable = canManage === true;
   const matter = assembly.matter as VotingMatter;
   const convocation = assembly.convocation as Convocation;
 
+  // Morador vê o resultado salvo; a contagem de votantes só é legível pela administração.
   const outcome = result
-    ? evaluateVote({
-        matter,
-        convocation,
-        totalAssociates: roll.voters.length,
-        presentAssociates: result.present_associates,
-        presentVotes: result.present_votes,
-        votesInFavor: result.votes_in_favor,
-      })
+    ? editable
+      ? evaluateVote({
+          matter,
+          convocation,
+          totalAssociates: roll.voters.length,
+          presentAssociates: result.present_associates,
+          presentVotes: result.present_votes,
+          votesInFavor: result.votes_in_favor,
+        })
+      : { quorumMet: result.quorum_met, approved: result.approved, reason: "" }
     : null;
 
   return <div className="cv-page">
@@ -61,13 +64,13 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
       <p className="cv-form-hint">{assemblyMatterLabels[matter]} · {assemblyConvocationLabels[convocation]}</p>
     </section>
 
-    <section className="cv-form-section">
+    {editable && <section className="cv-form-section">
       <h2>1. Lotes em dia</h2>
       <p>{roll.eligibleUnitIds.size} lotes em dia registrados para esta assembleia.</p>
-      {editable && <EligibleUnitsForm assemblyId={id} />}
-    </section>
+      <EligibleUnitsForm assemblyId={id} />
+    </section>}
 
-    <section className="cv-form-section">
+    {editable && <section className="cv-form-section">
       <h2>2. Presença</h2>
       {roll.voters.length === 0
         ? <Alert tone="info">Nenhum associado com direito a voto nos lotes em dia.</Alert>
@@ -84,11 +87,17 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
           </ul>
           {editable && <div className="cv-form-actions"><Button type="submit" variant="primary" size="compact">Salvar presença</Button></div>}
         </form>}
-    </section>
+    </section>}
 
     <section className="cv-form-section">
       <h2>3. Totais da votação</h2>
-      {roll.eligibleUnitIds.size === 0
+      {!editable && (result
+        ? <>
+          <p>Votos presentes: {result.present_votes}. Favoráveis: {result.votes_in_favor}. Contrários: {result.votes_against}. Abstenções: {result.votes_abstain}.</p>
+          {outcome && <Alert tone={outcome.quorumMet && outcome.approved ? "success" : "warning"}>{`Quórum ${outcome.quorumMet ? "atendido" : "não atendido"}. Aprovação ${outcome.approved ? "obtida" : "não obtida"}.`}</Alert>}
+        </>
+        : <Alert tone="info">Os totais ainda não foram registrados.</Alert>)}
+      {editable && (roll.eligibleUnitIds.size === 0
         ? <Alert tone="warning">Importe a lista de lotes em dia antes de lançar os totais.</Alert>
         : <>
           <p>Associados com direito a voto: {roll.voters.length}. Presentes: {roll.presentPersonIds.size}.</p>
@@ -105,7 +114,7 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
               {editable && <div className="cv-form-actions"><Button type="submit" variant="primary" size="compact">Salvar totais</Button></div>}
             </div>
           </form>
-        </>}
+        </>)}
     </section>
 
     <section className="cv-form-section">
