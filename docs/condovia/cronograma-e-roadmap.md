@@ -66,7 +66,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 | Fase | Situação | Próximo critério | % |
 |---|---|---|---|
 | P9 — Financeiro | Congelado pelo responsável em 22/10/2026, sem data para retomar. Menu e páginas ocultos em todos os ambientes (PR #98) | Nova decisão de fase | 0% |
-| P10 — Communication & Governance | A planejar | Definição funcional | 0% |
+| P10 — Communication & Governance | Em andamento. Comunicados concluídos e validados em produção em 23/10 (leitura, publicação, filtro por unidade e menu do morador). Votações (PR #114) em homologação. Atas não iniciadas | Votações em produção e atas | a definir |
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
 | P13 — Advanced Integration | A planejar | Dependências externas | 0% |
@@ -75,7 +75,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 ## Consolidado
 
 - MVP (MVP-0 a P7): **100%**.
-- Roadmap pós-MVP (P8 a P13, pesos iguais): **14%** (P8 em 85%).
+- Roadmap pós-MVP (P8 a P13, pesos iguais): **14%** (P8 em 85%). O P10 tem percentual a definir e, por enquanto, entra na média como 0%.
 
 ## Próximos ajustes (em ordem de prioridade)
 
