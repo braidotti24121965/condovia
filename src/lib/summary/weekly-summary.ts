@@ -6,7 +6,13 @@
 const OCCURRENCE_OPEN = ["open", "triage", "in_progress"];
 const WORK_ORDER_OPEN = ["open", "assigned", "in_progress", "awaiting_validation"];
 
-export type OccurrenceRow = { status: string; priority: string; created_at: string; resolved_at: string | null };
+export type OccurrenceRow = {
+  status: string;
+  priority: string;
+  created_at: string;
+  resolved_at: string | null;
+  category_id: string;
+};
 export type WorkOrderRow = { status: string; due_at: string | null };
 export type RequestRow = { status: string; opened_at: string };
 export type ContractRow = { status: string; ends_on: string };
@@ -17,13 +23,19 @@ export type WeeklySummaryInput = {
   /** Data civil de hoje no fuso do condomínio, aaaa-mm-dd. */
   todayIso: string;
   occurrences: OccurrenceRow[];
+  /** Nome de cada categoria, pelo id. */
+  categoryNames: Record<string, string>;
   workOrders: WorkOrderRow[];
   requests: RequestRow[];
   contracts: ContractRow[];
 };
 
+export type CategoryBreakdown = { categoryId: string; name: string; openNow: number; openedLast7Days: number };
+
 export type WeeklySummary = {
   occurrences: { openNow: number; openUrgent: number; openedLast7Days: number; resolvedLast7Days: number };
+  /** Ordenado pelas ocorrências abertas na semana, da maior para a menor. */
+  occurrencesByCategory: CategoryBreakdown[];
   workOrders: { openNow: number; overdue: number };
   requests: { pendingReview: number; openedLast7Days: number };
   contracts: { endingIn30Days: number };
@@ -45,7 +57,21 @@ export function buildWeeklySummary(input: WeeklySummaryInput): WeeklySummary {
   const openOccurrences = input.occurrences.filter((o) => OCCURRENCE_OPEN.includes(o.status));
   const openWorkOrders = input.workOrders.filter((w) => WORK_ORDER_OPEN.includes(w.status));
 
+  const categoryIds = [...new Set(input.occurrences.map((o) => o.category_id))];
+  const occurrencesByCategory = categoryIds
+    .map((categoryId) => {
+      const rows = input.occurrences.filter((o) => o.category_id === categoryId);
+      return {
+        categoryId,
+        name: input.categoryNames[categoryId] ?? "Sem nome",
+        openNow: rows.filter((o) => OCCURRENCE_OPEN.includes(o.status)).length,
+        openedLast7Days: rows.filter((o) => inWeek(o.created_at)).length,
+      };
+    })
+    .sort((a, b) => b.openedLast7Days - a.openedLast7Days || a.name.localeCompare(b.name, "pt-BR"));
+
   return {
+    occurrencesByCategory,
     occurrences: {
       openNow: openOccurrences.length,
       openUrgent: openOccurrences.filter((o) => o.priority === "urgent").length,

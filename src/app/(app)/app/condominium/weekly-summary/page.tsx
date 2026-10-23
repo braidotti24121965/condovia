@@ -10,20 +10,23 @@ export default async function WeeklySummaryPage() {
   const { data: condominium } = await supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle();
   const todayIso = todayInTimezone(condominium?.timezone || "America/Sao_Paulo");
 
-  const [occurrences, workOrders, requests, contracts] = await Promise.all([
-    supabase.from("occurrences").select("status,priority,created_at,resolved_at").eq("condominium_id", context.id),
+  const [occurrences, categories, workOrders, requests, contracts] = await Promise.all([
+    supabase.from("occurrences").select("status,priority,created_at,resolved_at,category_id").eq("condominium_id", context.id),
+    supabase.from("occurrence_categories").select("id,name").eq("condominium_id", context.id),
     supabase.from("maintenance_work_orders").select("status,due_at").eq("condominium_id", context.id),
     supabase.from("maintenance_requests").select("status,opened_at").eq("condominium_id", context.id),
     supabase.from("maintenance_contracts").select("status,ends_on").eq("condominium_id", context.id),
   ]);
 
-  const failed = occurrences.error || workOrders.error || requests.error || contracts.error;
+  const failed = occurrences.error || categories.error || workOrders.error || requests.error || contracts.error;
   if (failed) return <div className="cv-page"><Alert tone="error">Não foi possível carregar o resumo da semana.</Alert></div>;
 
+  const categoryNames = Object.fromEntries((categories.data ?? []).map((c) => [c.id, c.name]));
   const summary = buildWeeklySummary({
     now: new Date(),
     todayIso,
     occurrences: occurrences.data ?? [],
+    categoryNames,
     workOrders: workOrders.data ?? [],
     requests: requests.data ?? [],
     contracts: contracts.data ?? [],
@@ -44,6 +47,18 @@ export default async function WeeklySummaryPage() {
         <article><span>Abertas na semana</span><strong>{summary.occurrences.openedLast7Days}</strong></article>
         <article><span>Resolvidas na semana</span><strong>{summary.occurrences.resolvedLast7Days}</strong></article>
       </div>
+    </section>
+
+    <section className="cv-form-section">
+      <h2>Ocorrências por categoria</h2>
+      {summary.occurrencesByCategory.length === 0
+        ? <p>Nenhuma ocorrência registrada.</p>
+        : <div className="cv-table-wrap cv-table-wrap--has-cards">
+          <table className="cv-table">
+            <thead><tr><th>Categoria</th><th>Abertas agora</th><th>Abertas na semana</th></tr></thead>
+            <tbody>{summary.occurrencesByCategory.map((c) => <tr key={c.categoryId}><td>{c.name}</td><td>{c.openNow}</td><td>{c.openedLast7Days}</td></tr>)}</tbody>
+          </table>
+        </div>}
     </section>
 
     <section className="cv-form-section">
