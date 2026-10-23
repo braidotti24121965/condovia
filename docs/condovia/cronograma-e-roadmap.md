@@ -54,9 +54,9 @@ Entregas da portaria feitas depois da data de referência acima. Os itens são m
 | Completar cadastro antigo (visitante e prestador) pela tela de portaria | Concluído na homologação | PR #94 |
 | Confirmação do porteiro com foto e dados antes de registrar entrada ou saída, sem registro automático pela leitura | Concluído na homologação; teste aprovado pelo responsável | PR #94 |
 | Bloqueio de entrada de veículo sem placa cadastrada no ponto de acesso | Concluído na homologação | PR #94 |
-| Teste visual em celular e desktop das telas novas da portaria | Encerrado pelo responsável sem teste visual adicional | — |
+| Teste visual em celular e desktop das telas novas da portaria | Concluído em 23/10/2026 na homolog: painel, autorizações, visitantes, presença (cards no celular) e validar passe. A leitura pela câmera precisa de um celular real | PRs #131 a #134 |
 | Aplicação das migrations da portaria em produção | Concluído em 22/10/2026 (com backup prévio e conferência) | PR #99 |
-| Retenção de foto e documento por 90 dias após o fim da última autorização | Decidido em 22/10/2026; rotina de exclusão ainda não implementada | Ver decisoes-ativas.md |
+| Retenção de foto e documento por 90 dias após o fim da última autorização | Concluído em 23/10/2026: rotina diária (06h) implementada e ativa na produção, com migrations de retenção aplicadas | Ver decisoes-ativas.md |
 | Remoção dos dados de teste da homologação (visitante de teste com eventos protegidos pelo trigger de auditoria) | Pendente, depende de decisão sobre o trigger | — |
 
 Percentual da evolução da portaria: a definir pelo responsável. Esta seção não altera os percentuais das fases acima.
