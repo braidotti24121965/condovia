@@ -1,6 +1,6 @@
 # Cronograma e roadmap consolidados
 
-Data de referência: 19/10/2026, 18h (após o merge do PR #43 e testes em produção). Datas de conclusão vêm do histórico Git de `main`. O XLSX original permanece como baseline histórica.
+Data de referência: 23/10/2026 (após a equalização entre homolog e produção e os testes de comunicados em produção). Datas de conclusão vêm do histórico Git de `main`. O XLSX original permanece como baseline histórica.
 
 ## Critério de percentual
 
@@ -54,9 +54,9 @@ Entregas da portaria feitas depois da data de referência acima. Os itens são m
 | Completar cadastro antigo (visitante e prestador) pela tela de portaria | Concluído na homologação | PR #94 |
 | Confirmação do porteiro com foto e dados antes de registrar entrada ou saída, sem registro automático pela leitura | Concluído na homologação; teste aprovado pelo responsável | PR #94 |
 | Bloqueio de entrada de veículo sem placa cadastrada no ponto de acesso | Concluído na homologação | PR #94 |
-| Teste visual em celular e desktop das telas novas da portaria | Encerrado pelo responsável sem teste visual adicional | — |
+| Teste visual em celular e desktop das telas novas da portaria | Concluído em 23/10/2026 na homolog: painel, autorizações, visitantes, presença (cards no celular) e validar passe. A leitura pela câmera precisa de um celular real | PRs #131 a #134 |
 | Aplicação das migrations da portaria em produção | Concluído em 22/10/2026 (com backup prévio e conferência) | PR #99 |
-| Retenção de foto e documento por 90 dias após o fim da última autorização | Decidido em 22/10/2026; rotina de exclusão ainda não implementada | Ver decisoes-ativas.md |
+| Retenção de foto e documento por 90 dias após o fim da última autorização | Concluído em 23/10/2026: rotina diária (06h) implementada e ativa na produção, com migrations de retenção aplicadas | Ver decisoes-ativas.md |
 | Remoção dos dados de teste da homologação (visitante de teste com eventos protegidos pelo trigger de auditoria) | Pendente, depende de decisão sobre o trigger | — |
 
 Percentual da evolução da portaria: a definir pelo responsável. Esta seção não altera os percentuais das fases acima.
@@ -66,7 +66,7 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 | Fase | Situação | Próximo critério | % |
 |---|---|---|---|
 | P9 — Financeiro | Congelado pelo responsável em 22/10/2026, sem data para retomar. Menu e páginas ocultos em todos os ambientes (PR #98) | Nova decisão de fase | 0% |
-| P10 — Communication & Governance | Em andamento. Comunicados concluídos e validados em produção em 23/10 (leitura, publicação, filtro por unidade e menu do morador). Votações (PR #114) em homologação. Atas não iniciadas | Votações em produção e atas | a definir |
+| P10 — Communication & Governance | Em andamento. Comunicados concluídos e validados em produção em 23/10 (leitura, publicação, filtro por unidade e menu do morador). Votações em produção desde 23/10 (PR #121), com quórum e aprovação conforme o estatuto (art. 11). Teste completo em produção em 23/10 (lote de teste, presença, totais e resultado), com os dados de teste removidos. Atas não iniciadas | Atas de reunião | a definir |
 | P11 — Compliance Condominial | A planejar | Requisitos e LGPD | 0% |
 | P12 — Automation & AI | A planejar | Arquitetura, riscos e dados | 0% |
 | P13 — Advanced Integration | A planejar | Dependências externas | 0% |
@@ -75,19 +75,21 @@ Percentual da evolução da portaria: a definir pelo responsável. Esta seção 
 ## Consolidado
 
 - MVP (MVP-0 a P7): **100%**.
-- Roadmap pós-MVP (P8 a P13, pesos iguais): **14%** (P8 em 85%). O P10 tem percentual a definir e, por enquanto, entra na média como 0%.
+- Roadmap pós-MVP (P8 a P13, pesos iguais): **17%** (P8 em 100%). O P10 tem percentual a definir e, por enquanto, entra na média como 0%.
 
 ## Próximos ajustes (em ordem de prioridade)
 
-1. **Recuperação de senha:** aguarda a resposta da HostGator sobre o login SMTP. Depois, validar na homologação e só então avaliar a PR #52 (hoje revertida na produção pela PR #103).
-4. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a acontecer.
-5. **Merges pendentes:** conferir as PRs de documentação ainda abertas.
-6. **DNS do DKIM:** conferir se só sobrou o registro `titan1._domainkey` correto, após o TTL.
-7. **Limpeza:** contas de teste do conselho e da gestora na homologação, se for necessário.
+1. **Erro intermitente do dashboard:** investigar pelos logs da Vercel se voltar a acontecer.
+3. **DNS do DKIM:** conferir se só sobrou o registro `titan1._domainkey` correto, após o TTL.
+4. **Limpeza:** contas de teste do conselho e da gestora na homologação, se for necessário.
+
+Concluídos em 23/10/2026:
+- **Recuperação de senha em produção:** link do e-mail direcionado para `/auth/confirm`, com o template ajustado no Supabase. Validado com uma conta de morador.
+- **Equalização dos ambientes:** código da `main` e da `homolog` iguais; migrations de comunicados e assembleias aplicadas nos dois ambientes. Migrations de finanças (P9) seguem só na homolog, por decisão do responsável.
+- **Estruturas de teste na produção:** inativadas (sem exclusão), porque têm equipamentos e solicitações de manutenção vinculados.
 
 ## Pendências transversais
 
-- P8: homologação funcional formal (upload real ao Storage, tarefa diária `pg_cron`, fluxos completos de OS).
 - PR #40 (feedback de navegação e ajustes de manutenção): revisar e integrar ou encerrar.
 - PR #48 (Financeiro P9, rascunho): revisão funcional antes de qualquer merge.
 - Homologação: reconciliar o histórico de migrations (aliases); até lá, não usar `supabase db push` nela.
