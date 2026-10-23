@@ -81,7 +81,7 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
               </label>
             </li>)}
           </ul>
-          {editable && <Button type="submit" variant="primary">Salvar presença</Button>}
+          {editable && <div className="cv-form-actions"><Button type="submit" variant="primary" size="compact">Salvar presença</Button></div>}
         </form>}
     </section>
 
@@ -101,7 +101,7 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
               <label className="cv-field-sm">Favoráveis<input name="votes_in_favor" type="number" inputMode="numeric" min="0" step="1" required defaultValue={result?.votes_in_favor} disabled={!editable} /></label>
               <label className="cv-field-sm">Contrários<input name="votes_against" type="number" inputMode="numeric" min="0" step="1" required defaultValue={result?.votes_against} disabled={!editable} /></label>
               <label className="cv-field-sm">Abstenções<input name="votes_abstain" type="number" inputMode="numeric" min="0" step="1" required defaultValue={result?.votes_abstain} disabled={!editable} /></label>
-              {editable && <Button type="submit" variant="primary">Salvar totais</Button>}
+              {editable && <div className="cv-form-actions"><Button type="submit" variant="primary" size="compact">Salvar totais</Button></div>}
             </div>
           </form>
         </>}

@@ -18,7 +18,7 @@ export function EligibleUnitsForm({ assemblyId }: { assemblyId: string }) {
     <div className="cv-form-grid">
       <label className="cv-field-lg">Arquivo da administradora (.txt ou .csv)<input type="file" accept=".txt,.csv,text/plain,text/csv" onChange={readFile} /></label>
       <label className="cv-field-lg">Lotes em dia (um código por linha)<textarea name="lots" rows={6} required value={text} onChange={(event) => setText(event.target.value)} /></label>
-      <SubmitButton variant="primary" size="default" type="submit" pendingLabel="Salvando...">Salvar lotes em dia</SubmitButton>
+      <div className="cv-form-actions"><SubmitButton variant="primary" size="compact" type="submit" pendingLabel="Salvando...">Salvar lotes em dia</SubmitButton></div>
     </div>
   </form>;
 }
