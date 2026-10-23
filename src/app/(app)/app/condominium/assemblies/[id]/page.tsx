@@ -6,7 +6,7 @@ import { EligibleUnitsForm } from "@/components/voting/eligible-units-form";
 import { hasPermission, requireCondominiumPermission } from "@/lib/condominium/access";
 import { todayInTimezone } from "@/lib/condominium/people-data";
 import { loadVotingRoll } from "@/lib/voting/assembly-data";
-import { saveAttendanceAction, saveResultsAction } from "@/lib/voting/actions";
+import { saveAttendanceAction, saveMinutesAction, saveResultsAction } from "@/lib/voting/actions";
 import { assemblyConvocationLabels, assemblyMatterLabels } from "@/lib/voting/labels";
 import { evaluateVote, type Convocation, type VotingMatter } from "@/lib/voting/quorum";
 
@@ -27,10 +27,11 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
 
   const { data: condominium } = await supabase.from("condominiums").select("timezone").eq("id", context.id).maybeSingle();
   const today = todayInTimezone(condominium?.timezone || "America/Sao_Paulo");
-  const [roll, { data: canManage }, { data: result }] = await Promise.all([
+  const [roll, { data: canManage }, { data: result }, { data: minutes }] = await Promise.all([
     loadVotingRoll(supabase, context.id, id, today),
     hasPermission("assemblies.manage", context.id),
     supabase.from("assembly_results").select("present_associates,present_votes,votes_in_favor,votes_against,votes_abstain").eq("assembly_id", id).maybeSingle(),
+    supabase.from("assembly_minutes").select("body,status,published_at").eq("assembly_id", id).maybeSingle(),
   ]);
   const editable = canManage === true;
   const matter = assembly.matter as VotingMatter;
@@ -105,6 +106,26 @@ export default async function AssemblyPage({ params, searchParams }: { params: P
             </div>
           </form>
         </>}
+    </section>
+
+    <section className="cv-form-section">
+      <h2>4. Ata</h2>
+      {query.minutes === "published" && <Alert tone="success">Ata publicada.</Alert>}
+      {query.minutes === "draft" && <Alert tone="success">Rascunho salvo.</Alert>}
+      {!editable && (minutes?.status === "published"
+        ? <p style={{ whiteSpace: "pre-wrap" }}>{minutes.body}</p>
+        : <Alert tone="info">A ata ainda não foi publicada.</Alert>)}
+      {editable && <form action={saveMinutesAction} className="cv-form">
+        <input type="hidden" name="assembly_id" value={id} />
+        <label className="cv-field-lg">Decisões e registros da reunião
+          <textarea name="body" rows={8} maxLength={10000} defaultValue={minutes?.body ?? ""} />
+        </label>
+        <p className="cv-form-hint">{minutes?.status === "published" ? "Ata publicada: as correções são salvas e continuam visíveis aos moradores." : "Rascunho: visível somente à administração até a publicação."}</p>
+        <div className="cv-form-actions">
+          <Button type="submit" name="intent" value="draft" variant="secondary" size="compact">Salvar rascunho</Button>
+          <Button type="submit" name="intent" value="publish" variant="primary" size="compact">{minutes?.status === "published" ? "Salvar correção" : "Publicar ata"}</Button>
+        </div>
+      </form>}
     </section>
   </div>;
 }
