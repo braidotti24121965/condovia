@@ -1,6 +1,6 @@
 # Proposta de escopo — P10 a P13
 
-Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P10 está em andamento (ver situação abaixo); P11 a P13 não foram iniciadas. Os itens "fora do escopo" protegem decisões já tomadas (financeiro congelado, integração de equipamentos só no piloto).
+Status: atualizada em 23/10/2026. O P10 está concluído, por decisão do responsável; as atas de reuniões avulsas viram uma fase separada, a ser planejada depois. P11 a P13 seguem como indicado abaixo. Os itens "fora do escopo" protegem decisões já tomadas (financeiro congelado, integração de equipamentos só no piloto).
 
 ## P10 — Comunicação e governança
 
@@ -25,7 +25,7 @@ Status: proposta para aprovação do responsável, atualizada em 23/10/2026. O P
 - Teste em produção em 23/10: o síndico publicou um comunicado para um bloco de teste, e o morador vinculado à unidade viu o comunicado no menu. Os dados de teste foram removidos depois.
 - Votações: regras de quórum e aprovação do estatuto e registro de lotes em dia, presença e totais (PR #114). Em produção desde 23/10 (PR #121), com teste completo em produção feito em 23/10.
 - Atas de assembleia: concluídas e em produção desde 23/10 (migration `assembly_minutes`). Rascunho, publicação e correção pela administração; moradores só leem as publicadas.
-- Atas de reuniões que não são assembleias: ficam para depois, por decisão do responsável.
+- Atas de reuniões que não são assembleias: passam para a fase separada "Atas de reuniões avulsas", a ser planejada depois, por decisão do responsável.
 - Percentual do P10: a definir, porque o critério de percentual do cronograma ainda não cobre fases parciais.
 
 ## P11 — Compliance condominial
