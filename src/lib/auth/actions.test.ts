@@ -35,6 +35,12 @@ describe("password recovery", () => {
     expect(result.success).toContain("Se houver uma conta");
     expect(mocks.reset).toHaveBeenCalledWith("test@example.com", { redirectTo: "https://homolog-condovia.kynovia.com.br/auth/callback?next=%2Freset-password" });
   });
+  it("asks for a different password when the current password is reused", async () => {
+    mocks.update.mockResolvedValue({ error: { code: "same_password", message: "New password should be different from the old password." } });
+    const result = await updatePassword({}, form({ password: "test-password", confirmation: "test-password" }));
+    expect(result.error).toBe("A nova senha deve ser diferente da senha atual. Escolha outra senha.");
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
   it("does not redirect when updating the password fails", async () => {
     mocks.update.mockResolvedValue({ error: { code: "session_not_found", message: "expired" } });
     const result = await updatePassword({}, form({ password: "test-password", confirmation: "test-password" }));
