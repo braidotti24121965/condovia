@@ -59,9 +59,16 @@ export async function requestPasswordReset(_previous: ActionState, formData: For
   if (!supabase) return { error: "A recuperação de senha não está configurada." };
   const requestOrigin = resolveAppOrigin(process.env.NEXT_PUBLIC_APP_URL, await headers());
   if (!requestOrigin) return { error: "A recuperação de senha não está configurada." };
-  await supabase.auth.resetPasswordForEmail(email.data, {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.data, {
     redirectTo: `${requestOrigin}/auth/callback?next=%2Freset-password`,
   });
+  if (error) {
+    console.error("[auth] password recovery request failed", {
+      code: error.code,
+      message: error.message,
+    });
+    return { error: "Não foi possível enviar as instruções de recuperação. Tente novamente mais tarde." };
+  }
   return { success: "Se houver uma conta para esse e-mail, você receberá as instruções para redefinir a senha." };
 }
 
@@ -74,7 +81,13 @@ export async function updatePassword(_previous: ActionState, formData: FormData)
   const supabase = await createClient();
   if (!supabase) return { error: "A redefinição de senha não está configurada." };
   const { error } = await supabase.auth.updateUser({ password: password.data });
-  if (error) return { error: "Não foi possível atualizar a senha. Solicite um novo link de recuperação." };
+  if (error) {
+    console.error("[auth] password update failed", {
+      code: error.code,
+      message: error.message,
+    });
+    return { error: "Não foi possível atualizar a senha. Solicite um novo link de recuperação." };
+  }
   redirect("/app");
 }
 
