@@ -86,6 +86,9 @@ export async function updatePassword(_previous: ActionState, formData: FormData)
       code: error.code,
       message: error.message,
     });
+    if (error.code === "same_password") {
+      return { error: "A nova senha deve ser diferente da senha atual. Escolha outra senha." };
+    }
     return { error: "Não foi possível atualizar a senha. Solicite um novo link de recuperação." };
   }
   redirect("/app");
