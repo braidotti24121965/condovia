@@ -131,3 +131,10 @@ Cuidados com ferramentas:
 - Pendência de unificação do leitor: encerrada.
 - Leitura facial do visitante: não implementada. Depende da fase de controle de acesso inteligente (levantamento de equipamentos, contrato de integração e consentimento LGPD). Não iniciar sem decisão do responsável.
 - Próxima tarefa sugerida: documento de contrato de integração facial (somente documentação), listando o que cada equipamento precisa informar e o que o sistema precisa guardar, sem código de integração.
+
+## Simulação de registros de acesso (27/10/2026)
+
+- Nova etapa preparada para revisão: gravação transacional de entradas/saídas simuladas e ledger separado para negações, sem comunicação com aparelhos.
+- A interface usa autorizações existentes de visitantes/prestadores; não amplia o registro para moradores nem tentativas não identificadas.
+- Restrita à homologação e a `structures.manage`. Histórico e presença recebem somente entradas/saídas, com marca explícita de simulação.
+- Migration, aplicação no banco e integração permanecem pendentes de autorização. Roteiro e limites de validação: `simulacao-registros-acesso.md`.

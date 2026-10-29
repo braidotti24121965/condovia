@@ -964,3 +964,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 .cv-check-list label > span:last-child { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
 
 @media (max-width: 767px) { .cv-table-wrap.cv-table-wrap--has-cards { display: none; } .cv-person-cards { display: grid; gap: 8px; } }
+
+/* Shared action rows preserve intrinsic button widths at every breakpoint. */
+.cv-form-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.cv-form-actions > label { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; max-width: 100%; }

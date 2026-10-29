@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { isGatehouseNavItemActive } from "./gatehouse-nav-state";
 
-export function GatehouseNav() {
+export function GatehouseNav({ showSimulation = false }: { showSimulation?: boolean } = {}) {
   const pathname = usePathname();
 
   const links = [
@@ -29,6 +29,8 @@ export function GatehouseNav() {
     { href: "/app/gatehouse/history", label: "Histórico", icon: History },
     { href: "/app/gatehouse/access-points", label: "Pontos de acesso", icon: DoorOpen },
   ];
+
+  if (showSimulation) links.push({ href: "/app/gatehouse/simulation", label: "Simulação", icon: ScanLine });
 
   return (
     <nav className="cv-gatehouse-nav" aria-label="Navegação da Portaria">

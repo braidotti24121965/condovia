@@ -1,0 +1,61 @@
+import { it } from "vitest";
+import { PGlite } from '@electric-sql/pglite';
+import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+// Exercises the real migration in PostgreSQL with minimal prerequisite tables.
+// Auth/permission helpers are fixtures; this does not replace full Supabase integration testing.
+it("persists simulations atomically, protects tenants and leaves denied attempts out of presence", async () => {
+const db = new PGlite();
+await db.exec(`
+create role anon; create role authenticated;
+create schema auth;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('test.uid',true),'')::uuid $$;
+create function auth.jwt() returns jsonb language sql stable as $$ select jsonb_build_object('iss', current_setting('test.issuer',true)) $$;
+create function public.current_user_account_id() returns uuid language sql stable as $$ select auth.uid() $$;
+create function public.has_permission(text,uuid) returns boolean language sql stable as $$ select coalesce(current_setting('test.allowed',true),'false')::boolean $$;
+create table public.condominiums(id uuid primary key);
+create table public.user_accounts(id uuid primary key);
+create table public.access_points(id uuid primary key, condominium_id uuid, status text);
+create table public.access_authorizations(id uuid primary key, condominium_id uuid, unit_id uuid, visitor_id uuid, service_provider_id uuid, status text, valid_from timestamptz, valid_until timestamptz);
+create table public.access_devices(id uuid primary key default gen_random_uuid(),condominium_id uuid,access_point_id uuid, manufacturer text,model text,status text default 'active');
+create table public.access_events(id uuid primary key default gen_random_uuid(),condominium_id uuid,access_point_id uuid,visitor_id uuid,service_provider_id uuid,authorization_id uuid,unit_id uuid,event_type text check(event_type in ('entry','exit')),occurred_at timestamptz,recorded_by_user_account_id uuid,notes text,source text,device_id uuid,external_event_id text,decision text,recognition_method text, unique(device_id,external_event_id));
+create function public.prevent_access_event_mutation() returns trigger language plpgsql as $$ begin raise exception 'immutable'; end $$;
+create table public.audit_events(actor_auth_user_id uuid,actor_user_account_id uuid,event_type text,entity_type text,entity_id uuid,metadata jsonb);
+`);
+const migration = readFileSync(new URL('../../../supabase/migrations/20261027224549_simulated_access_records.sql', import.meta.url),'utf8');
+await db.exec(migration);
+const c='11111111-1111-4111-8111-111111111111', p='22222222-2222-4222-8222-222222222222', a='33333333-3333-4333-8333-333333333333', u='44444444-4444-4444-8444-444444444444';
+await db.exec(`select set_config('test.uid','${u}',false),set_config('test.issuer','https://kgvbmisocqmsxcibpumq.supabase.co/auth/v1',false),set_config('test.allowed','true',false);
+insert into condominiums values('${c}'); insert into user_accounts values('${u}');
+insert into access_points values('${p}','${c}','active');
+insert into access_authorizations values('${a}','${c}','${u}','${u}',null,'approved',now()-interval '1 day',now()+interval '1 day');`);
+const device = (await db.query<{id: string}>(`select create_access_simulation_device($1,$2) id`,[c,p])).rows[0].id;
+assert.equal((await db.query<{id: string}>(`select create_access_simulation_device($1,$2) id`,[c,p])).rows[0].id,device);
+const call=async (id: string,type='entry',at=new Date().toISOString(),permit=a,dev=device,condo=c)=> (await db.query<{result: {action: string; outOfOrder?: boolean}}>(`select record_access_simulation($1,$2,$3,$4,$5,$6) result`,[condo,dev,permit,id,type,at])).rows[0].result;
+assert.equal((await call('entry')).action,'record');
+assert.equal((await call('entry')).action,'duplicate');
+assert.equal((await db.query<{n: number}>('select count(*)::int n from access_events')).rows[0].n,1);
+assert.equal((await call('denied','denied')).action,'record_denied');
+assert.equal((await db.query<{n: number}>('select count(*)::int n from access_events')).rows[0].n,1);
+assert.equal((await call('exit','exit')).action,'record');
+assert.equal((await call('old','entry',new Date(Date.now()-3600000).toISOString())).outOfOrder,true);
+await db.exec(`update access_authorizations set status='revoked' where id='${a}'`);
+assert.equal((await call('revoked')).action,'record_inconsistent');
+await assert.rejects(()=>call('bad-device','entry',undefined,a,u), /Equipamento inválido/);
+await assert.rejects(()=>call('bad-condo','entry',undefined,a,device,u), /Equipamento inválido/);
+await assert.rejects(()=>call('bad-auth','entry',undefined,u), /Autorização não encontrada/);
+await assert.rejects(()=>call('future','entry',new Date(Date.now()+3600000).toISOString()), /Evento inválido/);
+await db.exec(`select set_config('test.allowed','false',false)`);
+await assert.rejects(()=>call('no-permission'), /Permissão negada/);
+await db.exec(`select set_config('test.allowed','true',false),set_config('test.issuer','https://production.supabase.co/auth/v1',false)`);
+await assert.rejects(()=>call('production'), /somente no banco de homologação/);
+await assert.rejects(()=>db.exec(`update access_simulations set outcome='record'`), /immutable/);
+await db.exec(`select set_config('test.issuer','https://kgvbmisocqmsxcibpumq.supabase.co/auth/v1',false),set_config('test.allowed','false',false); set role authenticated;`);
+assert.equal((await db.query<{n: number}>('select count(*)::int n from access_simulations')).rows[0].n,0);
+await assert.rejects(()=>db.exec('delete from access_simulations'), /permission denied/);
+await db.exec(`reset role; set role anon;`);
+await assert.rejects(()=>call('anonymous'), /permission denied/);
+await db.exec('reset role');
+await db.close();
+
+}, 30000);
